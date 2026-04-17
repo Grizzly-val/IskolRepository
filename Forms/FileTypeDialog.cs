@@ -1,4 +1,4 @@
-namespace IskolRepository;
+namespace IskolRepository.Forms;
 
 public partial class FileTypeDialog : Form
 {

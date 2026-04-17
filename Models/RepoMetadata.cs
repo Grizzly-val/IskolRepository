@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
+using IskolRepository.Utilities;
 
-namespace IskolRepository;
+namespace IskolRepository.Models;
 
 public class RepoMetadata
 {

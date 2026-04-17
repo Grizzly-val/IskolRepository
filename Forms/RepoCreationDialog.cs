@@ -1,4 +1,6 @@
-namespace IskolRepository;
+using IskolRepository.Models;
+
+namespace IskolRepository.Forms;
 
 public partial class RepoCreationDialog : Form
 {

@@ -1,4 +1,4 @@
-namespace IskolRepository;
+namespace IskolRepository.Models;
 
 public class FileVersion
 {

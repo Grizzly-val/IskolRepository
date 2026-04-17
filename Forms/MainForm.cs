@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using System.Text.Json;
+using IskolRepository.Core;
+using IskolRepository.Models;
 
-namespace IskolRepository;
+namespace IskolRepository.Forms;
 
 public partial class MainForm : Form
 {
     private const string MetadataFileName = "metadata.json";
-    private const string HistoryFolderName = ".history";
     private static readonly string[] ValidStatuses = ["in-progress", "completed", "late"];
     private readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
     private string? currentSemesterPath;
@@ -59,7 +60,7 @@ public partial class MainForm : Form
             return;
         }
 
-        if (!IsValidName(semesterName))
+        if (!FileSystemHelper.IsValidName(semesterName))
         {
             MessageBox.Show(
                 "Please enter a valid semester name.",
@@ -83,7 +84,7 @@ public partial class MainForm : Form
                 return;
             }
 
-            Directory.CreateDirectory(targetPath);
+            FileSystemHelper.CreateDirectory(targetPath);
             ActivateSemester(targetPath);
         }
         catch (Exception ex)
@@ -167,7 +168,7 @@ public partial class MainForm : Form
         }
 
         var repositoryName = repositoryInput.RepositoryName.Trim();
-        if (!IsValidName(repositoryName))
+        if (!FileSystemHelper.IsValidName(repositoryName))
         {
             MessageBox.Show(
                 "Please enter a valid repository name.",
@@ -190,7 +191,7 @@ public partial class MainForm : Form
 
         try
         {
-            Directory.CreateDirectory(repositoryPath);
+            FileSystemHelper.CreateDirectory(repositoryPath);
             SaveMetadata(repositoryPath, new RepoMetadata
             {
                 Deadline = repositoryInput.Deadline.Date,
@@ -231,7 +232,7 @@ public partial class MainForm : Form
             return;
         }
 
-        if (!IsValidName(fileName))
+        if (!FileSystemHelper.IsValidName(fileName))
         {
             MessageBox.Show(
                 "Please enter a valid file name.",
@@ -420,7 +421,7 @@ public partial class MainForm : Form
 
         try
         {
-            RevertToVersion(selectedFilePath, selectedVersion);
+            VersionHelper.RevertToVersion(selectedFilePath, selectedVersion.Version, selectedVersion.SnapshotPath, jsonOptions);
 
             if (!string.IsNullOrWhiteSpace(selectedRepositoryPath))
             {
@@ -585,7 +586,7 @@ public partial class MainForm : Form
             foreach (var directory in Directory.GetDirectories(parentPath)
                          .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
             {
-                if (string.Equals(Path.GetFileName(directory), HistoryFolderName, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(Path.GetFileName(directory), VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -744,7 +745,7 @@ public partial class MainForm : Form
 
     private void CreateFolder(string parentPath, string name, string folderType)
     {
-        if (!IsValidName(name))
+        if (!FileSystemHelper.IsValidName(name))
         {
             MessageBox.Show(
                 $"Please enter a valid {folderType} name.",
@@ -767,7 +768,7 @@ public partial class MainForm : Form
 
         try
         {
-            Directory.CreateDirectory(fullPath);
+            FileSystemHelper.CreateDirectory(fullPath);
         }
         catch (Exception ex)
         {
@@ -794,15 +795,8 @@ public partial class MainForm : Form
 
         try
         {
-            if (extension == ".txt")
-            {
-                File.WriteAllText(filePath, string.Empty);
-            }
-            else if (extension == ".docx")
-            {
-                using var stream = File.Create(filePath);
-            }
-            else
+            var createdPath = FileSystemHelper.CreateRepositoryFile(repositoryPath, fileName, extension);
+            if (string.IsNullOrWhiteSpace(createdPath))
             {
                 MessageBox.Show(
                     "Please choose a valid file type.",
@@ -896,8 +890,8 @@ public partial class MainForm : Form
 
         try
         {
-            var historyFolder = GetHistoryFolderPath(filePath);
-            var logEntries = ReadVersionLog(historyFolder);
+            var historyFolder = VersionHelper.GetHistoryFolderPath(filePath);
+            var logEntries = VersionHelper.ReadVersionLog(filePath, jsonOptions);
             var extension = Path.GetExtension(filePath);
 
             foreach (var version in logEntries.OrderByDescending(v => v.Version))
@@ -940,7 +934,7 @@ public partial class MainForm : Form
 
         try
         {
-            SaveVersion(filePath, comment.Trim());
+            VersionHelper.SaveVersion(filePath, comment.Trim(), jsonOptions);
 
             if (string.Equals(selectedFilePath, filePath, StringComparison.OrdinalIgnoreCase))
             {
@@ -955,76 +949,6 @@ public partial class MainForm : Form
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
-    }
-
-    private void SaveVersion(string filePath, string comment)
-    {
-        var historyFolder = GetHistoryFolderPath(filePath);
-        Directory.CreateDirectory(historyFolder);
-
-        var versions = ReadVersionLog(historyFolder);
-        var nextVersion = versions.Count == 0 ? 1 : versions.Max(v => v.Version) + 1;
-        var snapshotPath = Path.Combine(historyFolder, $"v{nextVersion}{Path.GetExtension(filePath)}");
-
-        File.Copy(filePath, snapshotPath, true);
-        versions.Add(new FileVersion
-        {
-            Version = nextVersion,
-            Timestamp = DateTime.Now,
-            Comment = comment
-        });
-
-        SaveVersionLog(historyFolder, versions);
-    }
-
-    private void RevertToVersion(string originalFilePath, VersionListItem selectedVersion)
-    {
-        var historyFolder = GetHistoryFolderPath(originalFilePath);
-        var extension = Path.GetExtension(originalFilePath);
-        var versions = ReadVersionLog(historyFolder);
-
-        foreach (var version in versions.Where(v => v.Version > selectedVersion.Version.Version).ToList())
-        {
-            var snapshotPath = Path.Combine(historyFolder, $"v{version.Version}{extension}");
-            if (File.Exists(snapshotPath))
-            {
-                File.Delete(snapshotPath);
-            }
-        }
-
-        var retainedVersions = versions
-            .Where(v => v.Version <= selectedVersion.Version.Version)
-            .OrderBy(v => v.Version)
-            .ToList();
-
-        SaveVersionLog(historyFolder, retainedVersions);
-        File.Copy(selectedVersion.SnapshotPath, originalFilePath, true);
-    }
-
-    private List<FileVersion> ReadVersionLog(string historyFolder)
-    {
-        var logPath = Path.Combine(historyFolder, "log.json");
-        if (!File.Exists(logPath))
-        {
-            return [];
-        }
-
-        var json = File.ReadAllText(logPath);
-        return JsonSerializer.Deserialize<List<FileVersion>>(json, jsonOptions) ?? [];
-    }
-
-    private void SaveVersionLog(string historyFolder, List<FileVersion> versions)
-    {
-        var logPath = Path.Combine(historyFolder, "log.json");
-        File.WriteAllText(logPath, JsonSerializer.Serialize(versions.OrderBy(v => v.Version), jsonOptions));
-    }
-
-    private static string GetHistoryFolderPath(string filePath)
-    {
-        var repositoryPath = Path.GetDirectoryName(filePath)
-            ?? throw new InvalidOperationException("File path is missing a parent repository.");
-
-        return Path.Combine(repositoryPath, HistoryFolderName, Path.GetFileNameWithoutExtension(filePath));
     }
 
     private void SelectFileInList(string filePath)
@@ -1106,19 +1030,6 @@ public partial class MainForm : Form
         }
 
         return null;
-    }
-
-    private static bool IsValidName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return false;
-        }
-
-        var trimmedName = name.Trim();
-        return trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
-            && !trimmedName.EndsWith('.')
-            && !trimmedName.EndsWith(' ');
     }
 
     private static bool IsValidStatus(string? status)

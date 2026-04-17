@@ -9,81 +9,82 @@ This document provides a comprehensive overview of the **IskolRepository** proje
 **IskolRepository** is a local file management system that organizes school-related documents into a specific hierarchy:
 `Semester` -> `Subject` -> `Repository`.
 
-Each "Repository" represents a specific assignment or project and includes metadata (deadlines, status) and automated versioning for files contained within it.
+Each "Repository" represents a specific assignment or project and includes metadata (deadlines, status) and automated versioning for files contained within it. Unlike standard file explorers, it enforces a specific structure to ensure academic materials remain organized.
 
 ### Core Technologies
 - **Framework:** .NET 10.0 (Windows Forms)
-- **Data Persistence:** Local file system with JSON serialization for metadata and logs.
-- **Serialization:** `System.Text.Json` with custom converters.
+- **Data Persistence:** Local file system with JSON serialization for metadata and history logs.
+- **Serialization:** `System.Text.Json` with custom converters for specific date formats.
 
 ---
 
 ## 2. Directory Structure & Hierarchy
 
-The application roots itself in the user's `My Documents/IskolRepository` folder.
+The application allows users to select or create a "Semester" folder anywhere on their local machine. Once a semester is activated, the application manages the following structure:
 
 ### Hierarchy Rules:
-1. **Root:** `IskolRepository/`
-2. **Level 1 (Semester):** Folders representing academic terms (e.g., "Fall 2025").
-3. **Level 2 (Subject):** Folders representing specific courses within a semester.
-4. **Level 3 (Repository):** Folders representing specific tasks. This is where metadata and history are tracked.
+1. **Root (Semester):** The base folder representing an academic term (e.g., "Fall 2025").
+2. **Level 1 (Subject):** Subfolders within the semester folder representing specific courses.
+3. **Level 2 (Repository):** Folders within a subject representing specific tasks or assignments. This is the unit of versioning and metadata tracking.
 
 ### Managed Files:
-- `metadata.json`: Located in each Repository folder. Stores project status and deadlines.
-- `.history/`: A hidden folder within each Repository that contains version snapshots and a `log.json` file.
+- `metadata.json`: Located in each Repository folder. Stores the deadline, creation date, and current status.
+- `.history/`: A hidden folder within each Repository that contains versioned snapshots of files and a `log.json` file for each tracked file.
 
 ---
 
 ## 3. Key Components & Classes
 
 ### 3.1 UI Layer
-- **`Program.cs`**: The entry point that initializes the application and runs `Form1`.
-- **`Form1.cs`**: The main dashboard.
-    - **Navigation:** Uses a `TreeView` to display the semester/subject/repository hierarchy.
-    - **File Management:** Uses a `ListView` to show files within a selected repository.
-    - **Metadata View:** Displays and allows editing of deadlines and status for the selected repository.
-    - **History View:** Displays a list of previous versions for a selected file.
+- **`Program.cs`**: The entry point that initializes the application and runs `MainForm`.
+- **`MainForm.cs`**: The primary interface, featuring a dynamic view system:
+    - **Startup View:** Allows opening an existing semester folder or creating a new one.
+    - **Subject Selection View:** Displays subjects as interactive cards for quick navigation.
+    - **Workspace View:** The main project dashboard.
+        - **Repository Tree:** A `TreeView` showing repositories within the current subject.
+        - **File Manager:** A `ListView` displaying files in the selected repository.
+        - **Metadata Panel:** Displays and allows editing of project deadlines and status (`in-progress`, `completed`, `late`).
+        - **History Panel:** Displays version history for the selected file.
 - **`RepoCreationDialog.cs`**: A specialized dialog for creating a new repository, requiring a name and a deadline.
+- **`FileTypeDialog.cs`**: A selection dialog used when creating new files (currently supports `.txt` and `.docx`).
 - **`PromptDialog.cs`**: A generic input dialog used for names and version comments.
 
 ### 3.2 Data Models
 - **`RepoMetadata.cs`**:
     - `Deadline`: The due date for the project.
-    - `DateAdded`: When the repository was created.
+    - `DateAdded`: The date the repository was initialized.
     - `Status`: Current state (`in-progress`, `completed`, or `late`).
 - **`FileVersion.cs`**:
-    - `Version`: Integer version number.
-    - `Timestamp`: When the snapshot was taken.
+    - `Version`: Sequential version number.
+    - `Timestamp`: When the snapshot was captured.
     - `Comment`: User-provided description of changes.
-- **`RepoCreationInfo.cs`**: A simple DTO used to pass data back from the creation dialog.
+- **`RepoCreationInfo.cs`**: A DTO used to pass data from `RepoCreationDialog` back to the main form.
 
 ### 3.3 Utilities
-- **`DateOnlyDateTimeConverter.cs`**: A custom `JsonConverter<DateTime>` that ensures dates are stored in the `yyyy-MM-dd` format in JSON files, ignoring time components.
+- **`DateOnlyDateTimeConverter.cs`**: A custom `JsonConverter<DateTime>` that ensures dates are stored in the `yyyy-MM-dd` format in JSON files, omitting time components for metadata consistency.
 
 ---
 
 ## 4. Key Workflows
 
-### 4.1 Repository Management
-When a user creates a repository:
-1. A folder is created under the selected Subject.
-2. A `metadata.json` file is initialized with the chosen deadline.
-3. The UI refreshes to show the new node in the `TreeView`.
+### 4.1 Semester & Subject Management
+1. **Activation:** Users select a folder to act as a "Semester". If new, it must be empty.
+2. **Subject Creation:** Subjects are created as folders directly under the Semester root.
+3. **Repository Initialization:** When creating a repository:
+    - A folder is created under the selected Subject.
+    - A `metadata.json` is generated with the selected deadline.
 
-### 4.2 File Versioning System
-The versioning system is "opt-in" triggered by file interaction:
-1. **Opening a File:** Double-clicking a file in the `ListView` opens it with the default system handler (e.g., Notepad, Word).
-2. **Detection:** The application waits for the external process to exit.
-3. **Snapshot:** Upon exit, the user is prompted for a comment.
-4. **Storage:**
-    - The file is copied to `.history/{FileName}/v{N}.{ext}`.
-    - An entry is added to `.history/{FileName}/log.json`.
-5. **Reverting:** Users can select a version from the history list and click "Revert". The current file is then overwritten by the selected snapshot.
+### 4.2 File Management
+- **Creation:** Users can create new files directly within a repository using the "Create File" action, which prompts for a name and extension via `FileTypeDialog`.
+- **Versioning (Opt-in):**
+    1. **Opening:** Double-clicking a file opens it with the system's default handler.
+    2. **Tracking:** The application monitors the external process.
+    3. **Snapshot:** When the process exits, the application prompts the user for a comment and creates a new version in the `.history` folder.
+- **Reverting:** Users can select a previous version from the history list and click "Revert". This replaces the current file with the selected snapshot and removes any "newer" versions to maintain a linear history.
 
 ### 4.3 Validation Logic
-- **`IsValidName`**: Ensures folder/file names don't contain invalid characters or trailing dots/spaces.
-- **`IsValidStatus`**: Restricts repository status to `in-progress`, `completed`, or `late`.
-- **`IsSystemManagedFile`**: Prevents users from seeing or directly editing `metadata.json` within the file list.
+- **`IsValidName`**: Ensures folder/file names don't contain invalid characters or system-reserved sequences.
+- **`IsSystemManagedFile`**: Filters out `metadata.json` and internal folders from the file list to prevent accidental corruption.
 
 ---
 

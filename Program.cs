@@ -1,3 +1,5 @@
+using IskolRepository.Forms;
+
 namespace IskolRepository;
 
 static class Program

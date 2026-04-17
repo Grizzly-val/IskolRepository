@@ -1,4 +1,4 @@
-namespace IskolRepository;
+namespace IskolRepository.Forms;
 
 partial class PromptDialog
 {
