@@ -60,7 +60,6 @@ partial class MainForm
 
     private void InitializeComponent()
     {
-        components = new System.ComponentModel.Container();
         mainSplitContainer = new SplitContainer();
         repositoryTreeView = new TreeView();
         hostPanel = new Panel();

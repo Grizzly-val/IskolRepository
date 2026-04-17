@@ -2,12 +2,22 @@ using System.Diagnostics;
 using System.Text.Json;
 using IskolRepository.Core;
 using IskolRepository.Models;
+using System.Drawing;
 
 namespace IskolRepository.Forms;
+
+using ValidationHelper = IskolRepository.Core.ValidationHelper;
+using SemesterManager = IskolRepository.Core.SemesterManager;
+using SubjectManager = IskolRepository.Core.SubjectManager;
+using TreeViewManager = IskolRepository.Core.TreeViewManager;
+using RepositoryManager = IskolRepository.Core.RepositoryManager;
+using FileManager = IskolRepository.Core.FileManager;
+using VersionManager = IskolRepository.Core.VersionManager;
 
 public partial class MainForm : Form
 {
     private const string MetadataFileName = "metadata.json";
+    private const string SemesterMarkerFileName = ".semester.json";
     private static readonly string[] ValidStatuses = ["in-progress", "completed", "late"];
     private readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
     private string? currentSemesterPath;
@@ -22,6 +32,8 @@ public partial class MainForm : Form
         ShowStartupView();
     }
 
+    #region Event Handlers
+
     private void openSemesterButton_Click(object? sender, EventArgs e)
     {
         using var dialog = CreateFolderBrowserDialog("Select an existing semester folder.");
@@ -34,6 +46,16 @@ public partial class MainForm : Form
         {
             MessageBox.Show(
                 "The selected semester folder does not exist.",
+                "Invalid Semester",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (!IsSemesterFolder(dialog.SelectedPath))
+        {
+            MessageBox.Show(
+                "The selected folder is not a valid semester folder.",
                 "Invalid Semester",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -85,6 +107,7 @@ public partial class MainForm : Form
             }
 
             FileSystemHelper.CreateDirectory(targetPath);
+            CreateSemesterMarker(targetPath);
             ActivateSemester(targetPath);
         }
         catch (Exception ex)
@@ -119,7 +142,7 @@ public partial class MainForm : Form
         }
 
         CreateFolder(currentSemesterPath, subjectName.Trim(), "subject");
-        LoadSubjects();
+        LoadSubjectsUI();
     }
 
     private void changeSemesterButton_Click(object? sender, EventArgs e)
@@ -145,7 +168,7 @@ public partial class MainForm : Form
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
-        LoadSubjects();
+        LoadSubjectsUI();
         ShowSubjectView();
     }
 
@@ -308,8 +331,12 @@ public partial class MainForm : Form
 
         selectedPathValueLabel.Text = nodeData.Path;
 
+        // Lazy load children when node is selected
+        LoadChildNodes(e.Node);
+
         switch (nodeData.NodeType)
         {
+            case NodeType.Semester:
             case NodeType.Subject:
                 selectedRepositoryPath = null;
                 selectedFilePath = null;
@@ -322,15 +349,31 @@ public partial class MainForm : Form
             case NodeType.Repository:
                 SelectRepository(nodeData.Path);
                 break;
+            case NodeType.SubRepository:
+                selectedRepositoryPath = nodeData.Path;
+                selectedFilePath = null;
+                filesListView.Items.Clear();
+                versionsListBox.Items.Clear();
+                ClearMetadataDisplay();
+                UpdateRepositoryUiState(nodeData.Path);
+                UpdateHistoryUiState(null);
+                break;
             case NodeType.File:
-                var repositoryPath = Path.GetDirectoryName(nodeData.Path);
-                if (string.IsNullOrWhiteSpace(repositoryPath))
+                var parentPath = Path.GetDirectoryName(nodeData.Path);
+                if (string.IsNullOrWhiteSpace(parentPath))
                 {
                     ResetWorkspaceSelection();
                     return;
                 }
 
-                SelectRepository(repositoryPath);
+                // Find the repository root from ancestors
+                var repoPath = FindRepositoryRoot(parentPath);
+                if (string.IsNullOrWhiteSpace(repoPath))
+                {
+                    repoPath = parentPath;
+                }
+
+                SelectRepository(repoPath);
                 SelectFileInList(nodeData.Path);
                 selectedFilePath = nodeData.Path;
                 LoadVersionHistory(nodeData.Path);
@@ -447,6 +490,10 @@ public partial class MainForm : Form
         }
     }
 
+    #endregion
+
+    #region Semester Management
+
     private void ActivateSemester(string semesterPath)
     {
         currentSemesterPath = semesterPath;
@@ -460,52 +507,32 @@ public partial class MainForm : Form
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
-        LoadSubjects();
+        TreeViewManager.LoadSemesterTree(semesterPath, repositoryTreeView, SemesterMarkerFileName);
+        LoadSubjectsUI();
         ShowSubjectView();
     }
 
-    private void LoadSubjects()
+    private static bool IsSemesterFolder(string path)
     {
-        subjectCardsPanel.SuspendLayout();
-        subjectCardsPanel.Controls.Clear();
+        return SemesterManager.IsSemesterFolder(path);
+    }
 
-        if (string.IsNullOrWhiteSpace(currentSemesterPath) || !Directory.Exists(currentSemesterPath))
-        {
-            subjectCardsPanel.ResumeLayout();
-            return;
-        }
+    private static void CreateSemesterMarker(string semesterPath)
+    {
+        SemesterManager.CreateSemesterMarker(semesterPath);
+    }
 
-        try
-        {
-            var subjects = Directory.GetDirectories(currentSemesterPath)
-                .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
-                .ToList();
+    #endregion
 
-            if (subjects.Count == 0)
-            {
-                subjectCardsPanel.Controls.Add(CreateEmptyStateLabel(
-                    "No subjects yet. Create one to start organizing repositories."));
-            }
-            else
-            {
-                foreach (var subjectPath in subjects)
-                {
-                    subjectCardsPanel.Controls.Add(CreateSubjectCard(subjectPath));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Unable to load subjects.\n\n{ex.Message}",
-                "Load Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-        finally
-        {
-            subjectCardsPanel.ResumeLayout();
-        }
+    #region Subject Management
+
+    private void LoadSubjectsUI()
+    {
+        SubjectManager.LoadSubjects(
+            currentSemesterPath,
+            subjectCardsPanel,
+            CreateSubjectCard,
+            () => subjectCardsPanel.Controls.Add(CreateEmptyStateLabel("No subjects yet. Create one to start organizing repositories.")));
     }
 
     private Control CreateSubjectCard(string subjectPath)
@@ -546,123 +573,63 @@ public partial class MainForm : Form
         ShowWorkspaceView();
     }
 
+    #endregion
+
+    #region Semester Tree Management
+
     private void LoadSubjectTree(string? selectPath = null)
     {
-        if (string.IsNullOrWhiteSpace(currentSubjectPath) || !Directory.Exists(currentSubjectPath))
-        {
-            repositoryTreeView.Nodes.Clear();
-            return;
-        }
-
-        repositoryTreeView.BeginUpdate();
-        repositoryTreeView.Nodes.Clear();
-
-        var rootNode = new TreeNode(Path.GetFileName(currentSubjectPath))
-        {
-            Tag = new NodeData(currentSubjectPath, NodeType.Subject)
-        };
-
-        LoadSubjectNodes(currentSubjectPath, rootNode);
-        repositoryTreeView.Nodes.Add(rootNode);
-        rootNode.Expand();
-
-        var nodeToSelect = !string.IsNullOrWhiteSpace(selectPath)
-            ? FindNodeByPath(repositoryTreeView.Nodes, selectPath)
-            : rootNode;
-
-        if (nodeToSelect is not null)
-        {
-            repositoryTreeView.SelectedNode = nodeToSelect;
-            EnsureParentChainExpanded(nodeToSelect);
-        }
-
-        repositoryTreeView.EndUpdate();
+        TreeViewManager.LoadSubjectTree(currentSubjectPath, selectPath, repositoryTreeView, SemesterMarkerFileName);
     }
 
-    private void LoadSubjectNodes(string parentPath, TreeNode parentNode)
+    #endregion
+
+    #region TreeView Logic & Helpers
+
+    // LoadChildNodes is now handled by TreeViewManager.LoadChildNodes
+    private void LoadChildNodes(TreeNode parentNode)
     {
-        try
-        {
-            foreach (var directory in Directory.GetDirectories(parentPath)
-                         .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
-            {
-                if (string.Equals(Path.GetFileName(directory), VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var childNode = new TreeNode(Path.GetFileName(directory))
-                {
-                    Tag = new NodeData(directory, NodeType.Repository)
-                };
-
-                parentNode.Nodes.Add(childNode);
-                LoadSubjectNodes(directory, childNode);
-            }
-
-            foreach (var filePath in Directory.GetFiles(parentPath)
-                         .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
-            {
-                if (IsSystemManagedFile(filePath))
-                {
-                    continue;
-                }
-
-                parentNode.Nodes.Add(new TreeNode(Path.GetFileName(filePath))
-                {
-                    Tag = new NodeData(filePath, NodeType.File)
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Unable to load the selected subject.\n\n{ex.Message}",
-                "Load Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
+        TreeViewManager.LoadChildNodes(parentNode, SemesterMarkerFileName);
     }
 
-    private void LoadFiles(string repositoryPath)
-    {
-        filesListView.Items.Clear();
+    #endregion
 
-        try
-        {
-            foreach (var filePath in Directory.GetFiles(repositoryPath)
-                         .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
-            {
-                if (IsSystemManagedFile(filePath))
-                {
-                    continue;
-                }
-
-                var item = new ListViewItem(Path.GetFileNameWithoutExtension(filePath));
-                item.SubItems.Add(Path.GetExtension(filePath));
-                item.Tag = filePath;
-                filesListView.Items.Add(item);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Unable to load files from:\n{repositoryPath}\n\n{ex.Message}",
-                "Load Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-    }
+    #region Repository Management
 
     private void SelectRepository(string repositoryPath)
     {
         selectedRepositoryPath = repositoryPath;
         selectedFilePath = null;
-        LoadFiles(repositoryPath);
-        LoadRepositoryMetadata(repositoryPath);
+        FileManager.LoadFiles(repositoryPath, filesListView, SemesterMarkerFileName);
+        LoadRepositoryMetadataUI(repositoryPath);
         UpdateRepositoryUiState(repositoryPath);
         UpdateHistoryUiState(null);
     }
+
+    private void LoadRepositoryMetadataUI(string repositoryPath)
+    {
+        try
+        {
+            var metadata = RepositoryManager.EnsureMetadata(repositoryPath, jsonOptions);
+            deadlineValueLabel.Text = metadata.Deadline.ToString("yyyy-MM-dd");
+            dateAddedValueLabel.Text = metadata.DateAdded.ToString("yyyy-MM-dd");
+            deadlineDateTimePicker.Value = metadata.Deadline;
+            statusComboBox.SelectedItem = metadata.Status;
+        }
+        catch (Exception ex)
+        {
+            ClearMetadataDisplay();
+            MessageBox.Show(
+                $"Unable to load repository metadata.\n\n{ex.Message}",
+                "Metadata Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
+    #endregion
+
+    #region View Management
 
     private void ResetWorkspaceSelection()
     {
@@ -714,7 +681,7 @@ public partial class MainForm : Form
 
         try
         {
-            var process = Process.Start(new ProcessStartInfo(filePath)
+            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
             {
                 UseShellExecute = true
             });
@@ -743,41 +710,33 @@ public partial class MainForm : Form
         }
     }
 
+    #endregion
+
+    #region File Management
+
     private void CreateFolder(string parentPath, string name, string folderType)
     {
-        if (!FileSystemHelper.IsValidName(name))
-        {
-            MessageBox.Show(
-                $"Please enter a valid {folderType} name.",
-                "Invalid Name",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            return;
-        }
+        FileManager.CreateFolder(parentPath, name, folderType);
+    }
 
-        var fullPath = Path.Combine(parentPath, name);
-        if (Directory.Exists(fullPath))
-        {
-            MessageBox.Show(
-                $"A {folderType} with that name already exists in the selected location.",
-                "Duplicate Folder",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            return;
-        }
+    private RepoMetadata EnsureMetadata(string repositoryPath)
+    {
+        return RepositoryManager.EnsureMetadata(repositoryPath, jsonOptions);
+    }
 
-        try
-        {
-            FileSystemHelper.CreateDirectory(fullPath);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Unable to create the {folderType}.\n\n{ex.Message}",
-                "Create Folder Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
+    private void SaveMetadata(string repositoryPath, RepoMetadata metadata)
+    {
+        RepositoryManager.SaveMetadata(repositoryPath, metadata, jsonOptions, ValidStatuses);
+    }
+
+    private void LoadRepositoryMetadata(string repositoryPath)
+    {
+        LoadRepositoryMetadataUI(repositoryPath);
+    }
+
+    private void LoadFiles(string repositoryPath)
+    {
+        FileManager.LoadFiles(repositoryPath, filesListView, SemesterMarkerFileName);
     }
 
     private void CreateRepositoryFile(string repositoryPath, string fileName, string extension)
@@ -806,7 +765,7 @@ public partial class MainForm : Form
                 return;
             }
 
-            LoadFiles(repositoryPath);
+            FileManager.LoadFiles(repositoryPath, filesListView, SemesterMarkerFileName);
             LoadSubjectTree(filePath);
             SelectFileInList(filePath);
         }
@@ -820,136 +779,24 @@ public partial class MainForm : Form
         }
     }
 
-    private void LoadRepositoryMetadata(string repositoryPath)
-    {
-        try
-        {
-            var metadata = EnsureMetadata(repositoryPath);
-            deadlineValueLabel.Text = metadata.Deadline.ToString("yyyy-MM-dd");
-            dateAddedValueLabel.Text = metadata.DateAdded.ToString("yyyy-MM-dd");
-            deadlineDateTimePicker.Value = metadata.Deadline;
-            statusComboBox.SelectedItem = metadata.Status;
-        }
-        catch (Exception ex)
-        {
-            ClearMetadataDisplay();
-            MessageBox.Show(
-                $"Unable to load repository metadata.\n\n{ex.Message}",
-                "Metadata Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-    }
+    #endregion
 
-    private RepoMetadata EnsureMetadata(string repositoryPath)
-    {
-        var metadataPath = Path.Combine(repositoryPath, MetadataFileName);
-        if (!File.Exists(metadataPath))
-        {
-            var metadata = new RepoMetadata
-            {
-                Deadline = DateTime.Today,
-                DateAdded = DateTime.Today,
-                Status = "in-progress"
-            };
-
-            SaveMetadata(repositoryPath, metadata);
-            return metadata;
-        }
-
-        var json = File.ReadAllText(metadataPath);
-        var metadataFromFile = JsonSerializer.Deserialize<RepoMetadata>(json, jsonOptions);
-        if (metadataFromFile is null || !IsValidStatus(metadataFromFile.Status))
-        {
-            throw new InvalidOperationException("The repository metadata is invalid.");
-        }
-
-        return metadataFromFile;
-    }
-
-    private void SaveMetadata(string repositoryPath, RepoMetadata metadata)
-    {
-        if (!IsValidStatus(metadata.Status))
-        {
-            throw new InvalidOperationException("Metadata status is invalid.");
-        }
-
-        var metadataPath = Path.Combine(repositoryPath, MetadataFileName);
-        File.WriteAllText(metadataPath, JsonSerializer.Serialize(metadata, jsonOptions));
-    }
+    #region Version History
 
     private void LoadVersionHistory(string? filePath)
     {
-        versionsListBox.Items.Clear();
-
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-        {
-            UpdateHistoryUiState(null);
-            return;
-        }
-
-        try
-        {
-            var historyFolder = VersionHelper.GetHistoryFolderPath(filePath);
-            var logEntries = VersionHelper.ReadVersionLog(filePath, jsonOptions);
-            var extension = Path.GetExtension(filePath);
-
-            foreach (var version in logEntries.OrderByDescending(v => v.Version))
-            {
-                var snapshotPath = Path.Combine(historyFolder, $"v{version.Version}{extension}");
-                if (File.Exists(snapshotPath))
-                {
-                    versionsListBox.Items.Add(new VersionListItem(snapshotPath, version));
-                }
-            }
-
-            UpdateHistoryUiState(filePath);
-        }
-        catch (Exception ex)
-        {
-            UpdateHistoryUiState(null);
-            MessageBox.Show(
-                $"Unable to load file history.\n\n{ex.Message}",
-                "History Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
+        VersionManager.LoadVersionHistory(filePath, versionsListBox, jsonOptions, historyCaptionLabel);
+        UpdateHistoryUiState(filePath);
     }
 
     private void PromptAndSaveVersion(string filePath)
     {
-        if (!File.Exists(filePath))
-        {
-            return;
-        }
-
-        var comment = PromptDialog.ShowDialog(
-            $"Enter a version comment for {Path.GetFileName(filePath)}:\n\nSelect Cancel to skip saving a snapshot.",
-            "Save Version");
-
-        if (string.IsNullOrWhiteSpace(comment))
-        {
-            return;
-        }
-
-        try
-        {
-            VersionHelper.SaveVersion(filePath, comment.Trim(), jsonOptions);
-
-            if (string.Equals(selectedFilePath, filePath, StringComparison.OrdinalIgnoreCase))
-            {
-                LoadVersionHistory(filePath);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Unable to save the file version.\n\n{ex.Message}",
-                "Version Save Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
+        VersionManager.PromptAndSaveVersion(filePath, selectedFilePath, jsonOptions, versionsListBox);
     }
+
+    #endregion
+
+    #region UI Helpers
 
     private void SelectFileInList(string filePath)
     {
@@ -992,6 +839,25 @@ public partial class MainForm : Form
             : "Version History";
     }
 
+    private bool IsValidStatus(string? status)
+    {
+        return ValidationHelper.IsValidStatus(status, ValidStatuses);
+    }
+
+    private bool IsSystemManagedFile(string filePath)
+    {
+        return ValidationHelper.IsSystemManagedFile(filePath, SemesterMarkerFileName);
+    }
+
+    private string? FindRepositoryRoot(string startPath)
+    {
+        return RepositoryManager.FindRepositoryRoot(startPath);
+    }
+
+    #endregion
+
+    #region Static Helpers & Validation
+
     private static FolderBrowserDialog CreateFolderBrowserDialog(string description)
     {
         return new FolderBrowserDialog
@@ -1002,82 +868,12 @@ public partial class MainForm : Form
         };
     }
 
-    private static void EnsureParentChainExpanded(TreeNode node)
-    {
-        var current = node.Parent;
-        while (current is not null)
-        {
-            current.Expand();
-            current = current.Parent;
-        }
-    }
+    #endregion
 
-    private static TreeNode? FindNodeByPath(TreeNodeCollection nodes, string path)
-    {
-        foreach (TreeNode node in nodes)
-        {
-            if (node.Tag is NodeData nodeData
-                && string.Equals(nodeData.Path, path, StringComparison.OrdinalIgnoreCase))
-            {
-                return node;
-            }
+    #region Nested Classes - Moved to Core
 
-            var childMatch = FindNodeByPath(node.Nodes, path);
-            if (childMatch is not null)
-            {
-                return childMatch;
-            }
-        }
+    // NodeType, NodeData, and VersionListItem are now defined in Core/TreeNodeData.cs
+    // They are imported via the IskolRepository.Core namespace
 
-        return null;
-    }
-
-    private static bool IsValidStatus(string? status)
-    {
-        return !string.IsNullOrWhiteSpace(status)
-            && ValidStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSystemManagedFile(string filePath)
-    {
-        return string.Equals(Path.GetFileName(filePath), MetadataFileName, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private enum NodeType
-    {
-        Subject,
-        Repository,
-        File
-    }
-
-    private sealed class NodeData
-    {
-        public NodeData(string path, NodeType nodeType)
-        {
-            Path = path;
-            NodeType = nodeType;
-        }
-
-        public string Path { get; }
-
-        public NodeType NodeType { get; }
-    }
-
-    private sealed class VersionListItem
-    {
-        public VersionListItem(string snapshotPath, FileVersion version)
-        {
-            SnapshotPath = snapshotPath;
-            Version = version;
-        }
-
-        public string SnapshotPath { get; }
-
-        public FileVersion Version { get; }
-
-        public override string ToString()
-        {
-            return $"v{Version.Version} - {Version.Timestamp:yyyy-MM-dd HH:mm} - {Version.Comment}";
-        }
-    }
+    #endregion
 }
