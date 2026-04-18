@@ -1,15 +1,31 @@
 using System.Windows.Forms;
+using IskolRepository.Core.Interfaces.Domain;
+using IskolRepository.Core.Interfaces.Infrastructure;
 
-namespace IskolRepository.Core;
+namespace IskolRepository.Core.Services.Domain;
 
 /// <summary>
-/// Manages TreeView operations including node loading, lazy loading, and tree navigation.
+/// Implementation of ITreeViewDomainService.
 /// </summary>
-public static class TreeViewManager
+public class TreeViewDomainService : ITreeViewDomainService
 {
-    public static void LoadSemesterTree(string semesterPath, TreeView repositoryTreeView, string semesterMarkerFileName)
+    private readonly IFileSystemHelper _fileSystemHelper;
+    private readonly IPathProvider _pathProvider;
+    private readonly IValidationHelper _validationHelper;
+
+    public TreeViewDomainService(
+        IFileSystemHelper fileSystemHelper,
+        IPathProvider pathProvider,
+        IValidationHelper validationHelper)
     {
-        if (string.IsNullOrWhiteSpace(semesterPath) || !Directory.Exists(semesterPath))
+        _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
+        _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
+        _validationHelper = validationHelper ?? throw new ArgumentNullException(nameof(validationHelper));
+    }
+
+    public void LoadSemesterTree(string semesterPath, TreeView repositoryTreeView, string semesterMarkerFileName)
+    {
+        if (string.IsNullOrWhiteSpace(semesterPath) || !_fileSystemHelper.DirectoryExists(semesterPath))
         {
             repositoryTreeView.Nodes.Clear();
             return;
@@ -18,14 +34,13 @@ public static class TreeViewManager
         repositoryTreeView.BeginUpdate();
         repositoryTreeView.Nodes.Clear();
 
-        var rootNode = new TreeNode(Path.GetFileName(semesterPath))
+        var rootNode = new TreeNode(_pathProvider.GetFileName(semesterPath))
         {
             Tag = new NodeData(semesterPath, NodeType.Semester)
         };
 
         repositoryTreeView.Nodes.Add(rootNode);
         rootNode.Expand();
-
         LoadChildNodes(rootNode, semesterMarkerFileName);
 
         repositoryTreeView.EndUpdate();
@@ -33,13 +48,13 @@ public static class TreeViewManager
         // Apply validation coloring
         foreach (TreeNode root in repositoryTreeView.Nodes)
         {
-            ValidationHelper.ApplyNodeValidationColors(root);
+            _validationHelper.ApplyNodeValidationColors(root);
         }
     }
 
-    public static void LoadSubjectTree(string? currentSubjectPath, string? selectPath, TreeView repositoryTreeView, string semesterMarkerFileName)
+    public void LoadSubjectTree(string? currentSubjectPath, string? selectPath, TreeView repositoryTreeView, string semesterMarkerFileName)
     {
-        if (string.IsNullOrWhiteSpace(currentSubjectPath) || !Directory.Exists(currentSubjectPath))
+        if (string.IsNullOrWhiteSpace(currentSubjectPath) || !_fileSystemHelper.DirectoryExists(currentSubjectPath))
         {
             repositoryTreeView.Nodes.Clear();
             return;
@@ -48,7 +63,7 @@ public static class TreeViewManager
         repositoryTreeView.BeginUpdate();
         repositoryTreeView.Nodes.Clear();
 
-        var rootNode = new TreeNode(Path.GetFileName(currentSubjectPath))
+        var rootNode = new TreeNode(_pathProvider.GetFileName(currentSubjectPath))
         {
             Tag = new NodeData(currentSubjectPath, NodeType.Subject)
         };
@@ -72,42 +87,35 @@ public static class TreeViewManager
         // Apply validation coloring
         foreach (TreeNode root in repositoryTreeView.Nodes)
         {
-            ValidationHelper.ApplyNodeValidationColors(root);
+            _validationHelper.ApplyNodeValidationColors(root);
         }
     }
 
-    public static void LoadChildNodes(TreeNode parentNode, string semesterMarkerFileName)
+    public void LoadChildNodes(TreeNode parentNode, string semesterMarkerFileName)
     {
         if (parentNode?.Tag is not NodeData parentData)
-        {
             return;
-        }
 
         // Prevent duplicate loading
         if (parentNode.Nodes.Count > 0)
-        {
             return;
-        }
 
         try
         {
             var parentPath = parentData.Path;
-            if (!Directory.Exists(parentPath))
-            {
+            if (!_fileSystemHelper.DirectoryExists(parentPath))
                 return;
-            }
 
             var childNodeType = GetChildNodeType(parentData.NodeType);
 
-            foreach (var directory in Directory.GetDirectories(parentPath)
-                         .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
+            // Load directories
+            foreach (var directory in _fileSystemHelper.EnumerateDirectories(parentPath)
+                .OrderBy(d => _pathProvider.GetFileName(d), StringComparer.OrdinalIgnoreCase))
             {
-                if (string.Equals(Path.GetFileName(directory), VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
-                {
+                if (string.Equals(_pathProvider.GetFileName(directory), VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
                     continue;
-                }
 
-                var childNode = new TreeNode(Path.GetFileName(directory))
+                var childNode = new TreeNode(_pathProvider.GetFileName(directory))
                 {
                     Tag = new NodeData(directory, childNodeType)
                 };
@@ -115,15 +123,14 @@ public static class TreeViewManager
                 parentNode.Nodes.Add(childNode);
             }
 
-            foreach (var filePath in Directory.GetFiles(parentPath)
-                         .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase))
+            // Load files
+            foreach (var filePath in _fileSystemHelper.EnumerateFiles(parentPath)
+                .OrderBy(f => _pathProvider.GetFileName(f), StringComparer.OrdinalIgnoreCase))
             {
-                if (ValidationHelper.IsSystemManagedFile(filePath, semesterMarkerFileName))
-                {
+                if (_validationHelper.IsSystemManagedFile(filePath, semesterMarkerFileName))
                     continue;
-                }
 
-                parentNode.Nodes.Add(new TreeNode(Path.GetFileName(filePath))
+                parentNode.Nodes.Add(new TreeNode(_pathProvider.GetFileName(filePath))
                 {
                     Tag = new NodeData(filePath, NodeType.File)
                 });
@@ -131,15 +138,11 @@ public static class TreeViewManager
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                $"Unable to load the selected item.\n\n{ex.Message}",
-                "Load Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+            throw new InvalidOperationException("Unable to load the selected item.", ex);
         }
     }
 
-    public static TreeNode? FindNodeByPath(TreeNodeCollection nodes, string path)
+    public TreeNode? FindNodeByPath(TreeNodeCollection nodes, string path)
     {
         foreach (TreeNode node in nodes)
         {
@@ -159,7 +162,7 @@ public static class TreeViewManager
         return null;
     }
 
-    public static void EnsureParentChainExpanded(TreeNode node)
+    public void EnsureParentChainExpanded(TreeNode node)
     {
         var current = node.Parent;
         while (current is not null)

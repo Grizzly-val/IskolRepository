@@ -1,37 +1,51 @@
 using System.Windows.Forms;
-using IskolRepository.Models;
+using IskolRepository.Core.Interfaces.Infrastructure;
 
-namespace IskolRepository.Core;
+namespace IskolRepository.Core.Services.Infrastructure;
 
 /// <summary>
-/// Provides validation and color management for tree nodes and repository detection.
+/// Implementation of IValidationHelper.
 /// </summary>
-public static class ValidationHelper
+public class ValidationHelperService : IValidationHelper
 {
     private const string MetadataFileName = "metadata.json";
+    private static readonly string[] ValidStatuses = ["in-progress", "completed", "late"];
+    private readonly IFileSystemHelper _fileSystemHelper;
 
-    public static bool IsRepositoryFolder(string path)
+    public ValidationHelperService(IFileSystemHelper fileSystemHelper)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return false;
-        }
-
-        if (!Directory.Exists(path))
-        {
-            return false;
-        }
-
-        var metadataPath = Path.Combine(path, MetadataFileName);
-        return File.Exists(metadataPath);
+        _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
     }
 
-    public static bool IsInsideRepository(TreeNode node)
+    public bool IsRepositoryFolder(string path)
     {
-        if (node is null)
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        if (!_fileSystemHelper.DirectoryExists(path))
+            return false;
+
+        var metadataPath = Path.Combine(path, MetadataFileName);
+        return _fileSystemHelper.FileExists(metadataPath);
+    }
+
+    public bool IsValidName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
         {
             return false;
         }
+
+        var trimmedName = name.Trim();
+        return trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
+            && !trimmedName.EndsWith('.')
+            && !trimmedName.EndsWith(' ');
+    }
+
+    public bool IsInsideRepository(TreeNode node)
+    {
+        if (node is null)
+            return false;
 
         string? path = null;
         if (node.Tag is NodeData nd)
@@ -44,13 +58,10 @@ public static class ValidationHelper
         }
 
         if (string.IsNullOrWhiteSpace(path))
-        {
             return false;
-        }
 
-        // Start from the node's path. If it's a file, move to its directory.
         var currentPath = path;
-        if (File.Exists(currentPath))
+        if (_fileSystemHelper.FileExists(currentPath))
         {
             currentPath = Path.GetDirectoryName(currentPath);
         }
@@ -58,9 +69,7 @@ public static class ValidationHelper
         while (!string.IsNullOrWhiteSpace(currentPath))
         {
             if (IsRepositoryFolder(currentPath))
-            {
                 return true;
-            }
 
             currentPath = Path.GetDirectoryName(currentPath);
         }
@@ -68,12 +77,10 @@ public static class ValidationHelper
         return false;
     }
 
-    public static void ApplyNodeValidationColors(TreeNode node)
+    public void ApplyNodeValidationColors(TreeNode node)
     {
         if (node is null)
-        {
             return;
-        }
 
         node.ForeColor = IsInsideRepository(node) ? SystemColors.WindowText : Color.Red;
 
@@ -83,13 +90,13 @@ public static class ValidationHelper
         }
     }
 
-    public static bool IsValidStatus(string? status, string[] validStatuses)
+    public bool IsValidStatus(string? status)
     {
         return !string.IsNullOrWhiteSpace(status)
-            && validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
+            && ValidStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
     }
 
-    public static bool IsSystemManagedFile(string filePath, string semesterMarkerFileName)
+    public bool IsSystemManagedFile(string filePath, string semesterMarkerFileName)
     {
         var fileName = Path.GetFileName(filePath);
         return string.Equals(fileName, MetadataFileName, StringComparison.OrdinalIgnoreCase)

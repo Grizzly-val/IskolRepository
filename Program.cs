@@ -1,3 +1,4 @@
+using IskolRepository.Core;
 using IskolRepository.Forms;
 
 namespace IskolRepository;
@@ -13,6 +14,13 @@ static class Program
         // To customize application configuration such as set high DPI settings or default font,
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm());
+
+        // Bootstrap services
+        var services = ServiceFactory.CreateServices();
+
+        // Create MainForm with injected services
+        var mainForm = new MainForm(services);
+
+        Application.Run(mainForm);
     }    
 }
