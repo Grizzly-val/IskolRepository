@@ -32,7 +32,6 @@ partial class PromptDialog
     /// </summary>
     private void InitializeComponent()
     {
-        components = new System.ComponentModel.Container();
         promptLabel = new Label();
         inputTextBox = new TextBox();
         okButton = new Button();

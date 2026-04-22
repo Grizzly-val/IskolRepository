@@ -299,7 +299,7 @@ partial class MainForm
         // updateMetadataButton
         // 
         updateMetadataButton.Enabled = false;
-        updateMetadataButton.Location = new Point(748, 114);
+        updateMetadataButton.Location = new Point(760, 115);
         updateMetadataButton.Name = "updateMetadataButton";
         updateMetadataButton.Size = new Size(170, 30);
         updateMetadataButton.TabIndex = 8;
@@ -427,7 +427,7 @@ partial class MainForm
         // 
         // selectedPathValueLabel
         // 
-        selectedPathValueLabel.Location = new Point(520, 52);
+        selectedPathValueLabel.Location = new Point(326, 65);
         selectedPathValueLabel.Name = "selectedPathValueLabel";
         selectedPathValueLabel.Size = new Size(430, 28);
         selectedPathValueLabel.TabIndex = 6;
@@ -435,7 +435,7 @@ partial class MainForm
         // 
         // selectedPathLabel
         // 
-        selectedPathLabel.Location = new Point(520, 28);
+        selectedPathLabel.Location = new Point(326, 48);
         selectedPathLabel.Name = "selectedPathLabel";
         selectedPathLabel.Size = new Size(120, 20);
         selectedPathLabel.TabIndex = 5;
@@ -443,7 +443,7 @@ partial class MainForm
         // 
         // selectedSubjectValueLabel
         // 
-        selectedSubjectValueLabel.Location = new Point(0, 60);
+        selectedSubjectValueLabel.Location = new Point(0, 65);
         selectedSubjectValueLabel.Name = "selectedSubjectValueLabel";
         selectedSubjectValueLabel.Size = new Size(400, 20);
         selectedSubjectValueLabel.TabIndex = 4;
@@ -451,7 +451,7 @@ partial class MainForm
         // 
         // selectedSubjectLabel
         // 
-        selectedSubjectLabel.Location = new Point(0, 40);
+        selectedSubjectLabel.Location = new Point(0, 48);
         selectedSubjectLabel.Name = "selectedSubjectLabel";
         selectedSubjectLabel.Size = new Size(120, 20);
         selectedSubjectLabel.TabIndex = 3;

@@ -77,13 +77,43 @@ public class ValidationHelperService : IValidationHelper
         return false;
     }
 
+    /// <summary>
+    /// Determines if a node should be marked as invalid (red).
+    /// A node is invalid if it's a non-repository item directly under a Subject,
+    /// i.e., files or directories that should be inside repositories instead.
+    /// </summary>
+    private bool IsInvalidNode(TreeNode node)
+    {
+        if (node?.Tag is not NodeData nodeData)
+            return false;
+
+        // Subject folders and above are always valid
+        if (nodeData.NodeType == NodeType.Semester || nodeData.NodeType == NodeType.Subject)
+            return false;
+
+        // Get the parent node
+        var parentNode = node.Parent;
+        if (parentNode?.Tag is not NodeData parentData)
+            return false;
+
+        // Only mark as invalid if parent is Subject AND this is NOT a repository folder
+        if (parentData.NodeType == NodeType.Subject)
+        {
+            return !IsRepositoryFolder(nodeData.Path);
+        }
+
+        return false;
+    }
+
     public void ApplyNodeValidationColors(TreeNode node)
     {
         if (node is null)
             return;
 
-        node.ForeColor = IsInsideRepository(node) ? SystemColors.WindowText : Color.Red;
+        // Color the current node red if it's invalid
+        node.ForeColor = IsInvalidNode(node) ? Color.Red : SystemColors.WindowText;
 
+        // Recursively apply to all children
         foreach (TreeNode child in node.Nodes)
         {
             ApplyNodeValidationColors(child);
