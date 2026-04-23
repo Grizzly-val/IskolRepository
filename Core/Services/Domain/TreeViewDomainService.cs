@@ -130,9 +130,12 @@ public class TreeViewDomainService : ITreeViewDomainService
                 if (_validationHelper.IsSystemManagedFile(filePath, semesterMarkerFileName))
                     continue;
 
+                // Check if file is valid (inside a repository, not directly under subject)
+                var isValidFile = IsValidFileNode(parentNode, parentData);
+
                 parentNode.Nodes.Add(new TreeNode(_pathProvider.GetFileName(filePath))
                 {
-                    Tag = new NodeData(filePath, NodeType.File)
+                    Tag = new NodeData(filePath, NodeType.File, isValidFile)
                 });
             }
         }
@@ -182,5 +185,15 @@ public class TreeViewDomainService : ITreeViewDomainService
             NodeType.SubRepository => NodeType.SubRepository,
             _ => NodeType.File
         };
+    }
+
+    /// <summary>
+    /// Determines if a file node is valid.
+    /// A file is invalid if its parent is a Subject node (file directly under subject, outside any repository).
+    /// </summary>
+    private static bool IsValidFileNode(TreeNode parentNode, NodeData parentData)
+    {
+        // Files are valid if parent is not a Subject (files must be inside repositories or their subdirectories)
+        return parentData.NodeType != NodeType.Subject;
     }
 }

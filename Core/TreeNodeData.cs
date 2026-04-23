@@ -17,15 +17,22 @@ public enum NodeType
 /// </summary>
 public sealed class NodeData
 {
-    public NodeData(string path, NodeType nodeType)
+    public NodeData(string path, NodeType nodeType, bool isValidFile = true)
     {
         Path = path;
         NodeType = nodeType;
+        IsValidFile = isValidFile;
     }
 
     public string Path { get; }
 
     public NodeType NodeType { get; }
+
+    /// <summary>
+    /// Indicates if a File node is valid (inside a repository).
+    /// Only meaningful when NodeType is File. Defaults to true for non-File nodes.
+    /// </summary>
+    public bool IsValidFile { get; }
 }
 
 /// <summary>

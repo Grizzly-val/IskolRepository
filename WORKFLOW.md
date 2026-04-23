@@ -37,6 +37,92 @@ Application.Run(mainForm)
 
 ---
 
+## Validation & UI State Management
+
+### 1.5 **File Validation System**
+
+Files in the tree view are validated during tree construction to determine if they are valid or invalid:
+
+**Validation Logic:**
+```
+File Validation Check
+  ↓
+Is file's parent node a Subject?
+  ├─ YES: File is INVALID (directly under subject, outside any repository)
+  │  ├─ Mark as RED in tree view
+  │  ├─ Set NodeData.IsValidFile = false
+  │  └─ Cannot be opened, edited, or interacted with
+  │
+  └─ NO: File is VALID (inside repository or subrepo)
+     ├─ Mark as normal (black) in tree view
+     ├─ Set NodeData.IsValidFile = true
+     └─ Can be opened and edited normally
+```
+
+**Where Validation Happens:**
+- `TreeViewDomainService.LoadChildNodes()` - When building tree structure
+- `IsValidFileNode()` helper method - Determines validity based on parent node type
+
+**NodeData Enhancement:**
+- Added `IsValidFile` property (boolean)
+- Tracks validation status during tree construction
+- Default: `true` (backward compatible)
+
+---
+
+### 1.6 **Message Panel & Right Panel Visibility**
+
+The right side of MainForm now intelligently hides/shows content based on selection:
+
+**Right Panel Composition:**
+```
+Right Panel Contents
+  ├─ Message Panel (when no valid selection)
+  │  └─ Bold, prominent text with contextual message
+  ├─ Metadata GroupBox (repository deadline, status)
+  ├─ Files ListBox (files in repository)
+  └─ History Panel (version history)
+```
+
+**Message Panel Styling:**
+- **Font:** Segoe UI, 14pt, Bold (highly visible)
+- **Color:** Dark Gray (#5A5A5A) for excellent contrast
+- **Padding:** 20px for breathing room around text
+- **Alignment:** Centered both horizontally and vertically
+- **Area:** Fills entire right panel (394x512 pixels)
+- **Purpose:** Guide users to make valid selections
+
+**Visibility Rules:**
+```
+Selection Type          Message Panel    Content Panels
+─────────────────────────────────────────────────────
+No selection            VISIBLE          HIDDEN
+Semester selected       VISIBLE          HIDDEN
+Subject selected        VISIBLE          HIDDEN
+Invalid file selected   VISIBLE          HIDDEN
+Valid repository        HIDDEN           VISIBLE
+Valid file              HIDDEN           VISIBLE
+```
+
+**Message Display Logic:**
+```
+ShowMessage(message)
+  ├─ messageLabel.Text = message
+  ├─ messagePanel.Visible = true
+  ├─ metadataGroupBox.Visible = false
+  ├─ filesListView.Visible = false
+  ├─ historyPanel.Visible = false
+  └─ createFileButton.Enabled = false
+
+HideMessage()
+  ├─ messagePanel.Visible = false
+  ├─ metadataGroupBox.Visible = true
+  ├─ filesListView.Visible = true
+  └─ historyPanel.Visible = true
+```
+
+---
+
 ## Core Workflows
 
 ### 2. **Semester Management**
@@ -220,39 +306,53 @@ LoadSubjectTree(createdPath)
 #### 4.2 Select/Open Repository
 ```
 repositoryTreeView_AfterSelect(sender, TreeViewEventArgs)
-  ↓ User selects repository node in tree view
+  ↓ User selects node in tree view
 Extract TreeNode data (NodeData tag)
   ↓
-Check nodeData.NodeType
-  ├─ SEMESTER/SUBJECT: Clear file list, hide metadata
-  ├─ REPOSITORY: 
-  │  └─ SelectRepository(nodeData.Path)
-  │      ├─ Set selectedRepositoryPath
-  │      ├─ LoadFiles(repositoryPath)
-  │      │  └─ FileApplicationService.LoadFiles()
-  │      │     └─ FileDomainService.GetFiles()
-  │      │        ├─ Lists all files in repository
-  │      │        └─ Populates filesListView
-  │      ├─ LoadRepositoryMetadataUI(repositoryPath)
-  │      │  └─ RepositoryApplicationService.EnsureMetadata()
-  │      │     └─ RepositoryDomainService.EnsureMetadata()
-  │      │        ├─ Reads .repo.json
-  │      │        └─ Displays deadline, status in UI
-  │      └─ UpdateRepositoryUiState() - Enable metadata buttons
+Check nodeData.NodeType & nodeData.IsValidFile
+  ├─ SEMESTER/SUBJECT:
+  │  ├─ Clear file list, history, metadata
+  │  ├─ ShowMessage("Please select a repository")
+  │  └─ Hide right panel content
+  │
+  ├─ REPOSITORY:
+  │  ├─ SelectRepository(nodeData.Path)
+  │  │  ├─ Set selectedRepositoryPath
+  │  │  ├─ LoadFiles(repositoryPath)
+  │  │  ├─ LoadRepositoryMetadataUI(repositoryPath)
+  │  │  └─ UpdateRepositoryUiState()
+  │  ├─ HideMessage()
+  │  └─ Show right panel content
+  │
+  ├─ SUBREPOSITORY:
+  │  ├─ Same as Repository handling
+  │  ├─ HideMessage()
+  │  └─ Show right panel content
+  │
   └─ FILE:
-     ├─ Find repository root
-     ├─ SelectRepository(repoPath)
-     ├─ SelectFileInList(filePath)
-     ├─ Set selectedFilePath
-     └─ LoadVersionHistory(filePath)
-        └─ Display file versions in list
+     ├─ Check nodeData.IsValidFile
+     ├─ If FALSE (invalid file):
+     │  ├─ ShowMessage("File not under a repository / unknown activity")
+     │  ├─ Clear all selections
+     │  └─ Hide right panel content
+     ├─ If TRUE (valid file):
+     │  ├─ Find repository root
+     │  ├─ SelectRepository(repoPath)
+     │  ├─ LoadVersionHistory(filePath)
+     │  ├─ HideMessage()
+     │  └─ Show right panel content
+     └─ Return early if errors
 ```
 
-**Key Classes Involved:**
+**Key Changes:**
+- Added `nodeData.IsValidFile` check for File nodes
+- Invalid files trigger error message and hide content
+- Valid files proceed normally with content shown
+
+**Related Classes:**
 - `MainForm.repositoryTreeView_AfterSelect()`
-- `MainForm.SelectRepository()`
-- `FileApplicationService.LoadFiles()` - Lists repository files
-- `RepositoryApplicationService.EnsureMetadata()` - Loads repository metadata
+- `NodeData` - Now includes `IsValidFile` property
+- `ShowMessage()` / `HideMessage()` - New helper methods
 
 #### 4.3 Update Repository Metadata
 ```
@@ -333,33 +433,43 @@ _fileDomainService.CreateRepositoryFile(
 
 #### 5.2 Open File and Track Changes
 ```
-filesListView_DoubleClick(sender, e)
-  ↓ User double-clicks file in list
-  OR
+Double-click on file in tree or file list
+  ↓
 repositoryTreeView_NodeMouseDoubleClick(sender, e)
-  ↓ User double-clicks file node in tree
+  OR
+filesListView_DoubleClick(sender, e)
   ↓
-Extract file path from selected item
+Extract file path and NodeData
   ↓
-OpenFile(filePath)
-  ├─ Validate file exists
-  │  └─ If not: Show error, return
-  ├─ Create ProcessStartInfo
-  │  └─ UseShellExecute = true (use default application)
-  ├─ System.Diagnostics.Process.Start(filePath)
-  │  └─ Opens file in default application (Word, Excel, etc.)
-  ├─ Hook process exit event
-  │  ↓ When file is closed
-  │  └─ Trigger PromptAndSaveVersion(filePath)
-  │     └─ User prompted to save version
-  │        ├─ YES: _versionService.PromptAndSaveVersion()
-  │        └─ NO: Discard changes
+Check if it's a File node AND nodeData.IsValidFile
+  ├─ NOT a File type:
+  │  └─ Return (silent, do nothing)
+  │
+  ├─ Is a File BUT IsValidFile = false:
+  │  └─ Return (silent, prevent opening invalid files)
+  │
+  └─ Is a File AND IsValidFile = true:
+     └─ OpenFile(filePath)
+        ├─ Validate file exists
+        ├─ Create ProcessStartInfo (UseShellExecute = true)
+        ├─ Process.Start() - Opens in default application
+        ├─ Hook process.Exited event
+        │  ↓ When file is closed
+        │  └─ PromptAndSaveVersion()
+        │     ├─ User prompted: "Save as new version?"
+        │     ├─ YES: Create version snapshot
+        │     └─ NO: Discard changes
+        └─ Catch and display errors
 ```
 
-**Key Classes Involved:**
-- `MainForm.filesListView_DoubleClick()`
-- `MainForm.OpenFile()` - Launches file with default app
-- `MainForm.PromptAndSaveVersion()` - Saves version on close
+**New Behavior:**
+- Invalid files (outside repositories) CANNOT be opened
+- Double-clicking invalid file does nothing (silent block)
+- Only valid files under repositories can be edited
+
+**Related Classes:**
+- `MainForm.repositoryTreeView_NodeMouseDoubleClick()` - Prevents invalid file opening
+- `MainForm.OpenFile()` - Opens valid files only
 
 #### 5.3 File Selection in List
 ```
@@ -482,9 +592,61 @@ Show success message
 
 ---
 
-### 7. **TreeView Navigation**
+### 7. **TreeView Navigation & Validation**
 
-#### 7.1 Load Child Nodes (Lazy Loading)
+#### 7.1 Load Child Nodes with Validation (Lazy Loading)
+```
+repositoryTreeView_AfterSelect(sender, TreeViewEventArgs)
+  ↓ User selects tree node
+Extract TreeNode.Tag (NodeData)
+  ↓
+LoadChildNodes(selectedNode)
+  └─ TreeViewDomainService.LoadChildNodes()
+    ├─ Check if node already has children
+    ├─ If not: Scan folder for subdirectories/files
+    │
+    ├─ For each DIRECTORY:
+    │  ├─ Create TreeNode
+    │  ├─ Determine NodeType (Subject, Repository, etc.)
+    │  ├─ Create NodeData(path, nodeType, isValidFile=true)
+    │  └─ Add to parent node
+    │
+    └─ For each FILE:
+       ├─ Check IsValidFileNode(parentNode, parentData)
+       │  └─ Validation Rule:
+       │     ├─ parentData.NodeType == Subject?
+       │     ├─ YES: isValidFile = false (file directly under subject)
+       │     └─ NO: isValidFile = true (file in repo or subrepo)
+       │
+       ├─ Create NodeData(path, NodeType.File, isValidFile)
+       ├─ Set ForeColor:
+       │  ├─ isValidFile = true: SystemColors.WindowText (black/normal)
+       │  └─ isValidFile = false: Color.Red (invalid)
+       └─ Add to parent node
+```
+
+**Validation Method:**
+```csharp
+private static bool IsValidFileNode(TreeNode parentNode, NodeData parentData)
+{
+    // Files are valid if parent is NOT a Subject
+    return parentData.NodeType != NodeType.Subject;
+}
+```
+
+**Key Points:**
+- Validation happens DURING tree construction, not on selection
+- Invalid files are marked RED immediately
+- Valid files appear normal (black)
+- Red files cannot be opened or edited
+- Reduces runtime checks, improves performance
+
+**Related Classes:**
+- `MainForm.LoadChildNodes()`
+- `TreeViewDomainService.LoadChildNodes()` - Validates during load
+- `TreeViewDomainService.IsValidFileNode()` - Validation logic
+
+#### 7.2 Load Child Nodes (Lazy Loading)
 ```
 repositoryTreeView_AfterSelect(sender, TreeViewEventArgs)
   ↓ User selects tree node
@@ -527,7 +689,7 @@ Check if repositoryPath is set
   │  └─ ENABLE: updateMetadataButton
 ```
 
-**Key Classes Involved:**
+**Related Classes:**
 - `MainForm.UpdateRepositoryUiState()`
 
 #### 8.2 Update History UI State
@@ -545,8 +707,60 @@ Check if filePath is set
   │  └─ Update revertButton based on version selection
 ```
 
-**Key Classes Involved:**
+**Related Classes:**
 - `MainForm.UpdateHistoryUiState()`
+
+#### 8.3 Update Message Panel Visibility ⭐ NEW
+
+The right panel intelligently switches between showing the message panel and content panels based on selection validity.
+
+```
+ShowMessage(message)
+  ├─ Hide: metadataGroupBox, filesListView, historyPanel
+  ├─ Show: messagePanel (visible = true)
+  ├─ Set: messageLabel.Text = message
+  └─ Call: messagePanel.BringToFront()
+
+HideMessage()
+  ├─ Hide: messagePanel (visible = false)
+  └─ Show: metadataGroupBox, filesListView, historyPanel
+```
+
+**Message Panel Structure:**
+```
+Panel2 (contentSplitContainer.Panel2)
+  └─ messagePanel (Dock.Fill)
+      └─ messageLabel (Dock.Fill)
+          ├─ Font: Segoe UI, 14pt, Bold
+          ├─ Color: Dark Gray RGB(90, 90, 90)
+          ├─ Padding: 20px
+          └─ TextAlign: MiddleCenter
+```
+
+**Message Panel Visibility Logic:**
+- **Show:** When no valid selection, invalid file selected, or semester/subject selected
+- **Hide:** When valid repository or valid file selected
+- **Initial State:** Hidden (visible = false)
+- **Z-order:** Brings to front when shown to ensure visibility
+
+**Visual Behavior:**
+- Message panel and content panels are mutually exclusive (never both visible)
+- Message panel fills entire Panel2 area when visible
+- Clean switching between states without overlap
+- Message text is always readable and centered
+
+**When to Show:**
+- Semester or Subject selected: "Please select a repository"
+- Invalid file selected: "File not under a repository / unknown activity"
+- No selection or reset: "Please select a repository"
+
+**When to Hide:**
+- Valid repository selected
+- Valid file under repository selected
+
+**Related Classes:**
+- `MainForm.ShowMessage(string message)` - Shows message panel, hides content
+- `MainForm.HideMessage()` - Hides message panel, shows content
 
 ---
 
@@ -663,10 +877,16 @@ Semester/
 
 ## Key Data Models
 
-- `RepoMetadata` - Stores deadline, dateAdded, status
-- `FileVersion` - Represents a file snapshot with timestamp and metadata
-- `NodeData` - Tree node data with path and type (Semester, Subject, Repository, SubRepository, File)
-- `RepoCreationInfo` - Input from repository creation dialog
+- **RepoMetadata** - Stores deadline, dateAdded, status
+- **FileVersion** - Represents a file snapshot with timestamp and metadata
+- **NodeData** ⭐ ENHANCED - Tree node data with:
+  - `Path` - Full path to node
+  - `NodeType` - Type (Semester, Subject, Repository, SubRepository, File)
+  - `IsValidFile` - ⭐ NEW: Boolean flag indicating if file is valid (inside repo)
+    - Only meaningful when NodeType is File
+    - true = file inside repository (can be opened)
+    - false = file directly under subject (cannot be opened)
+- **RepoCreationInfo** - Input from repository creation dialog
 
 ---
 
@@ -698,4 +918,124 @@ All operations include try-catch blocks that:
 | **Create File** | `createFileButton_Click()` | FileDomainService | New file + `.versions` folder |
 | **Save Version** | `PromptAndSaveVersion()` | VersionDomainService | New version snapshot |
 | **Revert Version** | `revertButton_Click()` | VersionDomainService | File restored, newer versions deleted |
-| **Update Metadata** | `updateMetadataButton_Click()` | RepositoryDomainService | Updated `.repo.json` |
+
+---
+
+## ⭐ NEW: Invalid Files & UI Visibility Control
+
+### Overview
+Added validation system to prevent files created outside repositories from being edited or opened, while maintaining visibility in the tree view for reference. Right panel now intelligently shows/hides based on valid selection.
+
+### Features
+
+#### 1. File Validation During Tree Construction
+- **When:** During `TreeViewDomainService.LoadChildNodes()`
+- **Logic:** Files directly under Subject nodes are marked as INVALID
+- **Indicator:** RED text in tree view
+- **Storage:** `NodeData.IsValidFile` property
+
+#### 2. Invalid File Prevention
+- **Double-Click:** Does nothing (silent block)
+- **Selection:** Shows error message "File not under a repository / unknown activity"
+- **Editing:** Cannot be edited or interacted with
+- **Purpose:** Guides users to organize files in repositories
+
+#### 3. Right Panel Visibility Control
+- **Message Panel:** Shows contextual messages when no valid selection
+- **Content Panels:** Show only when valid repository or file is selected
+- **Messages:**
+  - "Please select a repository" - For semester/subject/no selection
+  - "File not under a repository / unknown activity" - For invalid files
+
+#### 4. User Experience Flow
+
+**Valid Repository Selected:**
+```
+User clicks repository in tree
+  ↓
+repositoryTreeView_AfterSelect() fires
+  ↓
+Check: NodeType = Repository? YES
+  ↓
+SelectRepository(path)
+  ├─ Load metadata
+  ├─ Load file list
+  └─ Load history
+  ↓
+HideMessage()
+  ├─ Show metadata panel
+  ├─ Show files list
+  └─ Show history panel
+  ↓
+User sees repository details and files
+```
+
+**Invalid File Selected:**
+```
+User clicks invalid file (RED) in tree
+  ↓
+repositoryTreeView_AfterSelect() fires
+  ↓
+Check: NodeType = File? YES
+Check: IsValidFile? NO
+  ↓
+ShowMessage("File not under a repository / unknown activity")
+  ├─ Hide metadata panel
+  ├─ Hide files list
+  └─ Hide history panel
+  ↓
+User sees error message, cannot interact with file
+```
+
+**Invalid File Double-Click:**
+```
+User double-clicks invalid file
+  ↓
+repositoryTreeView_NodeMouseDoubleClick() fires
+  ↓
+Check: NodeType = File? YES
+Check: IsValidFile? NO
+  ↓
+Return (do nothing)
+  ↓
+File cannot be opened (silent block)
+```
+
+### Technical Implementation
+
+**Changes Made:**
+1. `NodeData` - Added `IsValidFile` boolean property
+2. `TreeViewDomainService.LoadChildNodes()` - Validates files during tree load
+3. `TreeViewDomainService.IsValidFileNode()` - Determines file validity
+4. `MainForm.repositoryTreeView_AfterSelect()` - Checks `IsValidFile`, shows/hides content
+5. `MainForm.repositoryTreeView_NodeMouseDoubleClick()` - Prevents opening invalid files
+6. `MainForm.ShowMessage()` / `HideMessage()` - Manages message panel visibility
+7. `MainForm.Designer.cs` - Added message panel UI controls
+
+### Validation Rules
+
+```csharp
+// File is INVALID if:
+- Parent node type is Subject
+- File is directly under subject directory
+- Outside of any repository folder
+
+// File is VALID if:
+- Parent node type is Repository or SubRepository
+- File is inside a repository folder hierarchy
+```
+
+### Benefits
+
+✅ **User Guidance** - Messages prevent confusion  
+✅ **Error Prevention** - Cannot edit orphaned files  
+✅ **Visual Clarity** - Red text highlights invalid files  
+✅ **Clean UI** - Content hides when not relevant  
+✅ **Performance** - Validation during tree load, not on click  
+✅ **Maintainability** - Simple boolean flag, minimal changes  
+
+### Related Documentation
+
+- See `IMPLEMENTATION_SUMMARY.md` for detailed changes
+- See `VISUAL_GUIDE.md` for UI behavior and state diagrams
+- See `IMPLEMENTATION_APPROACH.md` for design decisions

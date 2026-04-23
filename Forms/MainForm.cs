@@ -43,6 +43,18 @@ public partial class MainForm : Form
         _validationService = services.ValidationService;
 
         InitializeComponent();
+
+        // Fix panel layering: messagePanel overlays filesListView (Panel1)
+        if (contentSplitContainer.Panel2.Controls.Contains(messagePanel))
+        {
+            contentSplitContainer.Panel2.Controls.Remove(messagePanel);
+        }
+        if (!contentSplitContainer.Panel1.Controls.Contains(messagePanel))
+        {
+            contentSplitContainer.Panel1.Controls.Add(messagePanel);
+            contentSplitContainer.Panel1.Controls.SetChildIndex(messagePanel, 0);
+        }
+
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
     }
@@ -370,9 +382,11 @@ public partial class MainForm : Form
                 ClearMetadataDisplay();
                 UpdateRepositoryUiState(null);
                 UpdateHistoryUiState(null);
+                ShowMessage("Please select a repository");
                 break;
             case NodeType.Repository:
                 SelectRepository(nodeData.Path);
+                HideMessage();
                 break;
             case NodeType.SubRepository:
                 selectedRepositoryPath = nodeData.Path;
@@ -382,8 +396,23 @@ public partial class MainForm : Form
                 ClearMetadataDisplay();
                 UpdateRepositoryUiState(nodeData.Path);
                 UpdateHistoryUiState(null);
+                HideMessage();
                 break;
             case NodeType.File:
+                // Check if file is valid (inside a repository)
+                if (!nodeData.IsValidFile)
+                {
+                    selectedRepositoryPath = null;
+                    selectedFilePath = null;
+                    filesListView.Items.Clear();
+                    versionsListBox.Items.Clear();
+                    ClearMetadataDisplay();
+                    UpdateRepositoryUiState(null);
+                    UpdateHistoryUiState(null);
+                    ShowMessage("File not under a repository / unknown activity");
+                    return;
+                }
+
                 var parentPath = Path.GetDirectoryName(nodeData.Path);
                 if (string.IsNullOrWhiteSpace(parentPath))
                 {
@@ -402,16 +431,21 @@ public partial class MainForm : Form
                 SelectFileInList(nodeData.Path);
                 selectedFilePath = nodeData.Path;
                 LoadVersionHistory(nodeData.Path);
+                HideMessage();
                 break;
         }
     }
 
     private void repositoryTreeView_NodeMouseDoubleClick(object? sender, TreeNodeMouseClickEventArgs e)
     {
-        if (e.Node is not null && e.Node.Tag is NodeData nodeData && nodeData.NodeType == NodeType.File)
-        {
-            OpenFile(nodeData.Path);
-        }
+        if (e.Node?.Tag is not NodeData nodeData || nodeData.NodeType != NodeType.File)
+            return;
+
+        // Prevent opening invalid files (files outside repositories)
+        if (!nodeData.IsValidFile)
+            return;
+
+        OpenFile(nodeData.Path);
     }
 
     private void filesListView_SelectedIndexChanged(object? sender, EventArgs e)
@@ -441,11 +475,6 @@ public partial class MainForm : Form
         }
 
         OpenFile(filePath);
-    }
-
-    private void viewHistoryButton_Click(object? sender, EventArgs e)
-    {
-        LoadVersionHistory(selectedFilePath);
     }
 
     private void versionsListBox_SelectedIndexChanged(object? sender, EventArgs e)
@@ -669,6 +698,7 @@ public partial class MainForm : Form
         ClearMetadataDisplay();
         UpdateRepositoryUiState(null);
         UpdateHistoryUiState(null);
+        ShowMessage("Please select a repository");
     }
 
     private void ShowStartupView()
@@ -801,11 +831,42 @@ public partial class MainForm : Form
     private void UpdateHistoryUiState(string? filePath)
     {
         var hasFile = !string.IsNullOrWhiteSpace(filePath);
-        viewHistoryButton.Enabled = hasFile;
         revertButton.Enabled = hasFile && versionsListBox.SelectedItem is not null;
         historyCaptionLabel.Text = hasFile
             ? $"Version History - {Path.GetFileName(filePath)}"
             : "Version History";
+    }
+
+    #endregion
+
+    #region Message Panel Management
+
+    /// <summary>
+    /// Shows the message panel on the right side and hides content panels.
+    /// </summary>
+    private void ShowMessage(string message)
+    {
+        messageLabel.Text = message;
+        messagePanel.Visible = true;
+
+        // Hide content
+        metadataGroupBox.Visible = false;
+        filesListView.Visible = false;
+        historyPanel.Visible = false;
+        createFileButton.Enabled = false;
+    }
+
+    /// <summary>
+    /// Hides the message panel and shows content panels.
+    /// </summary>
+    private void HideMessage()
+    {
+        messagePanel.Visible = false;
+
+        // Show content
+        metadataGroupBox.Visible = true;
+        filesListView.Visible = true;
+        historyPanel.Visible = true;
     }
 
     #endregion
@@ -830,4 +891,5 @@ public partial class MainForm : Form
     // They are imported via the IskolRepository.Core namespace
 
     #endregion
+
 }
