@@ -11,7 +11,7 @@ public interface IVersionDomainService
     /// <summary>
     /// Loads version history for a file.
     /// </summary>
-    void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel);
+    void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel, Label? noVersionsMessageLabel);
 
     /// <summary>
     /// Prompts user and saves a new version.

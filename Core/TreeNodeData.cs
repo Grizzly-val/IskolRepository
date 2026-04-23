@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace IskolRepository.Core;
 
 /// <summary>
@@ -19,10 +21,14 @@ public sealed class NodeData
 {
     public NodeData(string path, NodeType nodeType, bool isValidFile = true)
     {
+        
         Path = path;
+        FileName = System.IO.Path.GetFileName(path);
         NodeType = nodeType;
         IsValidFile = isValidFile;
     }
+
+    public string FileName { get; }
 
     public string Path { get; }
 

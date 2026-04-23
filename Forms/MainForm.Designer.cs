@@ -47,8 +47,8 @@ partial class MainForm
     private Label selectedPathLabel = null!;
     private Label selectedSubjectValueLabel = null!;
     private Label selectedSubjectLabel = null!;
-    private Panel messagePanel = null!;
-    private Label messageLabel = null!;
+    private Label noRepositoryMessageLabel = null!;
+    private Label noVersionsMessageLabel = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -66,13 +66,13 @@ partial class MainForm
         hostPanel = new Panel();
         workspacePanel = new Panel();
         contentSplitContainer = new SplitContainer();
-        messagePanel = new Panel();
-        messageLabel = new Label();
+        noRepositoryMessageLabel = new Label();
         filesListView = new ListView();
         fileNameColumn = new ColumnHeader();
         extensionColumn = new ColumnHeader();
         historyPanel = new Panel();
         versionsListBox = new ListBox();
+        noVersionsMessageLabel = new Label();
         historyCaptionLabel = new Label();
         revertButton = new Button();
         metadataGroupBox = new GroupBox();
@@ -117,7 +117,6 @@ partial class MainForm
         contentSplitContainer.Panel1.SuspendLayout();
         contentSplitContainer.Panel2.SuspendLayout();
         contentSplitContainer.SuspendLayout();
-        messagePanel.SuspendLayout();
         historyPanel.SuspendLayout();
         metadataGroupBox.SuspendLayout();
         workspaceHeaderPanel.SuspendLayout();
@@ -186,7 +185,7 @@ partial class MainForm
         // 
         // contentSplitContainer.Panel1
         // 
-        contentSplitContainer.Panel1.Controls.Add(messagePanel);
+        contentSplitContainer.Panel1.Controls.Add(noRepositoryMessageLabel);
         contentSplitContainer.Panel1.Controls.Add(filesListView);
         contentSplitContainer.Panel1.Padding = new Padding(0, 0, 8, 0);
         // 
@@ -198,27 +197,18 @@ partial class MainForm
         contentSplitContainer.SplitterDistance = 560;
         contentSplitContainer.TabIndex = 2;
         // 
-        // messagePanel
+        // noRepositoryMessageLabel
         // 
-        messagePanel.Controls.Add(messageLabel);
-        messagePanel.Dock = DockStyle.Fill;
-        messagePanel.Location = new Point(0, 0);
-        messagePanel.Name = "messagePanel";
-        messagePanel.Size = new Size(552, 512);
-        messagePanel.TabIndex = 1;
-        messagePanel.Visible = false;
-        // 
-        // messageLabel
-        // 
-        messageLabel.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-        messageLabel.ForeColor = Color.FromArgb(90, 90, 90);
-        messageLabel.Location = new Point(0, 0);
-        messageLabel.Name = "messageLabel";
-        messageLabel.Padding = new Padding(20);
-        messageLabel.Size = new Size(294, 512);
-        messageLabel.TabIndex = 0;
-        messageLabel.Text = "Please select a repository";
-        messageLabel.TextAlign = ContentAlignment.MiddleCenter;
+        noRepositoryMessageLabel.Dock = DockStyle.Fill;
+        noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular);
+        noRepositoryMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
+        noRepositoryMessageLabel.Location = new Point(0, 0);
+        noRepositoryMessageLabel.Name = "noRepositoryMessageLabel";
+        noRepositoryMessageLabel.Size = new Size(552, 512);
+        noRepositoryMessageLabel.TabIndex = 1;
+        noRepositoryMessageLabel.Text = "Please select an Activity Repository";
+        noRepositoryMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
+        noRepositoryMessageLabel.Visible = false;
         // 
         // filesListView
         // 
@@ -245,9 +235,10 @@ partial class MainForm
         // 
         extensionColumn.Text = "Extension";
         extensionColumn.Width = 120;
-        // 
+        //
         // historyPanel
         // 
+        historyPanel.Controls.Add(noVersionsMessageLabel);
         historyPanel.Controls.Add(versionsListBox);
         historyPanel.Controls.Add(historyCaptionLabel);
         historyPanel.Controls.Add(revertButton);
@@ -267,6 +258,19 @@ partial class MainForm
         versionsListBox.Size = new Size(394, 452);
         versionsListBox.TabIndex = 1;
         versionsListBox.SelectedIndexChanged += versionsListBox_SelectedIndexChanged;
+        // 
+        // noVersionsMessageLabel
+        // 
+        noVersionsMessageLabel.Dock = DockStyle.Fill;
+        noVersionsMessageLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular);
+        noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
+        noVersionsMessageLabel.Location = new Point(0, 0);
+        noVersionsMessageLabel.Name = "noVersionsMessageLabel";
+        noVersionsMessageLabel.Size = new Size(394, 452);
+        noVersionsMessageLabel.TabIndex = 1;
+        noVersionsMessageLabel.Text = "No versions available";
+        noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
+        noVersionsMessageLabel.Visible = false;
         // 
         // historyCaptionLabel
         // 
@@ -626,7 +630,6 @@ partial class MainForm
         contentSplitContainer.Panel2.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)contentSplitContainer).EndInit();
         contentSplitContainer.ResumeLayout(false);
-        messagePanel.ResumeLayout(false);
         historyPanel.ResumeLayout(false);
         metadataGroupBox.ResumeLayout(false);
         workspaceHeaderPanel.ResumeLayout(false);

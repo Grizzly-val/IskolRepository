@@ -44,17 +44,6 @@ public partial class MainForm : Form
 
         InitializeComponent();
 
-        // Fix panel layering: messagePanel overlays filesListView (Panel1)
-        if (contentSplitContainer.Panel2.Controls.Contains(messagePanel))
-        {
-            contentSplitContainer.Panel2.Controls.Remove(messagePanel);
-        }
-        if (!contentSplitContainer.Panel1.Controls.Contains(messagePanel))
-        {
-            contentSplitContainer.Panel1.Controls.Add(messagePanel);
-            contentSplitContainer.Panel1.Controls.SetChildIndex(messagePanel, 0);
-        }
-
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
     }
@@ -409,7 +398,7 @@ public partial class MainForm : Form
                     ClearMetadataDisplay();
                     UpdateRepositoryUiState(null);
                     UpdateHistoryUiState(null);
-                    ShowMessage("File not under a repository / unknown activity");
+                    ShowMessage($"File \"{nodeData.FileName}\" not under a repository / unknown activity");
                     return;
                 }
 
@@ -784,7 +773,7 @@ public partial class MainForm : Form
 
     private void LoadVersionHistory(string? filePath)
     {
-        _versionService.LoadVersionHistory(filePath, versionsListBox, historyCaptionLabel);
+        _versionService.LoadVersionHistory(filePath, versionsListBox, historyCaptionLabel, noVersionsMessageLabel);
         UpdateHistoryUiState(filePath);
     }
 
@@ -842,31 +831,22 @@ public partial class MainForm : Form
     #region Message Panel Management
 
     /// <summary>
-    /// Shows the message panel on the right side and hides content panels.
+    /// Shows the repository message label and hides file list.
     /// </summary>
     private void ShowMessage(string message)
     {
-        messageLabel.Text = message;
-        messagePanel.Visible = true;
-
-        // Hide content
-        metadataGroupBox.Visible = false;
+        noRepositoryMessageLabel.Text = message;
+        noRepositoryMessageLabel.Visible = true;
         filesListView.Visible = false;
-        historyPanel.Visible = false;
-        createFileButton.Enabled = false;
     }
 
     /// <summary>
-    /// Hides the message panel and shows content panels.
+    /// Hides the repository message label and shows file list.
     /// </summary>
     private void HideMessage()
     {
-        messagePanel.Visible = false;
-
-        // Show content
-        metadataGroupBox.Visible = true;
+        noRepositoryMessageLabel.Visible = false;
         filesListView.Visible = true;
-        historyPanel.Visible = true;
     }
 
     #endregion

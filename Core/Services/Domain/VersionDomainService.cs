@@ -16,8 +16,7 @@ public class VersionDomainService : IVersionDomainService
     {
         _jsonOptions = jsonOptions ?? throw new ArgumentNullException(nameof(jsonOptions));
     }
-
-    public void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel)
+    public void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel, Label? noVersionsMessageLabel = null)
     {
         versionsListBox.Items.Clear();
 
@@ -29,7 +28,11 @@ public class VersionDomainService : IVersionDomainService
         }
 
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            if (noVersionsMessageLabel != null)
+                noVersionsMessageLabel.Visible = false;
             return;
+        }
 
         try
         {
@@ -44,6 +47,12 @@ public class VersionDomainService : IVersionDomainService
                 {
                     versionsListBox.Items.Add(new FileVersion(version.Version, version.Timestamp, version.Comment, snapshotPath));
                 }
+            }
+
+            // Show/hide the no versions message based on whether items exist
+            if (noVersionsMessageLabel != null)
+            {
+                noVersionsMessageLabel.Visible = versionsListBox.Items.Count == 0;
             }
         }
         catch (Exception ex)
