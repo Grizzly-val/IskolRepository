@@ -5,12 +5,15 @@ namespace IskolRepository.Core;
 
 public static class VersionHelper
 {
+    public const string MetadataFolderName = ".metadata";
     public const string HistoryFolderName = ".history";
 
     public static void SaveVersion(string filePath, string comment, JsonSerializerOptions jsonOptions)
     {
         var historyFolder = GetHistoryFolderPath(filePath);
         Directory.CreateDirectory(historyFolder);
+
+        EnsureMetadataFolderHidden(filePath);
 
         var versions = ReadVersionLogByHistoryFolder(historyFolder, jsonOptions);
         var nextVersion = versions.Count == 0 ? 1 : versions.Max(v => v.Version) + 1;
@@ -55,7 +58,7 @@ public static class VersionHelper
         var repositoryPath = Path.GetDirectoryName(filePath)
             ?? throw new InvalidOperationException("File path is missing a parent repository.");
 
-        return Path.Combine(repositoryPath, HistoryFolderName, Path.GetFileNameWithoutExtension(filePath));
+        return Path.Combine(repositoryPath, MetadataFolderName, HistoryFolderName, Path.GetFileNameWithoutExtension(filePath));
     }
 
     private static List<FileVersion> ReadVersionLogByHistoryFolder(string historyFolder, JsonSerializerOptions jsonOptions)
@@ -89,6 +92,24 @@ public static class VersionHelper
             {
                 File.Delete(snapshotPath);
             }
+        }
+    }
+
+    private static void EnsureMetadataFolderHidden(string filePath)
+    {
+        var repositoryPath = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrWhiteSpace(repositoryPath))
+        {
+            return;
+        }
+
+        var metadataFolder = Path.Combine(repositoryPath, MetadataFolderName);
+        Directory.CreateDirectory(metadataFolder);
+
+        if (Directory.Exists(metadataFolder))
+        {
+            var dirInfo = new DirectoryInfo(metadataFolder);
+            dirInfo.Attributes |= FileAttributes.Hidden;
         }
     }
 }

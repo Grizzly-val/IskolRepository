@@ -112,10 +112,12 @@ public class TreeViewDomainService : ITreeViewDomainService
             foreach (var directory in _fileSystemHelper.EnumerateDirectories(parentPath)
                 .OrderBy(d => _pathProvider.GetFileName(d), StringComparer.OrdinalIgnoreCase))
             {
-                if (string.Equals(_pathProvider.GetFileName(directory), VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
+                var directoryName = _pathProvider.GetFileName(directory);
+                if (string.Equals(directoryName, RepositoryDomainService.MetadataFolderName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(directoryName, VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var childNode = new TreeNode(_pathProvider.GetFileName(directory))
+                var childNode = new TreeNode(directoryName)
                 {
                     Tag = new NodeData(directory, childNodeType)
                 };

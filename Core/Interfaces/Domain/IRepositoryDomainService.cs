@@ -31,7 +31,7 @@ public interface IRepositoryDomainService
     /// <summary>
     /// Creates a new repository with initial metadata.
     /// </summary>
-    /// <returns>Path to the created repository</returns>
+    /// <returns>Path to the created repository</returns>d
     string CreateRepository(string subjectPath, string repositoryName, DateTime deadline);
 
     /// <summary>

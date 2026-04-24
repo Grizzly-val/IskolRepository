@@ -10,6 +10,7 @@ namespace IskolRepository.Core.Services.Domain;
 /// </summary>
 public class VersionDomainService : IVersionDomainService
 {
+    private static readonly string[] SupportedVersionExtensions = [".txt", ".docx"];
     private readonly System.Text.Json.JsonSerializerOptions _jsonOptions;
 
     public VersionDomainService(System.Text.Json.JsonSerializerOptions jsonOptions)
@@ -86,6 +87,42 @@ public class VersionDomainService : IVersionDomainService
         {
             throw new InvalidOperationException("Unable to save the file version.", ex);
         }
+    }
+
+    public bool IsSupportedVersionFileType(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return false;
+
+        var extension = Path.GetExtension(filePath);
+        return SupportedVersionExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public bool CanSaveVersion(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            return false;
+
+        if (!IsSupportedVersionFileType(filePath))
+            return false;
+
+        var historyFolder = VersionHelper.GetHistoryFolderPath(filePath);
+        var logEntries = VersionHelper.ReadVersionLog(filePath, _jsonOptions);
+        if (logEntries.Count == 0)
+            return true;
+
+        var latestVersion = logEntries.MaxBy(v => v.Version);
+        if (latestVersion is null)
+            return true;
+
+        var extension = Path.GetExtension(filePath);
+        var latestSnapshotPath = Path.Combine(historyFolder, $"v{latestVersion.Version}{extension}");
+        if (!File.Exists(latestSnapshotPath))
+            return true;
+
+        var currentWriteTime = File.GetLastWriteTime(filePath);
+        var latestSnapshotWriteTime = File.GetLastWriteTime(latestSnapshotPath);
+        return currentWriteTime != latestSnapshotWriteTime;
     }
 
     public void RevertToVersion(string filePath, FileVersion selectedVersion)

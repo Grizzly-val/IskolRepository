@@ -30,6 +30,7 @@ partial class MainForm
     private Label historyCaptionLabel = null!;
     private Button revertButton = null!;
     private GroupBox metadataGroupBox = null!;
+    private Button saveVersionButton = null!;
     private Button updateMetadataButton = null!;
     private ComboBox statusComboBox = null!;
     private Label statusLabel = null!;
@@ -71,11 +72,12 @@ partial class MainForm
         fileNameColumn = new ColumnHeader();
         extensionColumn = new ColumnHeader();
         historyPanel = new Panel();
-        versionsListBox = new ListBox();
         noVersionsMessageLabel = new Label();
+        versionsListBox = new ListBox();
         historyCaptionLabel = new Label();
         revertButton = new Button();
         metadataGroupBox = new GroupBox();
+        saveVersionButton = new Button();
         updateMetadataButton = new Button();
         statusComboBox = new ComboBox();
         statusLabel = new Label();
@@ -200,7 +202,7 @@ partial class MainForm
         // noRepositoryMessageLabel
         // 
         noRepositoryMessageLabel.Dock = DockStyle.Fill;
-        noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular);
+        noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F);
         noRepositoryMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
         noRepositoryMessageLabel.Location = new Point(0, 0);
         noRepositoryMessageLabel.Name = "noRepositoryMessageLabel";
@@ -235,7 +237,7 @@ partial class MainForm
         // 
         extensionColumn.Text = "Extension";
         extensionColumn.Width = 120;
-        //
+        // 
         // historyPanel
         // 
         historyPanel.Controls.Add(noVersionsMessageLabel);
@@ -248,6 +250,19 @@ partial class MainForm
         historyPanel.Size = new Size(394, 512);
         historyPanel.TabIndex = 0;
         // 
+        // noVersionsMessageLabel
+        // 
+        noVersionsMessageLabel.Dock = DockStyle.Fill;
+        noVersionsMessageLabel.Font = new Font("Segoe UI", 12F);
+        noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
+        noVersionsMessageLabel.Location = new Point(0, 0);
+        noVersionsMessageLabel.Name = "noVersionsMessageLabel";
+        noVersionsMessageLabel.Size = new Size(394, 452);
+        noVersionsMessageLabel.TabIndex = 1;
+        noVersionsMessageLabel.Text = "No versions available";
+        noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
+        noVersionsMessageLabel.Visible = false;
+        // 
         // versionsListBox
         // 
         versionsListBox.Dock = DockStyle.Fill;
@@ -258,19 +273,6 @@ partial class MainForm
         versionsListBox.Size = new Size(394, 452);
         versionsListBox.TabIndex = 1;
         versionsListBox.SelectedIndexChanged += versionsListBox_SelectedIndexChanged;
-        // 
-        // noVersionsMessageLabel
-        // 
-        noVersionsMessageLabel.Dock = DockStyle.Fill;
-        noVersionsMessageLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular);
-        noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
-        noVersionsMessageLabel.Location = new Point(0, 0);
-        noVersionsMessageLabel.Name = "noVersionsMessageLabel";
-        noVersionsMessageLabel.Size = new Size(394, 452);
-        noVersionsMessageLabel.TabIndex = 1;
-        noVersionsMessageLabel.Text = "No versions available";
-        noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
-        noVersionsMessageLabel.Visible = false;
         // 
         // historyCaptionLabel
         // 
@@ -296,6 +298,7 @@ partial class MainForm
         // 
         // metadataGroupBox
         // 
+        metadataGroupBox.Controls.Add(saveVersionButton);
         metadataGroupBox.Controls.Add(updateMetadataButton);
         metadataGroupBox.Controls.Add(statusComboBox);
         metadataGroupBox.Controls.Add(statusLabel);
@@ -313,13 +316,24 @@ partial class MainForm
         metadataGroupBox.TabStop = false;
         metadataGroupBox.Text = "Repository Metadata";
         // 
+        // saveVersionButton
+        // 
+        saveVersionButton.Enabled = false;
+        saveVersionButton.Location = new Point(760, 51);
+        saveVersionButton.Name = "saveVersionButton";
+        saveVersionButton.Size = new Size(170, 30);
+        saveVersionButton.TabIndex = 8;
+        saveVersionButton.Text = "Select a file to save a version of";
+        saveVersionButton.UseVisualStyleBackColor = true;
+        saveVersionButton.Click += saveVersionButton_Click;
+        // 
         // updateMetadataButton
         // 
         updateMetadataButton.Enabled = false;
         updateMetadataButton.Location = new Point(760, 115);
         updateMetadataButton.Name = "updateMetadataButton";
         updateMetadataButton.Size = new Size(170, 30);
-        updateMetadataButton.TabIndex = 8;
+        updateMetadataButton.TabIndex = 9;
         updateMetadataButton.Text = "Update Metadata";
         updateMetadataButton.UseVisualStyleBackColor = true;
         updateMetadataButton.Click += updateMetadataButton_Click;

@@ -1,5 +1,6 @@
-using System.Windows.Forms;
 using IskolRepository.Core.Interfaces.Infrastructure;
+using IskolRepository.Core.Services.Domain;
+using System.Windows.Forms;
 
 namespace IskolRepository.Core.Services.Infrastructure;
 
@@ -8,7 +9,6 @@ namespace IskolRepository.Core.Services.Infrastructure;
 /// </summary>
 public class ValidationHelperService : IValidationHelper
 {
-    private const string MetadataFileName = "metadata.json";
     private static readonly string[] ValidStatuses = ["in-progress", "completed", "late"];
     private readonly IFileSystemHelper _fileSystemHelper;
 
@@ -25,7 +25,10 @@ public class ValidationHelperService : IValidationHelper
         if (!_fileSystemHelper.DirectoryExists(path))
             return false;
 
-        var metadataPath = Path.Combine(path, MetadataFileName);
+        var metadataPath = Path.Combine(
+            path,
+            RepositoryDomainService.MetadataFolderName,
+            RepositoryDomainService.MetadataFileName);
         return _fileSystemHelper.FileExists(metadataPath);
     }
 
@@ -129,7 +132,11 @@ public class ValidationHelperService : IValidationHelper
     public bool IsSystemManagedFile(string filePath, string semesterMarkerFileName)
     {
         var fileName = Path.GetFileName(filePath);
-        return string.Equals(fileName, MetadataFileName, StringComparison.OrdinalIgnoreCase)
+        var parentFolderName = Path.GetFileName(Path.GetDirectoryName(filePath) ?? string.Empty);
+        var isMetadataJson = string.Equals(fileName, RepositoryDomainService.MetadataFileName, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(parentFolderName, RepositoryDomainService.MetadataFolderName, StringComparison.OrdinalIgnoreCase);
+
+        return isMetadataJson
             || string.Equals(fileName, semesterMarkerFileName, StringComparison.OrdinalIgnoreCase);
     }
 }

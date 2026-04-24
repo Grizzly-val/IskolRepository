@@ -453,12 +453,6 @@ Check if it's a File node AND nodeData.IsValidFile
         ├─ Validate file exists
         ├─ Create ProcessStartInfo (UseShellExecute = true)
         ├─ Process.Start() - Opens in default application
-        ├─ Hook process.Exited event
-        │  ↓ When file is closed
-        │  └─ PromptAndSaveVersion()
-        │     ├─ User prompted: "Save as new version?"
-        │     ├─ YES: Create version snapshot
-        │     └─ NO: Discard changes
         └─ Catch and display errors
 ```
 
@@ -526,24 +520,33 @@ UpdateHistoryUiState(filePath)
 
 #### 6.2 Save New Version
 ```
-PromptAndSaveVersion(filePath)
-  ↓ Called when file process exits
-_versionService.PromptAndSaveVersion(
-    filePath, 
-    selectedFilePath, 
-    versionsListBox)
-  └─ VersionDomainService.PromptAndSaveVersion()
-    ├─ User prompted: "Save changes as new version?"
-    ├─ YES:
-    │  ├─ Copy current file → {filePath}/.versions/v{n}
-    │  ├─ Store metadata (timestamp, file size)
-    │  └─ Update versionsListBox
-    └─ NO:
-       └─ Discard changes (user keeps old version)
+User selects file in tree/list
+  ↓
+Save Version button text updates:
+  ├─ Selected file: "Save version for {FileName}"
+  └─ No file: "Select a file to save a version of"
+  ↓
+saveVersionButton_Click(sender, e)
+  ↓
+_versionService.CanSaveVersion(filePath)
+  ├─ FALSE: keep button disabled
+  └─ TRUE: continue
+  ↓
+_versionService.PromptAndSaveVersion(filePath, selectedFilePath, versionsListBox)
+  ├─ User enters version comment
+  ├─ Save snapshot to history path
+  └─ Reload version list
+  
+Eligibility rules:
+  1) A file is selected
+  2) File extension is supported (.txt, .docx)
+  3) LastWriteTime(file) differs from last saved snapshot
 ```
 
 **Key Classes Involved:**
-- `MainForm.PromptAndSaveVersion()`
+- `MainForm.saveVersionButton_Click()`
+- `MainForm.UpdateSaveVersionButtonState()`
+- `VersionDomainService.CanSaveVersion()`
 - `VersionDomainService.PromptAndSaveVersion()` - Manages versioning
 
 #### 6.3 Revert to Previous Version
@@ -916,7 +919,7 @@ All operations include try-catch blocks that:
 | **Create Subject** | `addSubjectButton_Click()` | SubjectDomainService | New subject folder |
 | **Create Repository** | `createRepositoryButton_Click()` | RepositoryDomainService | New repo with `.repo.json` |
 | **Create File** | `createFileButton_Click()` | FileDomainService | New file + `.versions` folder |
-| **Save Version** | `PromptAndSaveVersion()` | VersionDomainService | New version snapshot |
+| **Save Version** | `saveVersionButton_Click()` | VersionDomainService | New version snapshot |
 | **Revert Version** | `revertButton_Click()` | VersionDomainService | File restored, newer versions deleted |
 
 ---

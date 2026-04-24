@@ -10,7 +10,9 @@ namespace IskolRepository.Core.Services.Domain;
 /// </summary>
 public class RepositoryDomainService : IRepositoryDomainService
 {
-    private const string MetadataFileName = "metadata.json";
+    public const string MetadataFolderName = ".metadata";
+    public const string MetadataFileName = "metadata.json";
+
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IValidationHelper _validationHelper;
     private readonly IPathProvider _pathProvider;
@@ -33,7 +35,8 @@ public class RepositoryDomainService : IRepositoryDomainService
 
     public RepoMetadata EnsureMetadata(string repositoryPath)
     {
-        var metadataPath = _pathProvider.CombinePaths(repositoryPath, MetadataFileName);
+        var metadataPath = GetMetadataFilePath(repositoryPath);
+        EnsureMetadataFolder(repositoryPath);
         
         if (!_fileSystemHelper.FileExists(metadataPath))
         {
@@ -65,7 +68,8 @@ public class RepositoryDomainService : IRepositoryDomainService
         if (!_validationHelper.IsValidStatus(metadata.Status))
             throw new InvalidOperationException("Metadata status is invalid.");
 
-        var metadataPath = _pathProvider.CombinePaths(repositoryPath, MetadataFileName);
+        EnsureMetadataFolder(repositoryPath);
+        var metadataPath = GetMetadataFilePath(repositoryPath);
         var json = System.Text.Json.JsonSerializer.Serialize(metadata, _jsonOptions);
         _fileSystemHelper.WriteAllText(metadataPath, json);
     }
@@ -118,5 +122,30 @@ public class RepositoryDomainService : IRepositoryDomainService
         metadata.Deadline = deadline;
         metadata.Status = status;
         SaveMetadata(repositoryPath, metadata);
+    }
+
+    private string GetMetadataFolderPath(string repositoryPath)
+    {
+        return _pathProvider.CombinePaths(repositoryPath, MetadataFolderName);
+    }
+
+    private string GetMetadataFilePath(string repositoryPath)
+    {
+        return _pathProvider.CombinePaths(GetMetadataFolderPath(repositoryPath), MetadataFileName);
+    }
+
+    private void EnsureMetadataFolder(string repositoryPath)
+    {
+        var metadataFolderPath = GetMetadataFolderPath(repositoryPath);
+        if (!_fileSystemHelper.DirectoryExists(metadataFolderPath))
+        {
+            _fileSystemHelper.CreateDirectory(metadataFolderPath);
+        }
+
+        if (Directory.Exists(metadataFolderPath))
+        {
+            var dirInfo = new DirectoryInfo(metadataFolderPath);
+            dirInfo.Attributes |= FileAttributes.Hidden;
+        }
     }
 }

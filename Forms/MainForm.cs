@@ -46,6 +46,7 @@ public partial class MainForm : Form
 
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
+        UpdateSaveVersionButtonState();
     }
 
     #region Event Handlers
@@ -248,6 +249,7 @@ public partial class MainForm : Form
                 repositoryInput.Deadline.Date);
 
             LoadSubjectTree(createdPath);
+
         }
         catch (Exception ex)
         {
@@ -297,6 +299,7 @@ public partial class MainForm : Form
         }
 
         _fileDomainService.CreateRepositoryFile(selectedRepositoryPath, fileName.Trim(), extension, out string? error);
+        LoadSubjectTree(selectedRepositoryPath);
     }
 
     private void updateMetadataButton_Click(object? sender, EventArgs e)
@@ -342,6 +345,44 @@ public partial class MainForm : Form
             MessageBox.Show(
                 $"Unable to update metadata.\n\n{ex.Message}",
                 "Metadata Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
+    private void saveVersionButton_Click(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(selectedFilePath))
+        {
+            MessageBox.Show(
+                "Please select a file first.",
+                "No File Selected",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (!_versionService.CanSaveVersion(selectedFilePath))
+        {
+            MessageBox.Show(
+                "This file is not eligible for saving a new version yet.",
+                "Version Save Not Available",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        try
+        {
+            _versionService.PromptAndSaveVersion(selectedFilePath, selectedFilePath, versionsListBox);
+            LoadVersionHistory(selectedFilePath);
+            UpdateSaveVersionButtonState();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Unable to save a new version.\n\n{ex.Message}",
+                "Save Version Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
@@ -728,24 +769,10 @@ public partial class MainForm : Form
 
         try
         {
-            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
             {
                 UseShellExecute = true
             });
-
-            if (process is not null)
-            {
-                process.EnableRaisingEvents = true;
-                process.Exited += (_, _) =>
-                {
-                    if (!IsHandleCreated)
-                    {
-                        return;
-                    }
-
-                    BeginInvoke(new Action(() => PromptAndSaveVersion(filePath)));
-                };
-            }
         }
         catch (Exception ex)
         {
@@ -775,11 +802,6 @@ public partial class MainForm : Form
     {
         _versionService.LoadVersionHistory(filePath, versionsListBox, historyCaptionLabel, noVersionsMessageLabel);
         UpdateHistoryUiState(filePath);
-    }
-
-    private void PromptAndSaveVersion(string filePath)
-    {
-        _versionService.PromptAndSaveVersion(filePath, selectedFilePath, versionsListBox);
     }
 
     #endregion
@@ -815,6 +837,7 @@ public partial class MainForm : Form
         deadlineDateTimePicker.Enabled = hasRepository;
         statusComboBox.Enabled = hasRepository;
         updateMetadataButton.Enabled = hasRepository;
+        UpdateSaveVersionButtonState();
     }
 
     private void UpdateHistoryUiState(string? filePath)
@@ -824,6 +847,21 @@ public partial class MainForm : Form
         historyCaptionLabel.Text = hasFile
             ? $"Version History - {Path.GetFileName(filePath)}"
             : "Version History";
+        UpdateSaveVersionButtonState();
+    }
+
+    private void UpdateSaveVersionButtonState()
+    {
+        if (string.IsNullOrWhiteSpace(selectedFilePath))
+        {
+            saveVersionButton.Text = "Select a file to save a version of";
+            saveVersionButton.Enabled = false;
+            return;
+        }
+
+        var fileName = Path.GetFileName(selectedFilePath);
+        saveVersionButton.Text = $"Save version for {fileName}";
+        saveVersionButton.Enabled = _versionService.CanSaveVersion(selectedFilePath);
     }
 
     #endregion
