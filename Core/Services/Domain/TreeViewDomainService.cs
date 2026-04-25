@@ -36,7 +36,9 @@ public class TreeViewDomainService : ITreeViewDomainService
 
         var rootNode = new TreeNode(_pathProvider.GetFileName(semesterPath))
         {
-            Tag = new NodeData(semesterPath, NodeType.Semester)
+            Tag = new NodeData(semesterPath, NodeType.Semester),
+            ImageKey = GetIconKey(NodeType.Semester),
+            SelectedImageKey = GetIconKey(NodeType.Semester)
         };
 
         repositoryTreeView.Nodes.Add(rootNode);
@@ -65,7 +67,9 @@ public class TreeViewDomainService : ITreeViewDomainService
 
         var rootNode = new TreeNode(_pathProvider.GetFileName(currentSubjectPath))
         {
-            Tag = new NodeData(currentSubjectPath, NodeType.Subject)
+            Tag = new NodeData(currentSubjectPath, NodeType.Subject),
+            ImageKey = GetIconKey(NodeType.Subject),
+            SelectedImageKey = GetIconKey(NodeType.Subject)
         };
 
         repositoryTreeView.Nodes.Add(rootNode);
@@ -119,7 +123,9 @@ public class TreeViewDomainService : ITreeViewDomainService
 
                 var childNode = new TreeNode(directoryName)
                 {
-                    Tag = new NodeData(directory, childNodeType)
+                    Tag = new NodeData(directory, childNodeType),
+                    ImageKey = GetIconKey(childNodeType),
+                    SelectedImageKey = GetIconKey(childNodeType)
                 };
 
                 parentNode.Nodes.Add(childNode);
@@ -137,7 +143,9 @@ public class TreeViewDomainService : ITreeViewDomainService
 
                 parentNode.Nodes.Add(new TreeNode(_pathProvider.GetFileName(filePath))
                 {
-                    Tag = new NodeData(filePath, NodeType.File, isValidFile)
+                    Tag = new NodeData(filePath, NodeType.File, isValidFile),
+                    ImageKey = GetIconKey(NodeType.File),
+                    SelectedImageKey = GetIconKey(NodeType.File)
                 });
             }
         }
@@ -186,6 +194,19 @@ public class TreeViewDomainService : ITreeViewDomainService
             NodeType.Repository => NodeType.SubRepository,
             NodeType.SubRepository => NodeType.SubRepository,
             _ => NodeType.File
+        };
+    }
+
+    private static string GetIconKey(NodeType nodeType)
+    {
+        return nodeType switch
+        {
+            NodeType.Semester => IconProvider.SemesterIconKey,
+            NodeType.Subject => IconProvider.SubjectIconKey,
+            NodeType.Repository => IconProvider.RepositoryIconKey,
+            NodeType.SubRepository => IconProvider.SubRepositoryIconKey,
+            NodeType.File => IconProvider.FileIconKey,
+            _ => IconProvider.FileIconKey
         };
     }
 

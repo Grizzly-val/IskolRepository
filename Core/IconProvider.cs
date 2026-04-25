@@ -10,6 +10,10 @@ public sealed class IconProvider
 {
     public const string FolderIconKey = "folder";
     public const string FileIconKey = "file";
+    public const string SemesterIconKey = "semester";
+    public const string SubjectIconKey = "subject";
+    public const string RepositoryIconKey = "repository";
+    public const string SubRepositoryIconKey = "subrepo";
 
     public ImageList CreateImageList()
     {
@@ -20,6 +24,23 @@ public sealed class IconProvider
         };
 
         imageList.Images.Add(FolderIconKey, CreateFolderIcon());
+        imageList.Images.Add(FileIconKey, CreateFileIcon());
+
+        return imageList;
+    }
+
+    public ImageList CreateTreeViewImageList()
+    {
+        var imageList = new ImageList
+        {
+            ColorDepth = ColorDepth.Depth32Bit,
+            ImageSize = new Size(16, 16)
+        };
+
+        imageList.Images.Add(SemesterIconKey, CreateFolderIcon());
+        imageList.Images.Add(SubjectIconKey, CreateFolderIcon());
+        imageList.Images.Add(RepositoryIconKey, CreateFolderIcon());
+        imageList.Images.Add(SubRepositoryIconKey, CreateFolderIcon());
         imageList.Images.Add(FileIconKey, CreateFileIcon());
 
         return imageList;

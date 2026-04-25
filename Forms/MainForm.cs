@@ -46,6 +46,7 @@ public partial class MainForm : Form
 
         InitializeComponent();
         InitializeFilesListViewIcons();
+        InitializeTreeViewIcons();
 
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
@@ -1050,6 +1051,11 @@ public partial class MainForm : Form
     private void InitializeFilesListViewIcons()
     {
         filesListView.SmallImageList = _iconProvider.CreateImageList();
+    }
+
+    private void InitializeTreeViewIcons()
+    {
+        repositoryTreeView.ImageList = _iconProvider.CreateTreeViewImageList();
     }
 
     #endregion
