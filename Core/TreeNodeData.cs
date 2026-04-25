@@ -21,7 +21,7 @@ public sealed class NodeData
 {
     public NodeData(string path, NodeType nodeType, bool isValidFile = true)
     {
-        
+            
         Path = path;
         FileName = System.IO.Path.GetFileName(path);
         NodeType = nodeType;

@@ -8,9 +8,9 @@ namespace IskolRepository.Core.Interfaces.Domain;
 public interface IFileDomainService
 {
     /// <summary>
-    /// Loads files from a repository and populates a ListView.
+    /// Loads the current browse view for a repository and populates a ListView.
     /// </summary>
-    void LoadFiles(string repositoryPath, ListView filesListView, string semesterMarkerFileName);
+    void LoadFiles(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName);
 
     /// <summary>
     /// Creates a folder with validation.

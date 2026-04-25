@@ -26,7 +26,7 @@ public interface IFileApplicationService
     void RevertFileVersion(string filePath, FileVersion selectedVersion);
 
     /// <summary>
-    /// Loads files from a repository and populates the listView.
+    /// Loads the current browse view for a repository and populates the listView.
     /// </summary>
-    void LoadFiles(string repositoryPath, ListView filesListView, string semesterMarkerFileName);
+    void LoadFiles(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName);
 }

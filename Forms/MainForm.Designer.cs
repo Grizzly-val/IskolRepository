@@ -42,6 +42,7 @@ partial class MainForm
     private Label deadlineLabel = null!;
     private Panel workspaceHeaderPanel = null!;
     private Button createFileButton = null!;
+    private Button createSubrepositoryButton = null!;
     private Button createRepositoryButton = null!;
     private Button backToSubjectsButton = null!;
     private Label selectedPathValueLabel = null!;
@@ -89,6 +90,7 @@ partial class MainForm
         deadlineLabel = new Label();
         workspaceHeaderPanel = new Panel();
         createFileButton = new Button();
+        createSubrepositoryButton = new Button();
         createRepositoryButton = new Button();
         backToSubjectsButton = new Button();
         selectedPathValueLabel = new Label();
@@ -413,6 +415,7 @@ partial class MainForm
         // workspaceHeaderPanel
         // 
         workspaceHeaderPanel.Controls.Add(createFileButton);
+        workspaceHeaderPanel.Controls.Add(createSubrepositoryButton);
         workspaceHeaderPanel.Controls.Add(createRepositoryButton);
         workspaceHeaderPanel.Controls.Add(backToSubjectsButton);
         workspaceHeaderPanel.Controls.Add(selectedPathValueLabel);
@@ -428,13 +431,24 @@ partial class MainForm
         // createFileButton
         // 
         createFileButton.Enabled = false;
-        createFileButton.Location = new Point(298, 14);
+        createFileButton.Location = new Point(462, 14);
         createFileButton.Name = "createFileButton";
         createFileButton.Size = new Size(120, 32);
-        createFileButton.TabIndex = 2;
+        createFileButton.TabIndex = 3;
         createFileButton.Text = "Create File";
         createFileButton.UseVisualStyleBackColor = true;
         createFileButton.Click += createFileButton_Click;
+        // 
+        // createSubrepositoryButton
+        // 
+        createSubrepositoryButton.Enabled = false;
+        createSubrepositoryButton.Location = new Point(298, 14);
+        createSubrepositoryButton.Name = "createSubrepositoryButton";
+        createSubrepositoryButton.Size = new Size(148, 32);
+        createSubrepositoryButton.TabIndex = 2;
+        createSubrepositoryButton.Text = "Create Subrepository";
+        createSubrepositoryButton.UseVisualStyleBackColor = true;
+        createSubrepositoryButton.Click += createSubrepositoryButton_Click;
         // 
         // createRepositoryButton
         // 

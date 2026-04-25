@@ -68,17 +68,20 @@ public class FileApplicationService : IFileApplicationService
         }
     }
 
-    public void LoadFiles(string repositoryPath, ListView filesListView, string semesterMarkerFileName)
+    public void LoadFiles(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-            throw new ArgumentException("Repository path cannot be empty.", nameof(repositoryPath));
+        if (string.IsNullOrWhiteSpace(repositoryRootPath))
+            throw new ArgumentException("Repository root path cannot be empty.", nameof(repositoryRootPath));
+
+        if (string.IsNullOrWhiteSpace(browsePath))
+            throw new ArgumentException("Browse path cannot be empty.", nameof(browsePath));
 
         if (filesListView == null)
             throw new ArgumentNullException(nameof(filesListView));
 
         try
         {
-            _fileDomainService.LoadFiles(repositoryPath, filesListView, semesterMarkerFileName);
+            _fileDomainService.LoadFiles(repositoryRootPath, browsePath, filesListView, semesterMarkerFileName);
         }
         catch (Exception ex)
         {

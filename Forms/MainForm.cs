@@ -21,12 +21,14 @@ public partial class MainForm : Form
     private readonly ITreeViewDomainService _treeViewService;
     private readonly IVersionDomainService _versionService;
     private readonly IValidationHelper _validationService;
+    private readonly IconProvider _iconProvider = new();
 
 
     // UI state
     private string? currentSemesterPath;
     private string? currentSubjectPath;
     private string? selectedRepositoryPath;
+    private string? currentBrowsePath;
     private string? selectedFilePath;
 
     public MainForm(ApplicationServices services)
@@ -43,6 +45,7 @@ public partial class MainForm : Form
         _validationService = services.ValidationService;
 
         InitializeComponent();
+        InitializeFilesListViewIcons();
 
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
@@ -179,6 +182,7 @@ public partial class MainForm : Form
         currentSemesterPath = null;
         currentSubjectPath = null;
         selectedRepositoryPath = null;
+        currentBrowsePath = null;
         selectedFilePath = null;
         subjectCardsPanel.Controls.Clear();
         repositoryTreeView.Nodes.Clear();
@@ -192,6 +196,7 @@ public partial class MainForm : Form
     {
         currentSubjectPath = null;
         selectedRepositoryPath = null;
+        currentBrowsePath = null;
         selectedFilePath = null;
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
@@ -298,8 +303,77 @@ public partial class MainForm : Form
             return;
         }
 
-        _fileDomainService.CreateRepositoryFile(selectedRepositoryPath, fileName.Trim(), extension, out string? error);
-        LoadSubjectTree(selectedRepositoryPath);
+        var targetBrowsePath = currentBrowsePath ?? selectedRepositoryPath;
+        var createdFilePath = _fileDomainService.CreateRepositoryFile(targetBrowsePath, fileName.Trim(), extension, out string? error);
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            MessageBox.Show(
+                error,
+                "Create File Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(createdFilePath))
+        {
+            MessageBox.Show(
+                "The file could not be created.",
+                "Create File Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        DisplayRepositoryContents(selectedRepositoryPath, targetBrowsePath);
+        LoadSubjectTree(createdFilePath);
+    }
+
+    private void createSubrepositoryButton_Click(object? sender, EventArgs e)
+    {
+        var parentFolderPath = GetSelectedSubrepositoryParentPath();
+        if (string.IsNullOrWhiteSpace(parentFolderPath))
+        {
+            MessageBox.Show(
+                "Please select a repository or subrepository first.",
+                "No Folder Selected",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        var subrepositoryName = PromptDialog.ShowDialog(
+            "Enter a subrepository name:",
+            "Create Subrepository");
+
+        if (string.IsNullOrWhiteSpace(subrepositoryName))
+        {
+            return;
+        }
+
+        if (!_validationService.IsValidName(subrepositoryName))
+        {
+            MessageBox.Show(
+                "Please enter a valid subrepository name.",
+                "Invalid Name",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (!_fileDomainService.CreateFolder(parentFolderPath, subrepositoryName.Trim(), "subrepository", out string? error))
+        {
+            MessageBox.Show(
+                error ?? "The subrepository could not be created.",
+                "Create Subrepository Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        var createdPath = Path.Combine(parentFolderPath, subrepositoryName.Trim());
+        DisplayRepositoryContents(selectedRepositoryPath!, parentFolderPath);
+        LoadSubjectTree(createdPath);
     }
 
     private void updateMetadataButton_Click(object? sender, EventArgs e)
@@ -406,6 +480,7 @@ public partial class MainForm : Form
             case NodeType.Semester:
             case NodeType.Subject:
                 selectedRepositoryPath = null;
+                currentBrowsePath = null;
                 selectedFilePath = null;
                 filesListView.Items.Clear();
                 versionsListBox.Items.Clear();
@@ -419,13 +494,8 @@ public partial class MainForm : Form
                 HideMessage();
                 break;
             case NodeType.SubRepository:
-                selectedRepositoryPath = nodeData.Path;
-                selectedFilePath = null;
-                filesListView.Items.Clear();
-                versionsListBox.Items.Clear();
-                ClearMetadataDisplay();
-                UpdateRepositoryUiState(nodeData.Path);
-                UpdateHistoryUiState(null);
+                var repositoryRoot = _repositoryService.FindRepositoryRoot(nodeData.Path) ?? nodeData.Path;
+                SelectRepository(repositoryRoot, nodeData.Path);
                 HideMessage();
                 break;
             case NodeType.File:
@@ -457,7 +527,7 @@ public partial class MainForm : Form
                     repoPath = parentPath;
                 }
 
-                SelectRepository(repoPath);
+                SelectRepository(repoPath, parentPath);
                 SelectFileInList(nodeData.Path);
                 selectedFilePath = nodeData.Path;
                 LoadVersionHistory(nodeData.Path);
@@ -484,11 +554,34 @@ public partial class MainForm : Form
         {
             selectedFilePath = null;
             UpdateHistoryUiState(null);
+            UpdateCreateSubrepositoryButtonState();
+            UpdateSaveVersionButtonState();
             return;
         }
 
-        selectedFilePath = filesListView.SelectedItems[0].Tag as string;
-        LoadVersionHistory(selectedFilePath);
+        if (filesListView.SelectedItems[0].Tag is not RepositoryBrowseEntry browseEntry)
+        {
+            selectedFilePath = null;
+            UpdateHistoryUiState(null);
+            UpdateCreateSubrepositoryButtonState();
+            UpdateSaveVersionButtonState();
+            return;
+        }
+
+        if (browseEntry.Kind == RepositoryBrowseEntryKind.File)
+        {
+            selectedFilePath = browseEntry.Path;
+            LoadVersionHistory(selectedFilePath);
+        }
+        else
+        {
+            selectedFilePath = null;
+            versionsListBox.Items.Clear();
+            UpdateHistoryUiState(null);
+        }
+
+        UpdateCreateSubrepositoryButtonState();
+        UpdateSaveVersionButtonState();
     }
 
     private void filesListView_DoubleClick(object? sender, EventArgs e)
@@ -498,13 +591,21 @@ public partial class MainForm : Form
             return;
         }
 
-        var filePath = filesListView.SelectedItems[0].Tag as string;
-        if (string.IsNullOrWhiteSpace(filePath))
+        if (filesListView.SelectedItems[0].Tag is not RepositoryBrowseEntry browseEntry)
         {
             return;
         }
 
-        OpenFile(filePath);
+        switch (browseEntry.Kind)
+        {
+            case RepositoryBrowseEntryKind.File:
+                OpenFile(browseEntry.Path);
+                break;
+            case RepositoryBrowseEntryKind.Directory:
+            case RepositoryBrowseEntryKind.Parent:
+                NavigateToBrowsePath(browseEntry.Path);
+                break;
+        }
     }
 
     private void versionsListBox_SelectedIndexChanged(object? sender, EventArgs e)
@@ -552,7 +653,8 @@ public partial class MainForm : Form
 
             if (!string.IsNullOrWhiteSpace(selectedRepositoryPath))
             {
-                LoadFiles(selectedRepositoryPath);
+                DisplayRepositoryContents(selectedRepositoryPath, currentBrowsePath ?? selectedRepositoryPath);
+                SelectFileInList(selectedFilePath);
             }
 
             LoadSubjectTree(selectedFilePath);
@@ -583,6 +685,7 @@ public partial class MainForm : Form
         currentSemesterPath = semesterPath;
         currentSubjectPath = null;
         selectedRepositoryPath = null;
+        currentBrowsePath = null;
         selectedFilePath = null;
         semesterNameValueLabel.Text = Path.GetFileName(semesterPath);
         semesterPathValueLabel.Text = semesterPath;
@@ -685,12 +788,13 @@ public partial class MainForm : Form
 
     private void SelectRepository(string repositoryPath)
     {
-        selectedRepositoryPath = repositoryPath;
-        selectedFilePath = null;
-        LoadFiles(repositoryPath);
-        LoadRepositoryMetadataUI(repositoryPath);
-        UpdateRepositoryUiState(repositoryPath);
-        UpdateHistoryUiState(null);
+        SelectRepository(repositoryPath, repositoryPath);
+    }
+
+    private void SelectRepository(string repositoryRootPath, string browsePath)
+    {
+        DisplayRepositoryContents(repositoryRootPath, browsePath);
+        LoadRepositoryMetadataUI(repositoryRootPath);
     }
 
     private void LoadRepositoryMetadataUI(string repositoryPath)
@@ -721,6 +825,7 @@ public partial class MainForm : Form
     private void ResetWorkspaceSelection()
     {
         selectedRepositoryPath = null;
+        currentBrowsePath = null;
         selectedFilePath = null;
         selectedPathValueLabel.Text = "No item selected";
         filesListView.Items.Clear();
@@ -789,9 +894,9 @@ public partial class MainForm : Form
     #region File Management
 
 
-    private void LoadFiles(string repositoryPath)
+    private void LoadFiles(string repositoryRootPath, string browsePath)
     {
-        _fileApplicationService.LoadFiles(repositoryPath, filesListView, SemesterMarkerFileName);
+        _fileApplicationService.LoadFiles(repositoryRootPath, browsePath, filesListView, SemesterMarkerFileName);
     }
 
     #endregion
@@ -812,7 +917,9 @@ public partial class MainForm : Form
     {
         foreach (ListViewItem item in filesListView.Items)
         {
-            if (string.Equals(item.Tag as string, filePath, StringComparison.OrdinalIgnoreCase))
+            if (item.Tag is RepositoryBrowseEntry browseEntry
+                && browseEntry.Kind == RepositoryBrowseEntryKind.File
+                && string.Equals(browseEntry.Path, filePath, StringComparison.OrdinalIgnoreCase))
             {
                 item.Selected = true;
                 item.Focused = true;
@@ -837,6 +944,7 @@ public partial class MainForm : Form
         deadlineDateTimePicker.Enabled = hasRepository;
         statusComboBox.Enabled = hasRepository;
         updateMetadataButton.Enabled = hasRepository;
+        UpdateCreateSubrepositoryButtonState();
         UpdateSaveVersionButtonState();
     }
 
@@ -862,6 +970,86 @@ public partial class MainForm : Form
         var fileName = Path.GetFileName(selectedFilePath);
         saveVersionButton.Text = $"Save version for {fileName}";
         saveVersionButton.Enabled = _versionService.CanSaveVersion(selectedFilePath);
+    }
+
+    private void UpdateCreateSubrepositoryButtonState()
+    {
+        createSubrepositoryButton.Enabled = !string.IsNullOrWhiteSpace(GetSelectedSubrepositoryParentPath());
+    }
+
+    private void DisplayRepositoryContents(string repositoryRootPath, string browsePath)
+    {
+        selectedRepositoryPath = repositoryRootPath;
+        currentBrowsePath = browsePath;
+        selectedFilePath = null;
+        LoadFiles(repositoryRootPath, browsePath);
+        UpdateRepositoryUiState(repositoryRootPath);
+        UpdateHistoryUiState(null);
+    }
+
+    private void NavigateToBrowsePath(string targetPath)
+    {
+        if (string.IsNullOrWhiteSpace(selectedRepositoryPath) || string.IsNullOrWhiteSpace(targetPath))
+        {
+            return;
+        }
+
+        var repositoryRoot = Path.GetFullPath(selectedRepositoryPath);
+        var normalizedTargetPath = Path.GetFullPath(targetPath);
+
+        if (!IsPathInsideRepository(normalizedTargetPath, repositoryRoot))
+        {
+            return;
+        }
+
+        var targetNode = _treeViewService.FindNodeByPath(repositoryTreeView.Nodes, normalizedTargetPath);
+        if (targetNode is not null)
+        {
+            repositoryTreeView.SelectedNode = targetNode;
+            targetNode.EnsureVisible();
+            return;
+        }
+
+        DisplayRepositoryContents(repositoryRoot, normalizedTargetPath);
+        HideMessage();
+    }
+
+    private static bool IsPathInsideRepository(string path, string repositoryRoot)
+    {
+        if (string.Equals(path, repositoryRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var normalizedRoot = repositoryRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        var normalizedPath = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+
+        return normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string? GetSelectedSubrepositoryParentPath()
+    {
+        if (repositoryTreeView.SelectedNode?.Tag is NodeData nodeData
+            && (nodeData.NodeType == NodeType.Repository || nodeData.NodeType == NodeType.SubRepository))
+        {
+            return nodeData.Path;
+        }
+
+        if (filesListView.SelectedItems.Count > 0
+            && filesListView.SelectedItems[0].Tag is RepositoryBrowseEntry browseEntry
+            && browseEntry.Kind == RepositoryBrowseEntryKind.Directory)
+        {
+            return browseEntry.Path;
+        }
+
+        return null;
+    }
+
+    private void InitializeFilesListViewIcons()
+    {
+        filesListView.SmallImageList = _iconProvider.CreateImageList();
     }
 
     #endregion
