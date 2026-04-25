@@ -10,10 +10,8 @@ public sealed class IconProvider
 {
     public const string FolderIconKey = "folder";
     public const string FileIconKey = "file";
-    public const string SemesterIconKey = "semester";
-    public const string SubjectIconKey = "subject";
-    public const string RepositoryIconKey = "repository";
-    public const string SubRepositoryIconKey = "subrepo";
+    public const string ImageIconKey = "image";
+    public const string VideoIconKey = "video";
 
     public ImageList CreateImageList()
     {
@@ -24,6 +22,8 @@ public sealed class IconProvider
         };
 
         imageList.Images.Add(FolderIconKey, CreateFolderIcon());
+        imageList.Images.Add(ImageIconKey, CreateImageIcon());
+        imageList.Images.Add(VideoIconKey, CreateVideoIcon());
         imageList.Images.Add(FileIconKey, CreateFileIcon());
 
         return imageList;
@@ -37,10 +37,9 @@ public sealed class IconProvider
             ImageSize = new Size(16, 16)
         };
 
-        imageList.Images.Add(SemesterIconKey, CreateFolderIcon());
-        imageList.Images.Add(SubjectIconKey, CreateFolderIcon());
-        imageList.Images.Add(RepositoryIconKey, CreateFolderIcon());
-        imageList.Images.Add(SubRepositoryIconKey, CreateFolderIcon());
+        imageList.Images.Add(FolderIconKey, CreateFolderIcon());
+        imageList.Images.Add(ImageIconKey, CreateImageIcon());
+        imageList.Images.Add(VideoIconKey, CreateVideoIcon());
         imageList.Images.Add(FileIconKey, CreateFileIcon());
 
         return imageList;
@@ -53,7 +52,14 @@ public sealed class IconProvider
             return FolderIconKey;
         }
 
-        return FileIconKey;
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+        return ext switch
+        {
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" => ImageIconKey,
+            ".mp4" or ".avi" or ".mkv" or ".mov" => VideoIconKey,
+            _ => FileIconKey
+        };
     }
 
     private static Bitmap CreateFolderIcon()
@@ -105,4 +111,55 @@ public sealed class IconProvider
 
         return bitmap;
     }
+
+    private static Bitmap CreateImageIcon()
+    {
+        var bitmap = new Bitmap(16, 16);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.Transparent);
+
+        using var frameBrush = new SolidBrush(Color.FromArgb(180, 220, 255));
+        using var framePen = new Pen(Color.FromArgb(70, 130, 200));
+        using var skyBrush = new SolidBrush(Color.FromArgb(135, 195, 240));
+        using var groundBrush = new SolidBrush(Color.FromArgb(100, 180, 100));
+        using var sunBrush = new SolidBrush(Color.FromArgb(255, 220, 50));
+        using var mountainBrush = new SolidBrush(Color.FromArgb(80, 140, 80));
+
+        graphics.FillRectangle(frameBrush, 2, 2, 12, 12);
+        graphics.FillRectangle(skyBrush, 3, 3, 10, 6);
+        graphics.FillRectangle(groundBrush, 3, 9, 10, 4);
+        graphics.FillEllipse(sunBrush, 4, 4, 3, 3);
+        graphics.FillPolygon(mountainBrush, new[] { new Point(3, 13), new Point(8, 7), new Point(13, 13) });
+        graphics.DrawRectangle(framePen, 2, 2, 12, 12);
+
+        return bitmap;
+    }
+
+    private static Bitmap CreateVideoIcon()
+    {
+        var bitmap = new Bitmap(16, 16);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.Transparent);
+
+        using var bodyBrush = new SolidBrush(Color.FromArgb(60, 60, 60));
+        using var bodyPen = new Pen(Color.FromArgb(30, 30, 30));
+        using var stripBrush = new SolidBrush(Color.FromArgb(220, 220, 220));
+        using var playBrush = new SolidBrush(Color.FromArgb(80, 210, 120));
+
+        graphics.FillRectangle(bodyBrush, 1, 3, 14, 10);
+        graphics.DrawRectangle(bodyPen, 1, 3, 14, 10);
+
+        for (int x = 2; x <= 12; x += 3)
+        {
+            graphics.FillRectangle(stripBrush, x, 3, 2, 2);
+            graphics.FillRectangle(stripBrush, x, 11, 2, 2);
+        }
+
+        graphics.FillPolygon(playBrush, new[] { new Point(6, 6), new Point(6, 10), new Point(11, 8) });
+
+        return bitmap;
+    }
+
+
+
 }
