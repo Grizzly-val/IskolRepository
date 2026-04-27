@@ -1,5 +1,5 @@
 using IskolRepository.Core.Interfaces.Infrastructure;
-using IskolRepository.Core.Services.Domain;
+using IskolRepository.Core.Services;
 using System.Windows.Forms;
 
 namespace IskolRepository.Core.Services.Infrastructure;
@@ -27,8 +27,8 @@ public class ValidationHelperService : IValidationHelper
 
         var metadataPath = Path.Combine(
             path,
-            RepositoryDomainService.MetadataFolderName,
-            RepositoryDomainService.MetadataFileName);
+            RepositoryService.MetadataFolderName,
+            RepositoryService.MetadataFileName);
         return _fileSystemHelper.FileExists(metadataPath);
     }
 
@@ -133,8 +133,8 @@ public class ValidationHelperService : IValidationHelper
     {
         var fileName = Path.GetFileName(filePath);
         var parentFolderName = Path.GetFileName(Path.GetDirectoryName(filePath) ?? string.Empty);
-        var isMetadataJson = string.Equals(fileName, RepositoryDomainService.MetadataFileName, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(parentFolderName, RepositoryDomainService.MetadataFolderName, StringComparison.OrdinalIgnoreCase);
+        var isMetadataJson = string.Equals(fileName, RepositoryService.MetadataFileName, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(parentFolderName, RepositoryService.MetadataFolderName, StringComparison.OrdinalIgnoreCase);
 
         return isMetadataJson
             || string.Equals(fileName, semesterMarkerFileName, StringComparison.OrdinalIgnoreCase);

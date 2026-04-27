@@ -1,7 +1,5 @@
-using System.Text.Json;
 using IskolRepository.Core;
-using IskolRepository.Core.Interfaces.Application;
-using IskolRepository.Core.Interfaces.Domain;
+using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 using IskolRepository.Models;
 
@@ -10,16 +8,13 @@ namespace IskolRepository.Forms;
 public partial class MainForm : Form
 {
     private const string SemesterMarkerFileName = ".semester.json";
-    private readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
-    // Injected services
-    private readonly ISemesterApplicationService _semesterService;
-    private readonly IRepositoryApplicationService _repositoryService;
-    private readonly IFileApplicationService _fileApplicationService;
-    private readonly IFileDomainService _fileDomainService;
-    private readonly ISubjectApplicationService _subjectService;
-    private readonly ITreeViewDomainService _treeViewService;
-    private readonly IVersionDomainService _versionService;
+    private readonly ISemesterService _semesterService;
+    private readonly IRepositoryService _repositoryService;
+    private readonly IFileService _fileService;
+    private readonly ISubjectService _subjectService;
+    private readonly ITreeViewService _treeViewService;
+    private readonly IVersionService _versionService;
     private readonly IValidationHelper _validationService;
     private readonly IconProvider _iconProvider = new();
 
@@ -31,14 +26,13 @@ public partial class MainForm : Form
     private string? currentBrowsePath;
     private string? selectedFilePath;
 
-    public MainForm(ApplicationServices services)
+    public MainForm(ServiceRegistry services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
         _semesterService = services.SemesterService;
         _repositoryService = services.RepositoryService;
-        _fileApplicationService = services.FileService;
-        _fileDomainService = services.FileDomainService;
+        _fileService = services.FileService;
         _subjectService = services.SubjectService;
         _treeViewService = services.TreeViewService;
         _versionService = services.VersionService;
@@ -73,18 +67,19 @@ public partial class MainForm : Form
             return;
         }
 
-        var openedSemesterPath = _semesterService.OpenSemester(dialog.SelectedPath);
-        if (string.IsNullOrWhiteSpace(openedSemesterPath))
+        try
+        {
+            var openedSemesterPath = _semesterService.OpenSemester(dialog.SelectedPath);
+            ActivateSemester(openedSemesterPath);
+        }
+        catch (Exception ex)
         {
             MessageBox.Show(
-                "The selected folder is not a valid semester folder.",
+                ex.Message,
                 "Invalid Semester",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
-            return;
         }
-
-        ActivateSemester(openedSemesterPath);
     }
 
     private void newSemesterButton_Click(object? sender, EventArgs e)
@@ -114,22 +109,9 @@ public partial class MainForm : Form
             return;
         }
 
-        var targetPath = Path.Combine(dialog.SelectedPath, semesterName.Trim());
-
         try
         {
-            if (Directory.Exists(targetPath) && Directory.EnumerateFileSystemEntries(targetPath).Any())
-            {
-                MessageBox.Show(
-                    "The target semester folder must be empty before use.",
-                    "Semester Not Empty",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            Directory.CreateDirectory(targetPath);
-            _semesterService.CreateSemesterMarker(targetPath);
+            var targetPath = _semesterService.CreateSemester(dialog.SelectedPath, semesterName.Trim());
             ActivateSemester(targetPath);
         }
         catch (Exception ex)
@@ -305,29 +287,20 @@ public partial class MainForm : Form
         }
 
         var targetBrowsePath = currentBrowsePath ?? selectedRepositoryPath;
-        var createdFilePath = _fileDomainService.CreateRepositoryFile(targetBrowsePath, fileName.Trim(), extension, out string? error);
-        if (!string.IsNullOrWhiteSpace(error))
+        try
+        {
+            var createdFilePath = _fileService.CreateFile(targetBrowsePath, fileName.Trim(), extension);
+            DisplayRepositoryContents(selectedRepositoryPath, targetBrowsePath);
+            LoadSubjectTree(createdFilePath);
+        }
+        catch (Exception ex)
         {
             MessageBox.Show(
-                error,
+                ex.Message,
                 "Create File Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
-            return;
         }
-
-        if (string.IsNullOrWhiteSpace(createdFilePath))
-        {
-            MessageBox.Show(
-                "The file could not be created.",
-                "Create File Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            return;
-        }
-
-        DisplayRepositoryContents(selectedRepositoryPath, targetBrowsePath);
-        LoadSubjectTree(createdFilePath);
     }
 
     private void createSubrepositoryButton_Click(object? sender, EventArgs e)
@@ -362,19 +335,21 @@ public partial class MainForm : Form
             return;
         }
 
-        if (!_fileDomainService.CreateFolder(parentFolderPath, subrepositoryName.Trim(), "subrepository", out string? error))
+        try
+        {
+            _fileService.CreateFolder(parentFolderPath, subrepositoryName.Trim(), "subrepository");
+            var createdPath = Path.Combine(parentFolderPath, subrepositoryName.Trim());
+            DisplayRepositoryContents(selectedRepositoryPath!, parentFolderPath);
+            LoadSubjectTree(createdPath);
+        }
+        catch (Exception ex)
         {
             MessageBox.Show(
-                error ?? "The subrepository could not be created.",
+                ex.Message,
                 "Create Subrepository Error",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
-            return;
         }
-
-        var createdPath = Path.Combine(parentFolderPath, subrepositoryName.Trim());
-        DisplayRepositoryContents(selectedRepositoryPath!, parentFolderPath);
-        LoadSubjectTree(createdPath);
     }
 
     private void updateMetadataButton_Click(object? sender, EventArgs e)
@@ -449,7 +424,16 @@ public partial class MainForm : Form
 
         try
         {
-            _versionService.PromptAndSaveVersion(selectedFilePath, selectedFilePath, versionsListBox);
+            var comment = PromptDialog.ShowDialog(
+                $"Enter a version comment for {Path.GetFileName(selectedFilePath)}:\n\nSelect Cancel to skip saving a snapshot.",
+                "Save Version");
+
+            if (string.IsNullOrWhiteSpace(comment))
+            {
+                return;
+            }
+
+            _versionService.SaveVersion(selectedFilePath, comment);
             LoadVersionHistory(selectedFilePath);
             UpdateSaveVersionButtonState();
         }
@@ -650,7 +634,7 @@ public partial class MainForm : Form
 
         try
         {
-            _fileApplicationService.RevertFileVersion(selectedFilePath, selectedVersion);
+            _versionService.RevertToVersion(selectedFilePath, selectedVersion);
 
             if (!string.IsNullOrWhiteSpace(selectedRepositoryPath))
             {
@@ -875,10 +859,7 @@ public partial class MainForm : Form
 
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
-            {
-                UseShellExecute = true
-            });
+            _fileService.OpenFile(filePath);
         }
         catch (Exception ex)
         {
@@ -897,7 +878,7 @@ public partial class MainForm : Form
 
     private void LoadFiles(string repositoryRootPath, string browsePath)
     {
-        _fileApplicationService.LoadFiles(repositoryRootPath, browsePath, filesListView, SemesterMarkerFileName);
+        _fileService.LoadFiles(repositoryRootPath, browsePath, filesListView, SemesterMarkerFileName);
     }
 
     #endregion
@@ -969,7 +950,7 @@ public partial class MainForm : Form
         }
 
         var fileName = Path.GetFileName(selectedFilePath);
-        saveVersionButton.Text = $"Save version for {fileName}";
+        saveVersionButton.Text = $"Save a version for {fileName}";
         saveVersionButton.Enabled = _versionService.CanSaveVersion(selectedFilePath);
     }
 

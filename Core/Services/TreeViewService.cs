@@ -1,20 +1,17 @@
 using System.Windows.Forms;
-using IskolRepository.Core.Interfaces.Domain;
+using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 
-namespace IskolRepository.Core.Services.Domain;
+namespace IskolRepository.Core.Services;
 
-/// <summary>
-/// Implementation of ITreeViewDomainService.
-/// </summary>
-public class TreeViewDomainService : ITreeViewDomainService
+public class TreeViewService : ITreeViewService
 {
     private readonly IconProvider _iconProvider = new();
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IPathProvider _pathProvider;
     private readonly IValidationHelper _validationHelper;
 
-    public TreeViewDomainService(
+    public TreeViewService(
         IFileSystemHelper fileSystemHelper,
         IPathProvider pathProvider,
         IValidationHelper validationHelper)
@@ -48,7 +45,6 @@ public class TreeViewDomainService : ITreeViewDomainService
 
         repositoryTreeView.EndUpdate();
 
-        // Apply validation coloring
         foreach (TreeNode root in repositoryTreeView.Nodes)
         {
             _validationHelper.ApplyNodeValidationColors(root);
@@ -64,10 +60,7 @@ public class TreeViewDomainService : ITreeViewDomainService
         }
 
         repositoryTreeView.BeginUpdate();
-
-        // 1. CAPTURE STATE before clearing
         var expandedPaths = GetExpandedPaths(repositoryTreeView.Nodes);
-
         repositoryTreeView.Nodes.Clear();
 
         var rootNode = new TreeNode(_pathProvider.GetFileName(currentSubjectPath))
@@ -81,13 +74,10 @@ public class TreeViewDomainService : ITreeViewDomainService
         rootNode.Expand();
         LoadChildNodes(rootNode, semesterMarkerFileName);
 
-        // 2. RESTORE STATE top-down so lazy-loading populates the nodes
         RestoreExpandedPaths(repositoryTreeView, expandedPaths, semesterMarkerFileName);
 
-        // 3. SELECT NEW FILE (Ensure the parents of the newly created file are loaded)
         if (!string.IsNullOrWhiteSpace(selectPath))
         {
-            // We might need to load nodes down to the selectPath if it wasn't previously expanded
             ForceLoadPath(repositoryTreeView.Nodes, selectPath, semesterMarkerFileName);
         }
 
@@ -103,7 +93,6 @@ public class TreeViewDomainService : ITreeViewDomainService
 
         repositoryTreeView.EndUpdate();
 
-        // Apply validation coloring
         foreach (TreeNode root in repositoryTreeView.Nodes)
         {
             _validationHelper.ApplyNodeValidationColors(root);
@@ -115,7 +104,6 @@ public class TreeViewDomainService : ITreeViewDomainService
         if (parentNode?.Tag is not NodeData parentData)
             return;
 
-        // Prevent duplicate loading
         if (parentNode.Nodes.Count > 0)
             return;
 
@@ -127,14 +115,15 @@ public class TreeViewDomainService : ITreeViewDomainService
 
             var childNodeType = GetChildNodeType(parentData.NodeType);
 
-            // Load directories
             foreach (var directory in _fileSystemHelper.EnumerateDirectories(parentPath)
                 .OrderBy(d => _pathProvider.GetFileName(d), StringComparer.OrdinalIgnoreCase))
             {
                 var directoryName = _pathProvider.GetFileName(directory);
-                if (string.Equals(directoryName, RepositoryDomainService.MetadataFolderName, StringComparison.OrdinalIgnoreCase)
+                if (string.Equals(directoryName, RepositoryService.MetadataFolderName, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(directoryName, VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 var childNode = new TreeNode(directoryName)
                 {
@@ -146,16 +135,13 @@ public class TreeViewDomainService : ITreeViewDomainService
                 parentNode.Nodes.Add(childNode);
             }
 
-            // Load files
             foreach (var filePath in _fileSystemHelper.EnumerateFiles(parentPath)
                 .OrderBy(f => _pathProvider.GetFileName(f), StringComparer.OrdinalIgnoreCase))
             {
                 if (_validationHelper.IsSystemManagedFile(filePath, semesterMarkerFileName))
                     continue;
 
-                // Check if file is valid (inside a repository, not directly under subject)
-                var isValidFile = IsValidFileNode(parentNode, parentData);
-
+                var isValidFile = parentData.NodeType != NodeType.Subject;
                 parentNode.Nodes.Add(new TreeNode(_pathProvider.GetFileName(filePath))
                 {
                     Tag = new NodeData(filePath, NodeType.File, isValidFile),
@@ -200,12 +186,8 @@ public class TreeViewDomainService : ITreeViewDomainService
         }
     }
 
-
-
-
     private void ForceLoadPath(TreeNodeCollection nodes, string targetPath, string semesterMarkerFileName)
     {
-        // Find the deepest existing node that is part of the target path
         foreach (TreeNode node in nodes)
         {
             if (node.Tag is NodeData data && targetPath.StartsWith(data.Path, StringComparison.OrdinalIgnoreCase))
@@ -217,11 +199,7 @@ public class TreeViewDomainService : ITreeViewDomainService
         }
     }
 
-
-
-
-
-    public List<string> GetExpandedPaths(TreeNodeCollection nodes)
+    private List<string> GetExpandedPaths(TreeNodeCollection nodes)
     {
         var paths = new List<string>();
         foreach (TreeNode node in nodes)
@@ -236,32 +214,22 @@ public class TreeViewDomainService : ITreeViewDomainService
                 paths.AddRange(GetExpandedPaths(node.Nodes));
             }
         }
+
         return paths;
     }
 
-    public void RestoreExpandedPaths(TreeView treeView, List<string> expandedPaths, string semesterMarkerFileName)
+    private void RestoreExpandedPaths(TreeView treeView, List<string> expandedPaths, string semesterMarkerFileName)
     {
-        // CRITICAL: Sort by path length so we expand parents before children.
-        // This ensures lazy-loaded child nodes are generated before we try to find them.
-        var sortedPaths = expandedPaths.OrderBy(p => p.Length).ToList();
-
-        foreach (var path in sortedPaths)
+        foreach (var path in expandedPaths.OrderBy(p => p.Length))
         {
             var node = FindNodeByPath(treeView.Nodes, path);
-            if (node != null)
-            {
-                // Force load children so the next level down can be found
-                LoadChildNodes(node, semesterMarkerFileName);
-                node.Expand();
-            }
+            if (node is null)
+                continue;
+
+            LoadChildNodes(node, semesterMarkerFileName);
+            node.Expand();
         }
     }
-
-
-
-
-
-
 
     private static NodeType GetChildNodeType(NodeType parentType)
     {
@@ -273,15 +241,5 @@ public class TreeViewDomainService : ITreeViewDomainService
             NodeType.SubRepository => NodeType.SubRepository,
             _ => NodeType.File
         };
-    }
-
-    /// <summary>
-    /// Determines if a file node is valid.
-    /// A file is invalid if its parent is a Subject node (file directly under subject, outside any repository).
-    /// </summary>
-    private static bool IsValidFileNode(TreeNode parentNode, NodeData parentData)
-    {
-        // Files are valid if parent is not a Subject (files must be inside repositories or their subdirectories)
-        return parentData.NodeType != NodeType.Subject;
     }
 }

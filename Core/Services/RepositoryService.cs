@@ -1,14 +1,11 @@
 using System.Text.Json;
-using IskolRepository.Core.Interfaces.Domain;
+using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 using IskolRepository.Models;
 
-namespace IskolRepository.Core.Services.Domain;
+namespace IskolRepository.Core.Services;
 
-/// <summary>
-/// Implementation of IRepositoryDomainService.
-/// </summary>
-public class RepositoryDomainService : IRepositoryDomainService
+public class RepositoryService : IRepositoryService
 {
     public const string MetadataFolderName = ".metadata";
     public const string MetadataFileName = "metadata.json";
@@ -17,27 +14,27 @@ public class RepositoryDomainService : IRepositoryDomainService
     private readonly IValidationHelper _validationHelper;
     private readonly IPathProvider _pathProvider;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly string[] _validStatuses;
 
-    public RepositoryDomainService(
+    public RepositoryService(
         IFileSystemHelper fileSystemHelper,
         IValidationHelper validationHelper,
         IPathProvider pathProvider,
-        JsonSerializerOptions jsonOptions,
-        string[] validStatuses)
+        JsonSerializerOptions jsonOptions)
     {
         _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
         _validationHelper = validationHelper ?? throw new ArgumentNullException(nameof(validationHelper));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _jsonOptions = jsonOptions ?? throw new ArgumentNullException(nameof(jsonOptions));
-        _validStatuses = validStatuses ?? throw new ArgumentNullException(nameof(validStatuses));
     }
 
     public RepoMetadata EnsureMetadata(string repositoryPath)
     {
+        if (string.IsNullOrWhiteSpace(repositoryPath))
+            throw new ArgumentException("Repository path cannot be empty.", nameof(repositoryPath));
+
         var metadataPath = GetMetadataFilePath(repositoryPath);
         EnsureMetadataFolder(repositoryPath);
-        
+
         if (!_fileSystemHelper.FileExists(metadataPath))
         {
             var metadata = new RepoMetadata
@@ -51,35 +48,35 @@ public class RepositoryDomainService : IRepositoryDomainService
             return metadata;
         }
 
-        var json = _fileSystemHelper.ReadAllText(metadataPath);
-        var metadataFromFile = System.Text.Json.JsonSerializer.Deserialize<RepoMetadata>(json, _jsonOptions);
-        
-        if (metadataFromFile is null || 
-            !_validationHelper.IsValidStatus(metadataFromFile.Status))
+        try
         {
-            throw new InvalidOperationException("The repository metadata is invalid.");
+            var json = _fileSystemHelper.ReadAllText(metadataPath);
+            var metadataFromFile = JsonSerializer.Deserialize<RepoMetadata>(json, _jsonOptions);
+
+            if (metadataFromFile is null || !_validationHelper.IsValidStatus(metadataFromFile.Status))
+                throw new InvalidOperationException("The repository metadata is invalid.");
+
+            return metadataFromFile;
         }
-
-        return metadataFromFile;
-    }
-
-    public void SaveMetadata(string repositoryPath, RepoMetadata metadata)
-    {
-        if (!_validationHelper.IsValidStatus(metadata.Status))
-            throw new InvalidOperationException("Metadata status is invalid.");
-
-        EnsureMetadataFolder(repositoryPath);
-        var metadataPath = GetMetadataFilePath(repositoryPath);
-        var json = System.Text.Json.JsonSerializer.Serialize(metadata, _jsonOptions);
-        _fileSystemHelper.WriteAllText(metadataPath, json);
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Unable to load repository metadata.", ex);
+        }
     }
 
     public string? FindRepositoryRoot(string startPath)
     {
+        if (string.IsNullOrWhiteSpace(startPath))
+            return null;
+
         var currentPath = startPath;
         while (!string.IsNullOrWhiteSpace(currentPath))
         {
-            if (IsRepositoryPath(currentPath))
+            if (_validationHelper.IsRepositoryFolder(currentPath))
                 return currentPath;
 
             currentPath = _pathProvider.GetDirectoryName(currentPath);
@@ -88,13 +85,11 @@ public class RepositoryDomainService : IRepositoryDomainService
         return null;
     }
 
-    public bool IsRepositoryPath(string path)
-    {
-        return _validationHelper.IsRepositoryFolder(path);
-    }
-
     public string CreateRepository(string subjectPath, string repositoryName, DateTime deadline)
     {
+        if (string.IsNullOrWhiteSpace(subjectPath))
+            throw new ArgumentException("Subject path cannot be empty.", nameof(subjectPath));
+
         if (string.IsNullOrWhiteSpace(repositoryName))
             throw new ArgumentException("Repository name cannot be empty.", nameof(repositoryName));
 
@@ -103,25 +98,64 @@ public class RepositoryDomainService : IRepositoryDomainService
         if (_fileSystemHelper.DirectoryExists(repositoryPath))
             throw new InvalidOperationException("Repository already exists.");
 
-        _fileSystemHelper.CreateDirectory(repositoryPath);
-
-        var metadata = new RepoMetadata
+        try
         {
-            Deadline = deadline.Date,
-            DateAdded = DateTime.Today,
-            Status = "in-progress"
-        };
+            _fileSystemHelper.CreateDirectory(repositoryPath);
 
-        SaveMetadata(repositoryPath, metadata);
-        return repositoryPath;
+            var metadata = new RepoMetadata
+            {
+                Deadline = deadline.Date,
+                DateAdded = DateTime.Today,
+                Status = "in-progress"
+            };
+
+            SaveMetadata(repositoryPath, metadata);
+            return repositoryPath;
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Unable to create repository.", ex);
+        }
     }
 
     public void UpdateRepositoryMetadata(string repositoryPath, DateTime deadline, string status)
     {
+        if (string.IsNullOrWhiteSpace(repositoryPath))
+            throw new ArgumentException("Repository path cannot be empty.", nameof(repositoryPath));
+
+        if (string.IsNullOrWhiteSpace(status))
+            throw new ArgumentException("Status cannot be empty.", nameof(status));
+
         var metadata = EnsureMetadata(repositoryPath);
-        metadata.Deadline = deadline;
+        metadata.Deadline = deadline.Date;
         metadata.Status = status;
         SaveMetadata(repositoryPath, metadata);
+    }
+
+    private void SaveMetadata(string repositoryPath, RepoMetadata metadata)
+    {
+        if (!_validationHelper.IsValidStatus(metadata.Status))
+            throw new InvalidOperationException("Metadata status is invalid.");
+
+        try
+        {
+            EnsureMetadataFolder(repositoryPath);
+            var metadataPath = GetMetadataFilePath(repositoryPath);
+            var json = JsonSerializer.Serialize(metadata, _jsonOptions);
+            _fileSystemHelper.WriteAllText(metadataPath, json);
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Unable to save repository metadata.", ex);
+        }
     }
 
     private string GetMetadataFolderPath(string repositoryPath)

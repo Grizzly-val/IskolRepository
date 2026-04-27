@@ -1,20 +1,17 @@
 using System.Windows.Forms;
-using IskolRepository.Core.Interfaces.Domain;
+using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 
-namespace IskolRepository.Core.Services.Domain;
+namespace IskolRepository.Core.Services;
 
-/// <summary>
-/// Implementation of IFileDomainService.
-/// </summary>
-public class FileDomainService : IFileDomainService
+public class FileService : IFileService
 {
     private readonly IconProvider _iconProvider = new();
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IPathProvider _pathProvider;
     private readonly IValidationHelper _validationHelper;
 
-    public FileDomainService(
+    public FileService(
         IFileSystemHelper fileSystemHelper,
         IPathProvider pathProvider,
         IValidationHelper validationHelper)
@@ -26,11 +23,15 @@ public class FileDomainService : IFileDomainService
 
     public void LoadFiles(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName)
     {
-        LoadFilesInternal(repositoryRootPath, browsePath, filesListView, semesterMarkerFileName);
-    }
+        if (string.IsNullOrWhiteSpace(repositoryRootPath))
+            throw new ArgumentException("Repository root path cannot be empty.", nameof(repositoryRootPath));
 
-    private void LoadFilesInternal(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName)
-    {
+        if (string.IsNullOrWhiteSpace(browsePath))
+            throw new ArgumentException("Browse path cannot be empty.", nameof(browsePath));
+
+        if (filesListView is null)
+            throw new ArgumentNullException(nameof(filesListView));
+
         filesListView.Items.Clear();
 
         try
@@ -62,7 +63,7 @@ public class FileDomainService : IFileDomainService
             foreach (var directoryPath in directories)
             {
                 var directoryName = _pathProvider.GetFileName(directoryPath);
-                if (string.Equals(directoryName, RepositoryDomainService.MetadataFolderName, StringComparison.OrdinalIgnoreCase)
+                if (string.Equals(directoryName, RepositoryService.MetadataFolderName, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(directoryName, VersionHelper.HistoryFolderName, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
@@ -96,9 +97,80 @@ public class FileDomainService : IFileDomainService
                 filesListView.Items.Add(item);
             }
         }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Unable to load files from: {browsePath}", ex);
+        }
+    }
+
+    public void CreateFolder(string parentPath, string name, string folderType)
+    {
+        if (string.IsNullOrWhiteSpace(parentPath))
+            throw new ArgumentException("Parent path cannot be empty.", nameof(parentPath));
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException($"{folderType} name cannot be empty.", nameof(name));
+
+        var fullPath = _pathProvider.CombinePaths(parentPath, name.Trim());
+        if (_fileSystemHelper.DirectoryExists(fullPath))
+            throw new InvalidOperationException($"A {folderType} with that name already exists in the selected location.");
+
+        try
+        {
+            _fileSystemHelper.CreateDirectory(fullPath);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Unable to create the {folderType}.", ex);
+        }
+    }
+
+    public string CreateFile(string repositoryPath, string fileName, string extension)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryPath))
+            throw new ArgumentException("Repository path cannot be empty.", nameof(repositoryPath));
+
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("File name cannot be empty.", nameof(fileName));
+
+        if (string.IsNullOrWhiteSpace(extension))
+            throw new ArgumentException("Extension cannot be empty.", nameof(extension));
+
+        var result = _fileSystemHelper.CreateRepositoryFile(repositoryPath, fileName.Trim(), extension);
+        if (string.IsNullOrWhiteSpace(result))
+            throw new InvalidOperationException("Unable to create file.");
+
+        return result;
+    }
+
+    public void OpenFile(string filePath, Action<string>? onFileExited = null)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be empty.", nameof(filePath));
+
+        if (!_fileSystemHelper.FileExists(filePath))
+            throw new InvalidOperationException("The selected file could not be found.");
+
+        try
+        {
+            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
+            {
+                UseShellExecute = true
+            });
+
+            if (process is not null && onFileExited is not null)
+            {
+                process.EnableRaisingEvents = true;
+                process.Exited += (_, _) => onFileExited(filePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Unable to open the selected file.", ex);
         }
     }
 
@@ -113,75 +185,5 @@ public class FileDomainService : IFileDomainService
             + Path.DirectorySeparatorChar;
 
         return normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase);
-    }
-
-    public bool CreateFolder(string parentPath, string name, string folderType, out string? error)
-    {
-        error = null;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            error = $"Please enter a valid {folderType} name.";
-            return false;
-        }
-
-        var fullPath = _pathProvider.CombinePaths(parentPath, name);
-        if (_fileSystemHelper.DirectoryExists(fullPath))
-        {
-            error = $"A {folderType} with that name already exists in the selected location.";
-            return false;
-        }
-
-        try
-        {
-            _fileSystemHelper.CreateDirectory(fullPath);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            error = $"Unable to create the {folderType}: {ex.Message}";
-            return false;
-        }
-    }
-
-    public string? CreateRepositoryFile(string repositoryPath, string fileName, string extension, out string? error)
-    {
-        error = null;
-        // Basic validation can still throw specific exceptions
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-            throw new ArgumentException("Repository path cannot be empty.", nameof(repositoryPath));
-
-        if (string.IsNullOrWhiteSpace(fileName))
-            throw new ArgumentException("File name cannot be empty.", nameof(fileName));
-
-        if (string.IsNullOrWhiteSpace(extension))
-            throw new ArgumentException("Extension cannot be empty.", nameof(extension));
-
-        return _fileSystemHelper.CreateRepositoryFile(repositoryPath, fileName, extension);
-    }
-
-
-    public void OpenFile(string filePath, Action<string> onFileExited)
-    {
-        if (!_fileSystemHelper.FileExists(filePath))
-            throw new FileNotFoundException("The selected file could not be found.", filePath);
-
-        try
-        {
-            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
-            {
-                UseShellExecute = true
-            });
-
-            if (process is not null)
-            {
-                process.EnableRaisingEvents = true;
-                process.Exited += (_, _) => onFileExited(filePath);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Unable to open the selected file.", ex);
-        }
     }
 }

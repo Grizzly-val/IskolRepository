@@ -18,7 +18,6 @@ static class Program
         // Bootstrap services
         var services = ServiceFactory.CreateServices();
 
-        // Create MainForm with injected services
         var mainForm = new MainForm(services);
 
         Application.Run(mainForm);

@@ -1,36 +1,37 @@
+using System.Text.Json;
 using System.Windows.Forms;
-using IskolRepository.Core.Interfaces.Domain;
-using IskolRepository.Forms;
+using IskolRepository.Core.Interfaces;
 using IskolRepository.Models;
 
-namespace IskolRepository.Core.Services.Domain;
+namespace IskolRepository.Core.Services;
 
-/// <summary>
-/// Implementation of IVersionDomainService.
-/// </summary>
-public class VersionDomainService : IVersionDomainService
+public class VersionService : IVersionService
 {
     private static readonly string[] SupportedVersionExtensions = [".txt", ".docx"];
-    private readonly System.Text.Json.JsonSerializerOptions _jsonOptions;
 
-    public VersionDomainService(System.Text.Json.JsonSerializerOptions jsonOptions)
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public VersionService(JsonSerializerOptions jsonOptions)
     {
         _jsonOptions = jsonOptions ?? throw new ArgumentNullException(nameof(jsonOptions));
     }
-    public void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel, Label? noVersionsMessageLabel = null)
-    {
-        versionsListBox.Items.Clear();
 
-        if (captionLabel != null)
-        {
-            captionLabel.Text = filePath != null
-                ? $"Version History - {Path.GetFileName(filePath)}"
-                : "Version History";
-        }
+    public void LoadVersionHistory(string? filePath, ListBox versionsListBox, Label captionLabel, Label? noVersionsMessageLabel)
+    {
+        if (versionsListBox is null)
+            throw new ArgumentNullException(nameof(versionsListBox));
+
+        if (captionLabel is null)
+            throw new ArgumentNullException(nameof(captionLabel));
+
+        versionsListBox.Items.Clear();
+        captionLabel.Text = filePath != null
+            ? $"Version History - {Path.GetFileName(filePath)}"
+            : "Version History";
 
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
         {
-            if (noVersionsMessageLabel != null)
+            if (noVersionsMessageLabel is not null)
                 noVersionsMessageLabel.Visible = false;
             return;
         }
@@ -50,8 +51,7 @@ public class VersionDomainService : IVersionDomainService
                 }
             }
 
-            // Show/hide the no versions message based on whether items exist
-            if (noVersionsMessageLabel != null)
+            if (noVersionsMessageLabel is not null)
             {
                 noVersionsMessageLabel.Visible = versionsListBox.Items.Count == 0;
             }
@@ -62,26 +62,20 @@ public class VersionDomainService : IVersionDomainService
         }
     }
 
-    public void PromptAndSaveVersion(string filePath, string? selectedFilePath, ListBox versionsListBox)
+    public void SaveVersion(string filePath, string comment)
     {
-        if (!File.Exists(filePath))
-            return;
-
-        var comment = PromptDialog.ShowDialog(
-            $"Enter a version comment for {Path.GetFileName(filePath)}:\n\nSelect Cancel to skip saving a snapshot.",
-            "Save Version");
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be empty.", nameof(filePath));
 
         if (string.IsNullOrWhiteSpace(comment))
-            return;
+            throw new ArgumentException("Version comment cannot be empty.", nameof(comment));
+
+        if (!File.Exists(filePath))
+            throw new InvalidOperationException("The selected file could not be found.");
 
         try
         {
             VersionHelper.SaveVersion(filePath, comment.Trim(), _jsonOptions);
-
-            if (string.Equals(selectedFilePath, filePath, StringComparison.OrdinalIgnoreCase))
-            {
-                LoadVersionHistory(filePath, versionsListBox, null!);
-            }
         }
         catch (Exception ex)
         {
@@ -143,4 +137,3 @@ public class VersionDomainService : IVersionDomainService
         }
     }
 }
-
