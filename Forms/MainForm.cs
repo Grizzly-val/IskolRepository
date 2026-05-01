@@ -824,6 +824,8 @@ public partial class MainForm : Form
     private void ShowStartupView()
     {
         mainSplitContainer.Panel1Collapsed = true;
+        pathHeaderPanel.Visible = false;
+        toolbarHeaderPanel.Visible = false;
         startupPanel.Visible = true;
         subjectSelectionPanel.Visible = false;
         workspacePanel.Visible = false;
@@ -832,6 +834,8 @@ public partial class MainForm : Form
     private void ShowSubjectView()
     {
         mainSplitContainer.Panel1Collapsed = true;
+        pathHeaderPanel.Visible = false;
+        toolbarHeaderPanel.Visible = false;
         startupPanel.Visible = false;
         subjectSelectionPanel.Visible = true;
         workspacePanel.Visible = false;
@@ -840,6 +844,8 @@ public partial class MainForm : Form
     private void ShowWorkspaceView()
     {
         mainSplitContainer.Panel1Collapsed = false;
+        pathHeaderPanel.Visible = true;
+        toolbarHeaderPanel.Visible = true;
         startupPanel.Visible = false;
         subjectSelectionPanel.Visible = false;
         workspacePanel.Visible = true;
