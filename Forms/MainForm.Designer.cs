@@ -25,10 +25,12 @@ partial class MainForm
     private ListView filesListView = null!;
     private ColumnHeader fileNameColumn = null!;
     private ColumnHeader extensionColumn = null!;
+    private Panel rightSidePanel = null!;
     private Panel historyPanel = null!;
     private ListBox versionsListBox = null!;
     private Label historyCaptionLabel = null!;
     private Button revertButton = null!;
+    private Panel filePreviewPanel = null!;
     private GroupBox metadataGroupBox = null!;
     private Button saveVersionButton = null!;
     private Button updateMetadataButton = null!;
@@ -40,8 +42,7 @@ partial class MainForm
     private Label dateAddedLabel = null!;
     private Label deadlineValueLabel = null!;
     private Label deadlineLabel = null!;
-    private Panel pathHeaderPanel = null!;
-    private Panel toolbarHeaderPanel = null!;
+    private Panel workspaceHeaderPanel = null!;
     private Button createFileButton = null!;
     private Button createSubrepositoryButton = null!;
     private Button createRepositoryButton = null!;
@@ -64,6 +65,7 @@ partial class MainForm
 
     private void InitializeComponent()
     {
+        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
         mainSplitContainer = new SplitContainer();
         repositoryTreeView = new TreeView();
         hostPanel = new Panel();
@@ -73,11 +75,13 @@ partial class MainForm
         filesListView = new ListView();
         fileNameColumn = new ColumnHeader();
         extensionColumn = new ColumnHeader();
+        rightSidePanel = new Panel();
         historyPanel = new Panel();
         noVersionsMessageLabel = new Label();
         versionsListBox = new ListBox();
         historyCaptionLabel = new Label();
         revertButton = new Button();
+        filePreviewPanel = new Panel();
         metadataGroupBox = new GroupBox();
         saveVersionButton = new Button();
         updateMetadataButton = new Button();
@@ -89,8 +93,7 @@ partial class MainForm
         dateAddedLabel = new Label();
         deadlineValueLabel = new Label();
         deadlineLabel = new Label();
-        pathHeaderPanel = new Panel();
-        toolbarHeaderPanel = new Panel();
+        workspaceHeaderPanel = new Panel();
         createFileButton = new Button();
         createSubrepositoryButton = new Button();
         createRepositoryButton = new Button();
@@ -118,15 +121,15 @@ partial class MainForm
         mainSplitContainer.Panel2.SuspendLayout();
         mainSplitContainer.SuspendLayout();
         hostPanel.SuspendLayout();
-        pathHeaderPanel.SuspendLayout();
-        toolbarHeaderPanel.SuspendLayout();
         workspacePanel.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)contentSplitContainer).BeginInit();
         contentSplitContainer.Panel1.SuspendLayout();
         contentSplitContainer.Panel2.SuspendLayout();
         contentSplitContainer.SuspendLayout();
+        rightSidePanel.SuspendLayout();
         historyPanel.SuspendLayout();
         metadataGroupBox.SuspendLayout();
+        workspaceHeaderPanel.SuspendLayout();
         subjectSelectionPanel.SuspendLayout();
         subjectHeaderPanel.SuspendLayout();
         startupPanel.SuspendLayout();
@@ -146,20 +149,19 @@ partial class MainForm
         // mainSplitContainer.Panel2
         // 
         mainSplitContainer.Panel2.Controls.Add(hostPanel);
-        mainSplitContainer.Panel2.Controls.Add(toolbarHeaderPanel);
-        mainSplitContainer.Panel2.Controls.Add(pathHeaderPanel);
         mainSplitContainer.Panel2.Padding = new Padding(10);
-        mainSplitContainer.Size = new Size(1320, 780);
+        mainSplitContainer.Size = new Size(1320, 749);
         mainSplitContainer.SplitterDistance = 330;
         mainSplitContainer.TabIndex = 0;
         // 
         // repositoryTreeView
         // 
+        repositoryTreeView.BackColor = Color.FromArgb(218, 215, 205);
         repositoryTreeView.Dock = DockStyle.Fill;
         repositoryTreeView.HideSelection = false;
         repositoryTreeView.Location = new Point(10, 10);
         repositoryTreeView.Name = "repositoryTreeView";
-        repositoryTreeView.Size = new Size(310, 760);
+        repositoryTreeView.Size = new Size(310, 729);
         repositoryTreeView.TabIndex = 0;
         repositoryTreeView.AfterSelect += repositoryTreeView_AfterSelect;
         repositoryTreeView.NodeMouseDoubleClick += repositoryTreeView_NodeMouseDoubleClick;
@@ -172,22 +174,23 @@ partial class MainForm
         hostPanel.Dock = DockStyle.Fill;
         hostPanel.Location = new Point(10, 10);
         hostPanel.Name = "hostPanel";
-        hostPanel.Size = new Size(966, 760);
+        hostPanel.Size = new Size(966, 729);
         hostPanel.TabIndex = 0;
         // 
         // workspacePanel
         // 
         workspacePanel.Controls.Add(contentSplitContainer);
+        workspacePanel.Controls.Add(workspaceHeaderPanel);
         workspacePanel.Dock = DockStyle.Fill;
         workspacePanel.Location = new Point(0, 0);
         workspacePanel.Name = "workspacePanel";
-        workspacePanel.Size = new Size(966, 760);
+        workspacePanel.Size = new Size(966, 729);
         workspacePanel.TabIndex = 2;
         // 
         // contentSplitContainer
         // 
         contentSplitContainer.Dock = DockStyle.Fill;
-        contentSplitContainer.Location = new Point(0, 0);
+        contentSplitContainer.Location = new Point(0, 88);
         contentSplitContainer.Name = "contentSplitContainer";
         // 
         // contentSplitContainer.Panel1
@@ -198,20 +201,20 @@ partial class MainForm
         // 
         // contentSplitContainer.Panel2
         // 
-        contentSplitContainer.Panel2.Controls.Add(historyPanel);
+        contentSplitContainer.Panel2.Controls.Add(rightSidePanel);
         contentSplitContainer.Panel2.Padding = new Padding(8, 0, 0, 0);
-        contentSplitContainer.Size = new Size(966, 512);
-        contentSplitContainer.SplitterDistance = 560;
+        contentSplitContainer.Size = new Size(966, 641);
+        contentSplitContainer.SplitterDistance = 477;
         contentSplitContainer.TabIndex = 2;
         // 
         // noRepositoryMessageLabel
         // 
         noRepositoryMessageLabel.Dock = DockStyle.Fill;
         noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F);
-        noRepositoryMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
+        noRepositoryMessageLabel.ForeColor = Color.FromArgb(58, 90, 64);
         noRepositoryMessageLabel.Location = new Point(0, 0);
         noRepositoryMessageLabel.Name = "noRepositoryMessageLabel";
-        noRepositoryMessageLabel.Size = new Size(552, 512);
+        noRepositoryMessageLabel.Size = new Size(469, 641);
         noRepositoryMessageLabel.TabIndex = 1;
         noRepositoryMessageLabel.Text = "Please select an Activity Repository";
         noRepositoryMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -219,6 +222,7 @@ partial class MainForm
         // 
         // filesListView
         // 
+        filesListView.BackColor = Color.FromArgb(58, 90, 64);
         filesListView.Columns.AddRange(new ColumnHeader[] { fileNameColumn, extensionColumn });
         filesListView.Dock = DockStyle.Fill;
         filesListView.FullRowSelect = true;
@@ -226,7 +230,7 @@ partial class MainForm
         filesListView.Location = new Point(0, 0);
         filesListView.MultiSelect = false;
         filesListView.Name = "filesListView";
-        filesListView.Size = new Size(552, 512);
+        filesListView.Size = new Size(469, 641);
         filesListView.TabIndex = 0;
         filesListView.UseCompatibleStateImageBehavior = false;
         filesListView.View = View.Details;
@@ -236,12 +240,23 @@ partial class MainForm
         // fileNameColumn
         // 
         fileNameColumn.Text = "File Name";
-        fileNameColumn.Width = 360;
+        fileNameColumn.Width = 400;
         // 
         // extensionColumn
         // 
         extensionColumn.Text = "Extension";
-        extensionColumn.Width = 120;
+        extensionColumn.Width = 140;
+        // 
+        // rightSidePanel
+        // 
+        rightSidePanel.Controls.Add(historyPanel);
+        rightSidePanel.Controls.Add(filePreviewPanel);
+        rightSidePanel.Controls.Add(metadataGroupBox);
+        rightSidePanel.Dock = DockStyle.Fill;
+        rightSidePanel.Location = new Point(8, 0);
+        rightSidePanel.Name = "rightSidePanel";
+        rightSidePanel.Size = new Size(477, 641);
+        rightSidePanel.TabIndex = 0;
         // 
         // historyPanel
         // 
@@ -249,21 +264,20 @@ partial class MainForm
         historyPanel.Controls.Add(versionsListBox);
         historyPanel.Controls.Add(historyCaptionLabel);
         historyPanel.Controls.Add(revertButton);
-        historyPanel.Controls.Add(metadataGroupBox);
-        historyPanel.Dock = DockStyle.Fill;
-        historyPanel.Location = new Point(8, 0);
+        historyPanel.Dock = DockStyle.Bottom;
+        historyPanel.Location = new Point(0, 581);
         historyPanel.Name = "historyPanel";
-        historyPanel.Size = new Size(394, 512);
-        historyPanel.TabIndex = 0;
+        historyPanel.Size = new Size(477, 60);
+        historyPanel.TabIndex = 2;
         // 
         // noVersionsMessageLabel
         // 
         noVersionsMessageLabel.Dock = DockStyle.Fill;
         noVersionsMessageLabel.Font = new Font("Segoe UI", 12F);
         noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
-        noVersionsMessageLabel.Location = new Point(0, 0);
+        noVersionsMessageLabel.Location = new Point(0, 24);
         noVersionsMessageLabel.Name = "noVersionsMessageLabel";
-        noVersionsMessageLabel.Size = new Size(394, 452);
+        noVersionsMessageLabel.Size = new Size(477, 0);
         noVersionsMessageLabel.TabIndex = 1;
         noVersionsMessageLabel.Text = "No versions available";
         noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -274,19 +288,19 @@ partial class MainForm
         versionsListBox.Dock = DockStyle.Fill;
         versionsListBox.FormattingEnabled = true;
         versionsListBox.HorizontalScrollbar = true;
-        versionsListBox.Location = new Point(0, 0);
+        versionsListBox.Location = new Point(0, 24);
         versionsListBox.Name = "versionsListBox";
-        versionsListBox.Size = new Size(394, 452);
+        versionsListBox.Size = new Size(477, 0);
         versionsListBox.TabIndex = 1;
         versionsListBox.SelectedIndexChanged += versionsListBox_SelectedIndexChanged;
         // 
         // historyCaptionLabel
         // 
-        historyCaptionLabel.Dock = DockStyle.Bottom;
-        historyCaptionLabel.Location = new Point(0, 452);
+        historyCaptionLabel.Dock = DockStyle.Top;
+        historyCaptionLabel.Location = new Point(0, 0);
         historyCaptionLabel.Name = "historyCaptionLabel";
-        historyCaptionLabel.Padding = new Padding(0, 6, 0, 0);
-        historyCaptionLabel.Size = new Size(394, 24);
+        historyCaptionLabel.Padding = new Padding(0, 4, 0, 0);
+        historyCaptionLabel.Size = new Size(477, 24);
         historyCaptionLabel.TabIndex = 2;
         historyCaptionLabel.Text = "Version History";
         // 
@@ -294,13 +308,22 @@ partial class MainForm
         // 
         revertButton.Dock = DockStyle.Bottom;
         revertButton.Enabled = false;
-        revertButton.Location = new Point(0, 476);
+        revertButton.Location = new Point(0, 24);
         revertButton.Name = "revertButton";
-        revertButton.Size = new Size(394, 36);
+        revertButton.Size = new Size(477, 36);
         revertButton.TabIndex = 3;
         revertButton.Text = "Revert";
         revertButton.UseVisualStyleBackColor = true;
         revertButton.Click += revertButton_Click;
+        // 
+        // filePreviewPanel
+        // 
+        filePreviewPanel.BorderStyle = BorderStyle.FixedSingle;
+        filePreviewPanel.Dock = DockStyle.Fill;
+        filePreviewPanel.Location = new Point(0, 160);
+        filePreviewPanel.Name = "filePreviewPanel";
+        filePreviewPanel.Size = new Size(477, 481);
+        filePreviewPanel.TabIndex = 1;
         // 
         // metadataGroupBox
         // 
@@ -317,28 +340,28 @@ partial class MainForm
         metadataGroupBox.Dock = DockStyle.Top;
         metadataGroupBox.Location = new Point(0, 0);
         metadataGroupBox.Name = "metadataGroupBox";
-        metadataGroupBox.Size = new Size(394, 120);
-        metadataGroupBox.TabIndex = 1;
+        metadataGroupBox.Size = new Size(477, 160);
+        metadataGroupBox.TabIndex = 0;
         metadataGroupBox.TabStop = false;
         metadataGroupBox.Text = "Repository Metadata";
         // 
         // saveVersionButton
         // 
         saveVersionButton.Enabled = false;
-        saveVersionButton.Location = new Point(270, 51);
+        saveVersionButton.Location = new Point(300, 40);
         saveVersionButton.Name = "saveVersionButton";
-        saveVersionButton.Size = new Size(100, 25);
+        saveVersionButton.Size = new Size(94, 23);
         saveVersionButton.TabIndex = 8;
-        saveVersionButton.Text = "Save Version";
+        saveVersionButton.Text = "Select a file to";
         saveVersionButton.UseVisualStyleBackColor = true;
         saveVersionButton.Click += saveVersionButton_Click;
         // 
         // updateMetadataButton
         // 
         updateMetadataButton.Enabled = false;
-        updateMetadataButton.Location = new Point(270, 82);
+        updateMetadataButton.Location = new Point(300, 94);
         updateMetadataButton.Name = "updateMetadataButton";
-        updateMetadataButton.Size = new Size(100, 25);
+        updateMetadataButton.Size = new Size(94, 23);
         updateMetadataButton.TabIndex = 9;
         updateMetadataButton.Text = "Update";
         updateMetadataButton.UseVisualStyleBackColor = true;
@@ -350,16 +373,16 @@ partial class MainForm
         statusComboBox.Enabled = false;
         statusComboBox.FormattingEnabled = true;
         statusComboBox.Items.AddRange(new object[] { "in-progress", "completed", "late" });
-        statusComboBox.Location = new Point(170, 82);
+        statusComboBox.Location = new Point(172, 94);
         statusComboBox.Name = "statusComboBox";
-        statusComboBox.Size = new Size(90, 23);
+        statusComboBox.Size = new Size(120, 23);
         statusComboBox.TabIndex = 7;
         // 
         // statusLabel
         // 
-        statusLabel.Location = new Point(170, 65);
+        statusLabel.Location = new Point(172, 76);
         statusLabel.Name = "statusLabel";
-        statusLabel.Size = new Size(90, 15);
+        statusLabel.Size = new Size(64, 20);
         statusLabel.TabIndex = 6;
         statusLabel.Text = "Status";
         // 
@@ -367,124 +390,131 @@ partial class MainForm
         // 
         deadlineDateTimePicker.Enabled = false;
         deadlineDateTimePicker.Format = DateTimePickerFormat.Short;
-        deadlineDateTimePicker.Location = new Point(170, 38);
+        deadlineDateTimePicker.Location = new Point(172, 40);
         deadlineDateTimePicker.Name = "deadlineDateTimePicker";
-        deadlineDateTimePicker.Size = new Size(90, 23);
+        deadlineDateTimePicker.Size = new Size(120, 23);
         deadlineDateTimePicker.TabIndex = 5;
         // 
         // editDeadlineLabel
         // 
-        editDeadlineLabel.Location = new Point(170, 20);
+        editDeadlineLabel.Location = new Point(172, 22);
         editDeadlineLabel.Name = "editDeadlineLabel";
-        editDeadlineLabel.Size = new Size(90, 15);
+        editDeadlineLabel.Size = new Size(82, 20);
         editDeadlineLabel.TabIndex = 4;
         editDeadlineLabel.Text = "Edit Deadline";
         // 
         // dateAddedValueLabel
         // 
         dateAddedValueLabel.BorderStyle = BorderStyle.FixedSingle;
-        dateAddedValueLabel.Location = new Point(10, 82);
+        dateAddedValueLabel.Location = new Point(8, 94);
         dateAddedValueLabel.Name = "dateAddedValueLabel";
-        dateAddedValueLabel.Padding = new Padding(3, 2, 3, 2);
-        dateAddedValueLabel.Size = new Size(150, 20);
+        dateAddedValueLabel.Padding = new Padding(4, 3, 4, 3);
+        dateAddedValueLabel.Size = new Size(150, 23);
         dateAddedValueLabel.TabIndex = 3;
         dateAddedValueLabel.Text = "-";
         // 
         // dateAddedLabel
         // 
-        dateAddedLabel.Location = new Point(10, 65);
+        dateAddedLabel.Location = new Point(8, 76);
         dateAddedLabel.Name = "dateAddedLabel";
-        dateAddedLabel.Size = new Size(150, 15);
+        dateAddedLabel.Size = new Size(102, 20);
         dateAddedLabel.TabIndex = 2;
         dateAddedLabel.Text = "Date Added";
         // 
         // deadlineValueLabel
         // 
         deadlineValueLabel.BorderStyle = BorderStyle.FixedSingle;
-        deadlineValueLabel.Location = new Point(10, 38);
+        deadlineValueLabel.Location = new Point(8, 40);
         deadlineValueLabel.Name = "deadlineValueLabel";
-        deadlineValueLabel.Padding = new Padding(3, 2, 3, 2);
-        deadlineValueLabel.Size = new Size(150, 20);
+        deadlineValueLabel.Padding = new Padding(4, 3, 4, 3);
+        deadlineValueLabel.Size = new Size(150, 23);
         deadlineValueLabel.TabIndex = 1;
         deadlineValueLabel.Text = "-";
         // 
         // deadlineLabel
         // 
-        deadlineLabel.Location = new Point(10, 20);
+        deadlineLabel.Location = new Point(8, 22);
         deadlineLabel.Name = "deadlineLabel";
-        deadlineLabel.Size = new Size(150, 15);
+        deadlineLabel.Size = new Size(79, 20);
         deadlineLabel.TabIndex = 0;
         deadlineLabel.Text = "Deadline";
         // 
-        // pathHeaderPanel
+        // workspaceHeaderPanel
         // 
-        pathHeaderPanel.Controls.Add(selectedPathValueLabel);
-        pathHeaderPanel.Controls.Add(selectedPathLabel);
-        pathHeaderPanel.Controls.Add(selectedSubjectValueLabel);
-        pathHeaderPanel.Controls.Add(selectedSubjectLabel);
-        pathHeaderPanel.Dock = DockStyle.Top;
-        pathHeaderPanel.Location = new Point(0, 0);
-        pathHeaderPanel.Name = "pathHeaderPanel";
-        pathHeaderPanel.Size = new Size(966, 56);
-        pathHeaderPanel.TabIndex = 0;
-        // 
-        // toolbarHeaderPanel
-        // 
-        toolbarHeaderPanel.Controls.Add(createFileButton);
-        toolbarHeaderPanel.Controls.Add(createSubrepositoryButton);
-        toolbarHeaderPanel.Controls.Add(createRepositoryButton);
-        toolbarHeaderPanel.Controls.Add(backToSubjectsButton);
-        toolbarHeaderPanel.Dock = DockStyle.Top;
-        toolbarHeaderPanel.Location = new Point(0, 0);
-        toolbarHeaderPanel.Name = "toolbarHeaderPanel";
-        toolbarHeaderPanel.Size = new Size(966, 42);
-        toolbarHeaderPanel.TabIndex = 1;
+        workspaceHeaderPanel.BackColor = Color.FromArgb(218, 215, 205);
+        workspaceHeaderPanel.Controls.Add(createFileButton);
+        workspaceHeaderPanel.Controls.Add(createSubrepositoryButton);
+        workspaceHeaderPanel.Controls.Add(createRepositoryButton);
+        workspaceHeaderPanel.Controls.Add(backToSubjectsButton);
+        workspaceHeaderPanel.Controls.Add(selectedPathValueLabel);
+        workspaceHeaderPanel.Controls.Add(selectedPathLabel);
+        workspaceHeaderPanel.Controls.Add(selectedSubjectValueLabel);
+        workspaceHeaderPanel.Controls.Add(selectedSubjectLabel);
+        workspaceHeaderPanel.Dock = DockStyle.Top;
+        workspaceHeaderPanel.Location = new Point(0, 0);
+        workspaceHeaderPanel.Name = "workspaceHeaderPanel";
+        workspaceHeaderPanel.Size = new Size(966, 88);
+        workspaceHeaderPanel.TabIndex = 0;
         // 
         // createFileButton
         // 
+        createFileButton.BackColor = Color.FromArgb(218, 215, 205);
         createFileButton.Enabled = false;
-        createFileButton.Location = new Point(440, 6);
+        createFileButton.Image = (Image)resources.GetObject("createFileButton.Image");
+        createFileButton.ImageAlign = ContentAlignment.MiddleLeft;
+        createFileButton.Location = new Point(467, 9);
+        createFileButton.Margin = new Padding(0);
         createFileButton.Name = "createFileButton";
         createFileButton.Size = new Size(120, 32);
         createFileButton.TabIndex = 3;
         createFileButton.Text = "Create File";
-        createFileButton.UseVisualStyleBackColor = true;
+        createFileButton.UseVisualStyleBackColor = false;
         createFileButton.Click += createFileButton_Click;
         // 
         // createSubrepositoryButton
         // 
+        createSubrepositoryButton.BackColor = Color.FromArgb(218, 215, 205);
         createSubrepositoryButton.Enabled = false;
-        createSubrepositoryButton.Location = new Point(276, 6);
+        createSubrepositoryButton.Image = (Image)resources.GetObject("createSubrepositoryButton.Image");
+        createSubrepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
+        createSubrepositoryButton.Location = new Point(307, 9);
+        createSubrepositoryButton.Margin = new Padding(0);
         createSubrepositoryButton.Name = "createSubrepositoryButton";
-        createSubrepositoryButton.Size = new Size(148, 32);
+        createSubrepositoryButton.Size = new Size(154, 32);
         createSubrepositoryButton.TabIndex = 2;
-        createSubrepositoryButton.Text = "Create Subrepository";
-        createSubrepositoryButton.UseVisualStyleBackColor = true;
+        createSubrepositoryButton.Text = "     Create Subrepository";
+        createSubrepositoryButton.UseVisualStyleBackColor = false;
         createSubrepositoryButton.Click += createSubrepositoryButton_Click;
         // 
         // createRepositoryButton
         // 
-        createRepositoryButton.Location = new Point(114, 6);
+        createRepositoryButton.BackColor = Color.FromArgb(218, 215, 205);
+        createRepositoryButton.Image = (Image)resources.GetObject("createRepositoryButton.Image");
+        createRepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
+        createRepositoryButton.Location = new Point(156, 9);
         createRepositoryButton.Name = "createRepositoryButton";
         createRepositoryButton.Size = new Size(145, 32);
         createRepositoryButton.TabIndex = 1;
-        createRepositoryButton.Text = "Create Repository";
-        createRepositoryButton.UseVisualStyleBackColor = true;
+        createRepositoryButton.Text = "     Create Repository";
+        createRepositoryButton.UseVisualStyleBackColor = false;
         createRepositoryButton.Click += createRepositoryButton_Click;
         // 
         // backToSubjectsButton
         // 
-        backToSubjectsButton.Location = new Point(0, 6);
+        backToSubjectsButton.BackColor = Color.FromArgb(218, 215, 205);
+        backToSubjectsButton.Image = (Image)resources.GetObject("backToSubjectsButton.Image");
+        backToSubjectsButton.ImageAlign = ContentAlignment.MiddleLeft;
+        backToSubjectsButton.Location = new Point(9, 9);
         backToSubjectsButton.Name = "backToSubjectsButton";
-        backToSubjectsButton.Size = new Size(110, 32);
+        backToSubjectsButton.Size = new Size(141, 32);
         backToSubjectsButton.TabIndex = 0;
-        backToSubjectsButton.Text = "Back To Subjects";
-        backToSubjectsButton.UseVisualStyleBackColor = true;
+        backToSubjectsButton.Text = "      Back to Subject";
+        backToSubjectsButton.UseVisualStyleBackColor = false;
         backToSubjectsButton.Click += backToSubjectsButton_Click;
         // 
         // selectedPathValueLabel
         // 
-        selectedPathValueLabel.Location = new Point(326, 33);
+        selectedPathValueLabel.Location = new Point(326, 65);
         selectedPathValueLabel.Name = "selectedPathValueLabel";
         selectedPathValueLabel.Size = new Size(430, 20);
         selectedPathValueLabel.TabIndex = 6;
@@ -492,7 +522,7 @@ partial class MainForm
         // 
         // selectedPathLabel
         // 
-        selectedPathLabel.Location = new Point(326, 13);
+        selectedPathLabel.Location = new Point(326, 48);
         selectedPathLabel.Name = "selectedPathLabel";
         selectedPathLabel.Size = new Size(120, 20);
         selectedPathLabel.TabIndex = 5;
@@ -500,7 +530,7 @@ partial class MainForm
         // 
         // selectedSubjectValueLabel
         // 
-        selectedSubjectValueLabel.Location = new Point(0, 33);
+        selectedSubjectValueLabel.Location = new Point(0, 65);
         selectedSubjectValueLabel.Name = "selectedSubjectValueLabel";
         selectedSubjectValueLabel.Size = new Size(400, 20);
         selectedSubjectValueLabel.TabIndex = 4;
@@ -508,7 +538,7 @@ partial class MainForm
         // 
         // selectedSubjectLabel
         // 
-        selectedSubjectLabel.Location = new Point(0, 13);
+        selectedSubjectLabel.Location = new Point(0, 48);
         selectedSubjectLabel.Name = "selectedSubjectLabel";
         selectedSubjectLabel.Size = new Size(120, 20);
         selectedSubjectLabel.TabIndex = 3;
@@ -521,7 +551,7 @@ partial class MainForm
         subjectSelectionPanel.Dock = DockStyle.Fill;
         subjectSelectionPanel.Location = new Point(0, 0);
         subjectSelectionPanel.Name = "subjectSelectionPanel";
-        subjectSelectionPanel.Size = new Size(966, 760);
+        subjectSelectionPanel.Size = new Size(966, 729);
         subjectSelectionPanel.TabIndex = 1;
         // 
         // subjectCardsPanel
@@ -531,7 +561,7 @@ partial class MainForm
         subjectCardsPanel.Location = new Point(0, 120);
         subjectCardsPanel.Name = "subjectCardsPanel";
         subjectCardsPanel.Padding = new Padding(0, 8, 0, 0);
-        subjectCardsPanel.Size = new Size(966, 640);
+        subjectCardsPanel.Size = new Size(966, 609);
         subjectCardsPanel.TabIndex = 1;
         // 
         // subjectHeaderPanel
@@ -610,7 +640,7 @@ partial class MainForm
         startupPanel.Dock = DockStyle.Fill;
         startupPanel.Location = new Point(0, 0);
         startupPanel.Name = "startupPanel";
-        startupPanel.Size = new Size(966, 760);
+        startupPanel.Size = new Size(966, 729);
         startupPanel.TabIndex = 0;
         // 
         // openSemesterButton
@@ -654,7 +684,7 @@ partial class MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1320, 780);
+        ClientSize = new Size(1320, 749);
         Controls.Add(mainSplitContainer);
         MinimumSize = new Size(1100, 680);
         Name = "MainForm";
@@ -665,15 +695,15 @@ partial class MainForm
         ((System.ComponentModel.ISupportInitialize)mainSplitContainer).EndInit();
         mainSplitContainer.ResumeLayout(false);
         hostPanel.ResumeLayout(false);
-        pathHeaderPanel.ResumeLayout(false);
-        toolbarHeaderPanel.ResumeLayout(false);
         workspacePanel.ResumeLayout(false);
         contentSplitContainer.Panel1.ResumeLayout(false);
         contentSplitContainer.Panel2.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)contentSplitContainer).EndInit();
         contentSplitContainer.ResumeLayout(false);
+        rightSidePanel.ResumeLayout(false);
         historyPanel.ResumeLayout(false);
         metadataGroupBox.ResumeLayout(false);
+        workspaceHeaderPanel.ResumeLayout(false);
         subjectSelectionPanel.ResumeLayout(false);
         subjectHeaderPanel.ResumeLayout(false);
         startupPanel.ResumeLayout(false);
