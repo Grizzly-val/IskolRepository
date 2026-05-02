@@ -40,6 +40,8 @@ public partial class MainForm : Form
 
         InitializeComponent();
 
+        _startupView.Dock = DockStyle.Fill;
+
         _startupView.OpenSemesterRequested += openSemesterButton_Click;
         _startupView.NewSemesterRequested += newSemesterButton_Click;
         _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
