@@ -39,12 +39,12 @@ public partial class MainForm : Form
         _validationService = services.ValidationService;
 
         InitializeComponent();
-        
+
         _startupView.OpenSemesterRequested += openSemesterButton_Click;
         _startupView.NewSemesterRequested += newSemesterButton_Click;
         _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
         _subjectSelectionView.ChangeSemesterRequested += changeSemesterButton_Click;
-        
+
         InitializeFilesListViewIcons();
         InitializeTreeViewIcons();
 
@@ -831,8 +831,8 @@ public partial class MainForm : Form
     private void ShowStartupView()
     {
         mainSplitContainer.Panel1Collapsed = true;
-        pathHeaderPanel.Visible = false;
         toolbarHeaderPanel.Visible = false;
+        pathHeaderPanel.Visible = false;
         _startupView.Visible = true;
         _subjectSelectionView.Visible = false;
         workspacePanel.Visible = false;
@@ -841,8 +841,8 @@ public partial class MainForm : Form
     private void ShowSubjectView()
     {
         mainSplitContainer.Panel1Collapsed = true;
-        pathHeaderPanel.Visible = false;
         toolbarHeaderPanel.Visible = false;
+        pathHeaderPanel.Visible = false;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = true;
         workspacePanel.Visible = false;
@@ -851,8 +851,8 @@ public partial class MainForm : Form
     private void ShowWorkspaceView()
     {
         mainSplitContainer.Panel1Collapsed = false;
-        pathHeaderPanel.Visible = true;
         toolbarHeaderPanel.Visible = true;
+        pathHeaderPanel.Visible = true;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = false;
         workspacePanel.Visible = true;
@@ -1098,4 +1098,5 @@ public partial class MainForm : Form
 
     #endregion
 
+   
 }
