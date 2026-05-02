@@ -39,6 +39,12 @@ public partial class MainForm : Form
         _validationService = services.ValidationService;
 
         InitializeComponent();
+        
+        _startupView.OpenSemesterRequested += openSemesterButton_Click;
+        _startupView.NewSemesterRequested += newSemesterButton_Click;
+        _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
+        _subjectSelectionView.ChangeSemesterRequested += changeSemesterButton_Click;
+        
         InitializeFilesListViewIcons();
         InitializeTreeViewIcons();
 
@@ -167,7 +173,7 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        subjectCardsPanel.Controls.Clear();
+        _subjectSelectionView.PopulateSubjects(_ => { });
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
@@ -672,8 +678,8 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        semesterNameValueLabel.Text = Path.GetFileName(semesterPath);
-        semesterPathValueLabel.Text = semesterPath;
+        _subjectSelectionView.SemesterName = Path.GetFileName(semesterPath);
+        _subjectSelectionView.SemesterPath = semesterPath;
         selectedSubjectValueLabel.Text = "No subject selected";
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
@@ -694,11 +700,12 @@ public partial class MainForm : Form
         {
             if (!string.IsNullOrWhiteSpace(currentSemesterPath))
             {
-                _subjectService.LoadSubjectsUI(
-                    currentSemesterPath,
-                    subjectCardsPanel,
-                    CreateSubjectCard,
-                    () => subjectCardsPanel.Controls.Add(CreateEmptyStateLabel("No subjects yet. Create one to start organizing repositories.")));
+                _subjectSelectionView.PopulateSubjects(panel =>
+                    _subjectService.LoadSubjectsUI(
+                        currentSemesterPath,
+                        panel,
+                        CreateSubjectCard,
+                        () => panel.Controls.Add(CreateEmptyStateLabel("No subjects yet. Create one to start organizing repositories."))));
             }
         }
         catch (Exception ex)
@@ -826,8 +833,8 @@ public partial class MainForm : Form
         mainSplitContainer.Panel1Collapsed = true;
         pathHeaderPanel.Visible = false;
         toolbarHeaderPanel.Visible = false;
-        startupPanel.Visible = true;
-        subjectSelectionPanel.Visible = false;
+        _startupView.Visible = true;
+        _subjectSelectionView.Visible = false;
         workspacePanel.Visible = false;
     }
 
@@ -836,8 +843,8 @@ public partial class MainForm : Form
         mainSplitContainer.Panel1Collapsed = true;
         pathHeaderPanel.Visible = false;
         toolbarHeaderPanel.Visible = false;
-        startupPanel.Visible = false;
-        subjectSelectionPanel.Visible = true;
+        _startupView.Visible = false;
+        _subjectSelectionView.Visible = true;
         workspacePanel.Visible = false;
     }
 
@@ -846,8 +853,8 @@ public partial class MainForm : Form
         mainSplitContainer.Panel1Collapsed = false;
         pathHeaderPanel.Visible = true;
         toolbarHeaderPanel.Visible = true;
-        startupPanel.Visible = false;
-        subjectSelectionPanel.Visible = false;
+        _startupView.Visible = false;
+        _subjectSelectionView.Visible = false;
         workspacePanel.Visible = true;
     }
 
