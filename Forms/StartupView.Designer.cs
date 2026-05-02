@@ -4,7 +4,8 @@ partial class StartupView
 {
     private System.ComponentModel.IContainer components = null;
 
-    private Label startupTitleLabel = null!;
+    private ShadowLabel welcomeLabel = null!;
+    private ShadowLabel appNameLabel = null!;
     private Label orLabel = null!;
     private Button openSemesterButton = null!;
     private Button newSemesterButton = null!;
@@ -20,7 +21,8 @@ partial class StartupView
 
     private void InitializeComponent()
     {
-        startupTitleLabel = new Label();
+        welcomeLabel = new ShadowLabel();
+        appNameLabel = new ShadowLabel();
         orLabel = new Label();
         openSemesterButton = new Button();
         newSemesterButton = new Button();
@@ -34,12 +36,21 @@ partial class StartupView
         this.BackgroundImageLayout = ImageLayout.Stretch;
 
         // ===== TITLE (TOP) =====
-        startupTitleLabel.Text = "Welcome to\nIskolRepo";
-        startupTitleLabel.Font = new Font("Segoe UI", 38F, FontStyle.Bold);
-        startupTitleLabel.ForeColor = Color.Black;
-        startupTitleLabel.TextAlign = ContentAlignment.MiddleCenter;
-        startupTitleLabel.BackColor = Color.Transparent;
-        startupTitleLabel.AutoSize = true;
+        welcomeLabel.Text = "Welcome to";
+        welcomeLabel.Font = new Font("Segoe UI", 36F, FontStyle.Regular);
+        welcomeLabel.ForeColor = Color.FromArgb(245, 245, 240);
+        welcomeLabel.TextAlign = ContentAlignment.MiddleCenter;
+        welcomeLabel.BackColor = Color.Transparent;
+        welcomeLabel.AutoSize = true;
+        welcomeLabel.Location = new Point(120, 40);
+
+        appNameLabel.Text = "IskolRepo";
+        appNameLabel.Font = new Font("Segoe UI", 42F, FontStyle.Bold);
+        appNameLabel.ForeColor = Color.FromArgb(245, 245, 240);
+        appNameLabel.TextAlign = ContentAlignment.MiddleCenter;
+        appNameLabel.BackColor = Color.Transparent;
+        appNameLabel.AutoSize = true;
+        appNameLabel.Location = new Point(120, 90);
 
         // ===== PANEL (ROUNDED BOX CONTAINER) =====
         overlayPanel.Size = new Size(700, 200);
@@ -83,7 +94,8 @@ partial class StartupView
 
         // Add controls to view
         Controls.Add(overlayPanel);
-        Controls.Add(startupTitleLabel);
+        Controls.Add(welcomeLabel);
+        Controls.Add(appNameLabel);
 
         ResumeLayout(false);
     }

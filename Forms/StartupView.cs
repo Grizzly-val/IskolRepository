@@ -17,8 +17,11 @@ public partial class StartupView : UserControl
             overlayPanel.Left = (this.Width - overlayPanel.Width) / 2;
             overlayPanel.Top = this.Height / 2;
 
-            startupTitleLabel.Left = (this.Width - startupTitleLabel.Width) / 2;
-            startupTitleLabel.Top = overlayPanel.Top - startupTitleLabel.Height - 20;
+            appNameLabel.Left = (this.Width - appNameLabel.Width) / 2;
+            appNameLabel.Top = overlayPanel.Top - appNameLabel.Height - 10;
+
+            welcomeLabel.Left = (this.Width - welcomeLabel.Width) / 2;
+            welcomeLabel.Top = appNameLabel.Top - welcomeLabel.Height - 5;
 
             orLabel.Left = newSemesterButton.Right
                 + (openSemesterButton.Left - newSemesterButton.Right - orLabel.Width) / 2;
