@@ -181,6 +181,7 @@ partial class MainForm
         // 
         // noRepositoryMessageLabel
         // 
+        noRepositoryMessageLabel.BackColor = Color.FromArgb(141, 182, 152);
         noRepositoryMessageLabel.Dock = DockStyle.Fill;
         noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F);
         noRepositoryMessageLabel.ForeColor = Color.FromArgb(58, 90, 64);
@@ -194,7 +195,7 @@ partial class MainForm
         // 
         // filesListView
         // 
-        filesListView.BackColor = Color.FromArgb(58, 90, 64);
+        filesListView.BackColor = Color.FromArgb(141, 182, 152);
         filesListView.Columns.AddRange(new ColumnHeader[] { fileNameColumn, extensionColumn });
         filesListView.Dock = DockStyle.Fill;
         filesListView.FullRowSelect = true;
@@ -234,12 +235,13 @@ partial class MainForm
         // 
         // noVersionsMessageLabel
         // 
+        noVersionsMessageLabel.BackColor = Color.FromArgb(217, 217, 217);
         noVersionsMessageLabel.Dock = DockStyle.Fill;
         noVersionsMessageLabel.Font = new Font("Segoe UI", 12F);
         noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
-        noVersionsMessageLabel.Location = new Point(0, 120);
+        noVersionsMessageLabel.Location = new Point(0, 129);
         noVersionsMessageLabel.Name = "noVersionsMessageLabel";
-        noVersionsMessageLabel.Size = new Size(394, 457);
+        noVersionsMessageLabel.Size = new Size(394, 448);
         noVersionsMessageLabel.TabIndex = 1;
         noVersionsMessageLabel.Text = "No versions available";
         noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -247,12 +249,13 @@ partial class MainForm
         // 
         // versionsListBox
         // 
+        versionsListBox.BackColor = Color.FromArgb(217, 217, 217);
         versionsListBox.Dock = DockStyle.Fill;
         versionsListBox.FormattingEnabled = true;
         versionsListBox.HorizontalScrollbar = true;
-        versionsListBox.Location = new Point(0, 120);
+        versionsListBox.Location = new Point(0, 129);
         versionsListBox.Name = "versionsListBox";
-        versionsListBox.Size = new Size(394, 457);
+        versionsListBox.Size = new Size(394, 448);
         versionsListBox.TabIndex = 1;
         versionsListBox.SelectedIndexChanged += versionsListBox_SelectedIndexChanged;
         // 
@@ -280,6 +283,7 @@ partial class MainForm
         // 
         // metadataGroupBox
         // 
+        metadataGroupBox.BackColor = Color.Silver;
         metadataGroupBox.Controls.Add(saveVersionButton);
         metadataGroupBox.Controls.Add(updateMetadataButton);
         metadataGroupBox.Controls.Add(statusComboBox);
@@ -293,7 +297,7 @@ partial class MainForm
         metadataGroupBox.Dock = DockStyle.Top;
         metadataGroupBox.Location = new Point(0, 0);
         metadataGroupBox.Name = "metadataGroupBox";
-        metadataGroupBox.Size = new Size(394, 120);
+        metadataGroupBox.Size = new Size(394, 129);
         metadataGroupBox.TabIndex = 1;
         metadataGroupBox.TabStop = false;
         metadataGroupBox.Text = "Repository Metadata";
@@ -523,6 +527,7 @@ partial class MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
+        BackColor = Color.White;
         ClientSize = new Size(1320, 749);
         Controls.Add(mainSplitContainer);
         MinimumSize = new Size(1100, 680);
