@@ -69,4 +69,14 @@ public interface IFileSystemHelper
     /// Gets file attributes.
     /// </summary>
     System.IO.FileAttributes GetFileAttributes(string filePath);
+
+    /// <summary>
+    /// Moves a directory from source to destination path.
+    /// </summary>
+    void MoveDirectory(string sourcePath, string destinationPath);
+
+    /// <summary>
+    /// Deletes a directory and all its contents.
+    /// </summary>
+    void DeleteDirectory(string path);
 }

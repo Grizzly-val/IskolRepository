@@ -9,7 +9,7 @@ namespace IskolRepository.Core.Services.Infrastructure;
 /// </summary>
 public class ValidationHelperService : IValidationHelper
 {
-    private static readonly string[] ValidStatuses = ["in-progress", "completed", "late"];
+    private static readonly string[] ValidStatuses = ["in-progress", "completed", "submitted"];
     private readonly IFileSystemHelper _fileSystemHelper;
 
     public ValidationHelperService(IFileSystemHelper fileSystemHelper)

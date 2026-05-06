@@ -19,17 +19,35 @@ public static class ServiceFactory
         var pathProvider = new PathProviderService();
         var validationHelper = new ValidationHelperService(fileSystemHelper);
 
+        // Create file identity manager first (no dependencies on other services)
+        var fileIdentityManager = new FileIdentityManager(fileSystemHelper, pathProvider);
+
+        // Create reconciliation service (depends on fileIdentityManager)
+        var fileReconciliationService = new FileReconciliationService(fileSystemHelper, pathProvider, fileIdentityManager);
+
+        // Create repository service (depends on fileReconciliationService)
         var repositoryService = new RepositoryService(
             fileSystemHelper,
             validationHelper,
             pathProvider,
-            jsonOptions);
+            jsonOptions,
+            fileReconciliationService);
 
         var semesterService = new SemesterService(fileSystemHelper, pathProvider);
-        var fileService = new FileService(fileSystemHelper, pathProvider, validationHelper);
+
+        // Pass new services to FileService
+        var fileService = new FileService(
+            fileSystemHelper,
+            pathProvider,
+            validationHelper,
+            fileIdentityManager,
+            repositoryService);
+
         var subjectService = new SubjectService(fileSystemHelper, pathProvider);
-        var treeViewService = new TreeViewService(fileSystemHelper, pathProvider, validationHelper);
-        var versionService = new VersionService(jsonOptions);
+        var treeViewService = new TreeViewService(fileSystemHelper, pathProvider, validationHelper, repositoryService);
+        
+        // Pass new services to VersionService
+        var versionService = new VersionService(jsonOptions, fileIdentityManager, repositoryService);
 
         return new ServiceRegistry(
             semesterService,
@@ -38,7 +56,9 @@ public static class ServiceFactory
             subjectService,
             treeViewService,
             versionService,
-            validationHelper);
+            validationHelper,
+            fileIdentityManager,
+            fileReconciliationService);
     }
 }
 
@@ -51,6 +71,8 @@ public sealed class ServiceRegistry
     public ITreeViewService TreeViewService { get; }
     public IVersionService VersionService { get; }
     public IValidationHelper ValidationService { get; }
+    public IFileIdentityManager FileIdentityManager { get; }
+    public IFileReconciliationService FileReconciliationService { get; }
 
     public ServiceRegistry(
         ISemesterService semesterService,
@@ -59,7 +81,9 @@ public sealed class ServiceRegistry
         ISubjectService subjectService,
         ITreeViewService treeViewService,
         IVersionService versionService,
-        IValidationHelper validationService)
+        IValidationHelper validationService,
+        IFileIdentityManager fileIdentityManager,
+        IFileReconciliationService fileReconciliationService)
     {
         SemesterService = semesterService ?? throw new ArgumentNullException(nameof(semesterService));
         RepositoryService = repositoryService ?? throw new ArgumentNullException(nameof(repositoryService));
@@ -68,5 +92,7 @@ public sealed class ServiceRegistry
         TreeViewService = treeViewService ?? throw new ArgumentNullException(nameof(treeViewService));
         VersionService = versionService ?? throw new ArgumentNullException(nameof(versionService));
         ValidationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
+        FileIdentityManager = fileIdentityManager ?? throw new ArgumentNullException(nameof(fileIdentityManager));
+        FileReconciliationService = fileReconciliationService ?? throw new ArgumentNullException(nameof(fileReconciliationService));
     }
 }

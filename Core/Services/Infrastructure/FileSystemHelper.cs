@@ -141,4 +141,23 @@ public class FileSystemService : IFileSystemHelper
 
         return File.GetAttributes(filePath);
     }
+
+    public void MoveDirectory(string sourcePath, string destinationPath)
+    {
+        if (!DirectoryExists(sourcePath))
+            throw new DirectoryNotFoundException($"Source directory not found: {sourcePath}");
+
+        if (DirectoryExists(destinationPath))
+            throw new InvalidOperationException($"Destination directory already exists: {destinationPath}");
+
+        Directory.Move(sourcePath, destinationPath);
+    }
+
+    public void DeleteDirectory(string path)
+    {
+        if (!DirectoryExists(path))
+            throw new DirectoryNotFoundException($"Directory not found: {path}");
+
+        Directory.Delete(path, true); // true = recursive delete
+    }
 }

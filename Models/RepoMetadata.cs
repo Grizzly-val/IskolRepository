@@ -12,4 +12,7 @@ public class RepoMetadata
     public DateTime DateAdded { get; set; }
 
     public string Status { get; set; } = "in-progress";
+
+    [JsonConverter(typeof(DateOnlyDateTimeConverter))]
+    public DateTime? Submitted { get; set; } = null;
 }

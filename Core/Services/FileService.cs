@@ -10,17 +10,23 @@ public class FileService : IFileService
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IPathProvider _pathProvider;
     private readonly IValidationHelper _validationHelper;
+    private readonly IFileIdentityManager _identityManager;
+    private readonly IRepositoryService _repositoryService;
 
     public FileService(
         IFileSystemHelper fileSystemHelper,
         IPathProvider pathProvider,
-        IValidationHelper validationHelper)
+        IValidationHelper validationHelper,
+        IFileIdentityManager identityManager,
+        IRepositoryService repositoryService)
     {
         _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _validationHelper = validationHelper ?? throw new ArgumentNullException(nameof(validationHelper));
+        _identityManager = identityManager ?? throw new ArgumentNullException(nameof(identityManager));
+        _repositoryService = repositoryService ?? throw new ArgumentNullException(nameof(repositoryService));
     }
-
+    
     public void LoadFiles(string repositoryRootPath, string browsePath, ListView filesListView, string semesterMarkerFileName)
     {
         if (string.IsNullOrWhiteSpace(repositoryRootPath))
@@ -143,6 +149,18 @@ public class FileService : IFileService
         var result = _fileSystemHelper.CreateRepositoryFile(repositoryPath, fileName.Trim(), extension);
         if (string.IsNullOrWhiteSpace(result))
             throw new InvalidOperationException("Unable to create file.");
+
+        // Register the new file in the identity manifest
+        try
+        {
+            var fileId = _identityManager.RegisterFile(repositoryPath, result);
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't fail the file creation
+            // In production, consider a logging mechanism
+            System.Diagnostics.Debug.WriteLine($"Failed to register file identity: {ex.Message}");
+        }
 
         return result;
     }
