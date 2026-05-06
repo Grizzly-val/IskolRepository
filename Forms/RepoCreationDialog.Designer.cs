@@ -32,6 +32,7 @@ partial class RepoCreationDialog
         // 
         // repositoryNameLabel
         // 
+        repositoryNameLabel.ForeColor = Color.FromArgb(40, 55, 70);
         repositoryNameLabel.Location = new Point(12, 12);
         repositoryNameLabel.Name = "repositoryNameLabel";
         repositoryNameLabel.Size = new Size(360, 20);
@@ -47,6 +48,7 @@ partial class RepoCreationDialog
         // 
         // deadlineLabel
         // 
+        deadlineLabel.ForeColor = Color.FromArgb(40, 55, 70);
         deadlineLabel.Location = new Point(12, 70);
         deadlineLabel.Name = "deadlineLabel";
         deadlineLabel.Size = new Size(360, 20);
@@ -63,22 +65,34 @@ partial class RepoCreationDialog
         // 
         // okButton
         // 
+        okButton.BackColor = Color.FromArgb(43, 87, 158);
+        okButton.FlatAppearance.BorderSize = 0;
+        okButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        okButton.FlatStyle = FlatStyle.Flat;
+        okButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        okButton.ForeColor = Color.White;
         okButton.Location = new Point(216, 136);
         okButton.Name = "okButton";
-        okButton.Size = new Size(75, 28);
+        okButton.Size = new Size(75, 30);
         okButton.TabIndex = 4;
         okButton.Text = "OK";
-        okButton.UseVisualStyleBackColor = true;
+        okButton.UseVisualStyleBackColor = false;
         okButton.Click += okButton_Click;
         // 
         // cancelButton
         // 
+        cancelButton.BackColor = Color.FromArgb(43, 87, 158);
+        cancelButton.FlatAppearance.BorderSize = 0;
+        cancelButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        cancelButton.FlatStyle = FlatStyle.Flat;
+        cancelButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        cancelButton.ForeColor = Color.White;
         cancelButton.Location = new Point(297, 136);
         cancelButton.Name = "cancelButton";
-        cancelButton.Size = new Size(75, 28);
+        cancelButton.Size = new Size(75, 30);
         cancelButton.TabIndex = 5;
         cancelButton.Text = "Cancel";
-        cancelButton.UseVisualStyleBackColor = true;
+        cancelButton.UseVisualStyleBackColor = false;
         cancelButton.Click += cancelButton_Click;
         // 
         // RepoCreationDialog
@@ -86,6 +100,7 @@ partial class RepoCreationDialog
         AcceptButton = okButton;
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
+        BackColor = Color.FromArgb(240, 245, 250);
         CancelButton = cancelButton;
         ClientSize = new Size(384, 181);
         Controls.Add(cancelButton);

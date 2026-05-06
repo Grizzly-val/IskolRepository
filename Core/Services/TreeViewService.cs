@@ -10,15 +10,18 @@ public class TreeViewService : ITreeViewService
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IPathProvider _pathProvider;
     private readonly IValidationHelper _validationHelper;
+    private readonly IRepositoryService _repositoryService;
 
     public TreeViewService(
         IFileSystemHelper fileSystemHelper,
         IPathProvider pathProvider,
-        IValidationHelper validationHelper)
+        IValidationHelper validationHelper,
+        IRepositoryService repositoryService)
     {
         _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _validationHelper = validationHelper ?? throw new ArgumentNullException(nameof(validationHelper));
+        _repositoryService = repositoryService ?? throw new ArgumentNullException(nameof(repositoryService));
     }
 
     public void LoadSemesterTree(string semesterPath, TreeView repositoryTreeView, string semesterMarkerFileName)
@@ -125,11 +128,22 @@ public class TreeViewService : ITreeViewService
                     continue;
                 }
 
+                // Determine if this repository needs a warning icon
+                bool hasWarning = false;
+                if (childNodeType == NodeType.Repository)
+                {
+                    hasWarning = HasRepositoryDeadlineWarning(directory);
+                }
+
+                var iconKey = childNodeType == NodeType.Repository 
+                    ? _iconProvider.GetFolderIconKey(directory, hasWarning)
+                    : _iconProvider.GetIconKey(directory);
+
                 var childNode = new TreeNode(directoryName)
                 {
                     Tag = new NodeData(directory, childNodeType),
-                    ImageKey = _iconProvider.GetIconKey(directory),
-                    SelectedImageKey = _iconProvider.GetIconKey(directory)
+                    ImageKey = iconKey,
+                    SelectedImageKey = iconKey
                 };
 
                 parentNode.Nodes.Add(childNode);
@@ -241,5 +255,39 @@ public class TreeViewService : ITreeViewService
             NodeType.SubRepository => NodeType.SubRepository,
             _ => NodeType.File
         };
+    }
+
+    /// <summary>
+    /// Checks if a repository node should display a warning icon based on deadline validation.
+    /// Returns true if the repository is overdue, due today, or submitted late.
+    /// </summary>
+    private bool HasRepositoryDeadlineWarning(string repositoryPath)
+    {
+        try
+        {
+            if (!_validationHelper.IsRepositoryFolder(repositoryPath))
+                return false;
+
+            var metadata = _repositoryService.EnsureMetadata(repositoryPath);
+            var today = DateTime.Today;
+            var daysUntilDue = (metadata.Deadline - today).Days;
+
+            // Show warning if overdue or due today
+            if (daysUntilDue <= 0)
+                return true;
+
+            // Show warning if submitted late
+            if (metadata.Status == "submitted" && metadata.Submitted.HasValue)
+            {
+                return metadata.Submitted.Value > metadata.Deadline;
+            }
+
+            return false;
+        }
+        catch
+        {
+            // If we can't validate, don't show a warning
+            return false;
+        }
     }
 }

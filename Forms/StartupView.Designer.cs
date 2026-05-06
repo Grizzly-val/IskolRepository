@@ -62,7 +62,7 @@ partial class StartupView
         openSemesterButton.Location = new Point(80, 60);
         openSemesterButton.FlatStyle = FlatStyle.Flat;
         openSemesterButton.FlatAppearance.BorderSize = 0;
-        openSemesterButton.BackColor = Color.FromArgb(160, 150, 170, 150);
+        openSemesterButton.BackColor = Color.FromArgb(160, 43, 87, 158);
         openSemesterButton.ForeColor = Color.White;
         openSemesterButton.Font = new Font("Segoe UI", 14, FontStyle.Bold);
         openSemesterButton.Click += openSemesterButton_Click;
@@ -82,7 +82,7 @@ partial class StartupView
         newSemesterButton.Location = new Point(400, 60);
         newSemesterButton.FlatStyle = FlatStyle.Flat;
         newSemesterButton.FlatAppearance.BorderSize = 0;
-        newSemesterButton.BackColor = Color.FromArgb(160, 150, 170, 150);
+        newSemesterButton.BackColor = Color.FromArgb(160, 43, 87, 158);
         newSemesterButton.ForeColor = Color.White;
         newSemesterButton.Font = new Font("Segoe UI", 14, FontStyle.Bold);
         newSemesterButton.Click += newSemesterButton_Click;

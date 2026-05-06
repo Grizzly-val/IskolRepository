@@ -70,10 +70,10 @@ public partial class StartupView : UserControl
     private void AddHoverEffect(Button btn)
     {
         btn.MouseEnter += (s, e) =>
-            btn.BackColor = Color.FromArgb(200, 150, 170, 150);
+            btn.BackColor = Color.FromArgb(200, 57, 97, 163);
 
         btn.MouseLeave += (s, e) =>
-            btn.BackColor = Color.FromArgb(160, 150, 170, 150);
+            btn.BackColor = Color.FromArgb(160, 43, 87, 158);
     }
 
     private void RoundButton(Button button, int radius)

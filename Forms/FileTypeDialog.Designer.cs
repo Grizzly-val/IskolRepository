@@ -28,6 +28,7 @@ partial class FileTypeDialog
         // 
         // fileTypeLabel
         // 
+        fileTypeLabel.ForeColor = Color.FromArgb(40, 55, 70);
         fileTypeLabel.Location = new Point(12, 12);
         fileTypeLabel.Name = "fileTypeLabel";
         fileTypeLabel.Size = new Size(260, 20);
@@ -46,22 +47,34 @@ partial class FileTypeDialog
         // 
         // okButton
         // 
+        okButton.BackColor = Color.FromArgb(43, 87, 158);
+        okButton.FlatAppearance.BorderSize = 0;
+        okButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        okButton.FlatStyle = FlatStyle.Flat;
+        okButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        okButton.ForeColor = Color.White;
         okButton.Location = new Point(116, 78);
         okButton.Name = "okButton";
-        okButton.Size = new Size(75, 28);
+        okButton.Size = new Size(75, 30);
         okButton.TabIndex = 2;
         okButton.Text = "OK";
-        okButton.UseVisualStyleBackColor = true;
+        okButton.UseVisualStyleBackColor = false;
         okButton.Click += okButton_Click;
         // 
         // cancelButton
         // 
+        cancelButton.BackColor = Color.FromArgb(43, 87, 158);
+        cancelButton.FlatAppearance.BorderSize = 0;
+        cancelButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        cancelButton.FlatStyle = FlatStyle.Flat;
+        cancelButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        cancelButton.ForeColor = Color.White;
         cancelButton.Location = new Point(197, 78);
         cancelButton.Name = "cancelButton";
-        cancelButton.Size = new Size(75, 28);
+        cancelButton.Size = new Size(75, 30);
         cancelButton.TabIndex = 3;
         cancelButton.Text = "Cancel";
-        cancelButton.UseVisualStyleBackColor = true;
+        cancelButton.UseVisualStyleBackColor = false;
         cancelButton.Click += cancelButton_Click;
         // 
         // FileTypeDialog
@@ -69,6 +82,7 @@ partial class FileTypeDialog
         AcceptButton = okButton;
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
+        BackColor = Color.FromArgb(240, 245, 250);
         CancelButton = cancelButton;
         ClientSize = new Size(284, 121);
         Controls.Add(cancelButton);

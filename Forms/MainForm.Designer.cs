@@ -28,6 +28,8 @@ partial class MainForm
     private Label dateAddedLabel = null!;
     private Label deadlineValueLabel = null!;
     private Label deadlineLabel = null!;
+    private Panel topHeaderPanel = null!;
+    private Label logoLabel = null!;
     private Panel toolbarHeaderPanel = null!;
     private Panel pathHeaderPanel = null!;
     private Button createFileButton = null!;
@@ -79,16 +81,17 @@ partial class MainForm
         deadlineValueLabel = new Label();
         deadlineLabel = new Label();
         _subjectSelectionView = new SubjectSelectionView();
-        _startupView = new StartupView();
+        topHeaderPanel = new Panel();
+        logoLabel = new Label();
+        selectedPathValueLabel = new Label();
         toolbarHeaderPanel = new Panel();
+        selectedSubjectValueLabel = new Label();
         backToSubjectsButton = new Button();
         createRepositoryButton = new Button();
         createSubrepositoryButton = new Button();
         createFileButton = new Button();
         pathHeaderPanel = new Panel();
         selectedPathLabel = new Label();
-        selectedPathValueLabel = new Label();
-        selectedSubjectValueLabel = new Label();
         selectedSubjectLabel = new Label();
         ((System.ComponentModel.ISupportInitialize)mainSplitContainer).BeginInit();
         mainSplitContainer.Panel1.SuspendLayout();
@@ -102,52 +105,54 @@ partial class MainForm
         contentSplitContainer.SuspendLayout();
         historyPanel.SuspendLayout();
         metadataGroupBox.SuspendLayout();
+        topHeaderPanel.SuspendLayout();
         toolbarHeaderPanel.SuspendLayout();
-        pathHeaderPanel.SuspendLayout();
         SuspendLayout();
         // 
         // mainSplitContainer
         // 
         mainSplitContainer.Dock = DockStyle.Fill;
-        mainSplitContainer.Location = new Point(0, 0);
+        mainSplitContainer.Location = new Point(0, 160);
         mainSplitContainer.Name = "mainSplitContainer";
         // 
         // mainSplitContainer.Panel1
         // 
+        mainSplitContainer.Panel1.BackColor = Color.FromArgb(235, 240, 245);
         mainSplitContainer.Panel1.Controls.Add(repositoryTreeView);
-        mainSplitContainer.Panel1.Padding = new Padding(10);
         // 
         // mainSplitContainer.Panel2
         // 
         mainSplitContainer.Panel2.Controls.Add(hostPanel);
-        mainSplitContainer.Panel2.Controls.Add(toolbarHeaderPanel);
-        mainSplitContainer.Panel2.Controls.Add(pathHeaderPanel);
-        mainSplitContainer.Panel2.Padding = new Padding(10);
-        mainSplitContainer.Size = new Size(1320, 749);
-        mainSplitContainer.SplitterDistance = 330;
+        mainSplitContainer.Size = new Size(1320, 589);
+        mainSplitContainer.SplitterDistance = 319;
         mainSplitContainer.TabIndex = 0;
         // 
         // repositoryTreeView
         // 
-        repositoryTreeView.BackColor = Color.FromArgb(218, 215, 205);
+        repositoryTreeView.BackColor = Color.FromArgb(235, 240, 245);
+        repositoryTreeView.BorderStyle = BorderStyle.None;
         repositoryTreeView.Dock = DockStyle.Fill;
+        repositoryTreeView.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        repositoryTreeView.ForeColor = Color.FromArgb(40, 55, 70);
         repositoryTreeView.HideSelection = false;
-        repositoryTreeView.Location = new Point(10, 10);
+        repositoryTreeView.Indent = 20;
+        repositoryTreeView.ItemHeight = 30;
+        repositoryTreeView.Location = new Point(0, 0);
         repositoryTreeView.Name = "repositoryTreeView";
-        repositoryTreeView.Size = new Size(310, 729);
+        repositoryTreeView.Size = new Size(319, 589);
         repositoryTreeView.TabIndex = 0;
         repositoryTreeView.AfterSelect += repositoryTreeView_AfterSelect;
         repositoryTreeView.NodeMouseDoubleClick += repositoryTreeView_NodeMouseDoubleClick;
         // 
         // hostPanel
         // 
+        hostPanel.BackColor = Color.FromArgb(240, 245, 250);
         hostPanel.Controls.Add(workspacePanel);
         hostPanel.Controls.Add(_subjectSelectionView);
-        hostPanel.Controls.Add(_startupView);
         hostPanel.Dock = DockStyle.Fill;
-        hostPanel.Location = new Point(10, 102);
+        hostPanel.Location = new Point(0, 0);
         hostPanel.Name = "hostPanel";
-        hostPanel.Size = new Size(966, 637);
+        hostPanel.Size = new Size(997, 589);
         hostPanel.TabIndex = 0;
         // 
         // workspacePanel
@@ -156,7 +161,7 @@ partial class MainForm
         workspacePanel.Dock = DockStyle.Fill;
         workspacePanel.Location = new Point(0, 0);
         workspacePanel.Name = "workspacePanel";
-        workspacePanel.Size = new Size(966, 637);
+        workspacePanel.Size = new Size(997, 589);
         workspacePanel.TabIndex = 2;
         // 
         // contentSplitContainer
@@ -167,27 +172,29 @@ partial class MainForm
         // 
         // contentSplitContainer.Panel1
         // 
+        contentSplitContainer.Panel1.BackColor = Color.White;
         contentSplitContainer.Panel1.Controls.Add(noRepositoryMessageLabel);
         contentSplitContainer.Panel1.Controls.Add(filesListView);
-        contentSplitContainer.Panel1.Padding = new Padding(0, 0, 8, 0);
+        contentSplitContainer.Panel1.Padding = new Padding(12);
         // 
         // contentSplitContainer.Panel2
         // 
+        contentSplitContainer.Panel2.BackColor = Color.FromArgb(235, 240, 245);
         contentSplitContainer.Panel2.Controls.Add(historyPanel);
-        contentSplitContainer.Panel2.Padding = new Padding(8, 0, 0, 0);
-        contentSplitContainer.Size = new Size(966, 637);
-        contentSplitContainer.SplitterDistance = 560;
+        contentSplitContainer.Panel2.Padding = new Padding(12);
+        contentSplitContainer.Size = new Size(997, 589);
+        contentSplitContainer.SplitterDistance = 600;
         contentSplitContainer.TabIndex = 2;
         // 
         // noRepositoryMessageLabel
         // 
-        noRepositoryMessageLabel.BackColor = Color.FromArgb(141, 182, 152);
+        noRepositoryMessageLabel.BackColor = Color.White;
         noRepositoryMessageLabel.Dock = DockStyle.Fill;
-        noRepositoryMessageLabel.Font = new Font("Segoe UI", 12F);
-        noRepositoryMessageLabel.ForeColor = Color.FromArgb(58, 90, 64);
-        noRepositoryMessageLabel.Location = new Point(0, 0);
+        noRepositoryMessageLabel.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+        noRepositoryMessageLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        noRepositoryMessageLabel.Location = new Point(12, 12);
         noRepositoryMessageLabel.Name = "noRepositoryMessageLabel";
-        noRepositoryMessageLabel.Size = new Size(552, 637);
+        noRepositoryMessageLabel.Size = new Size(576, 565);
         noRepositoryMessageLabel.TabIndex = 1;
         noRepositoryMessageLabel.Text = "Please select an Activity Repository";
         noRepositoryMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -195,15 +202,18 @@ partial class MainForm
         // 
         // filesListView
         // 
-        filesListView.BackColor = Color.FromArgb(141, 182, 152);
+        filesListView.BackColor = Color.White;
+        filesListView.BorderStyle = BorderStyle.None;
         filesListView.Columns.AddRange(new ColumnHeader[] { fileNameColumn, extensionColumn });
         filesListView.Dock = DockStyle.Fill;
+        filesListView.Font = new Font("Segoe UI", 10F);
+        filesListView.ForeColor = Color.FromArgb(40, 55, 70);
         filesListView.FullRowSelect = true;
-        filesListView.GridLines = true;
-        filesListView.Location = new Point(0, 0);
+        filesListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+        filesListView.Location = new Point(12, 12);
         filesListView.MultiSelect = false;
         filesListView.Name = "filesListView";
-        filesListView.Size = new Size(552, 637);
+        filesListView.Size = new Size(576, 565);
         filesListView.TabIndex = 0;
         filesListView.UseCompatibleStateImageBehavior = false;
         filesListView.View = View.Details;
@@ -213,35 +223,36 @@ partial class MainForm
         // fileNameColumn
         // 
         fileNameColumn.Text = "File Name";
-        fileNameColumn.Width = 360;
+        fileNameColumn.Width = 400;
         // 
         // extensionColumn
         // 
-        extensionColumn.Text = "Extension";
-        extensionColumn.Width = 120;
+        extensionColumn.Text = "Filetype";
+        extensionColumn.Width = 150;
         // 
         // historyPanel
         // 
+        historyPanel.BackColor = Color.FromArgb(235, 240, 245);
         historyPanel.Controls.Add(noVersionsMessageLabel);
         historyPanel.Controls.Add(versionsListBox);
         historyPanel.Controls.Add(historyCaptionLabel);
         historyPanel.Controls.Add(revertButton);
         historyPanel.Controls.Add(metadataGroupBox);
         historyPanel.Dock = DockStyle.Fill;
-        historyPanel.Location = new Point(8, 0);
+        historyPanel.Location = new Point(12, 12);
         historyPanel.Name = "historyPanel";
-        historyPanel.Size = new Size(394, 637);
+        historyPanel.Size = new Size(369, 565);
         historyPanel.TabIndex = 0;
         // 
         // noVersionsMessageLabel
         // 
-        noVersionsMessageLabel.BackColor = Color.FromArgb(217, 217, 217);
+        noVersionsMessageLabel.BackColor = Color.FromArgb(235, 240, 245);
         noVersionsMessageLabel.Dock = DockStyle.Fill;
-        noVersionsMessageLabel.Font = new Font("Segoe UI", 12F);
-        noVersionsMessageLabel.ForeColor = Color.FromArgb(120, 120, 120);
-        noVersionsMessageLabel.Location = new Point(0, 129);
+        noVersionsMessageLabel.Font = new Font("Segoe UI", 10F);
+        noVersionsMessageLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        noVersionsMessageLabel.Location = new Point(0, 220);
         noVersionsMessageLabel.Name = "noVersionsMessageLabel";
-        noVersionsMessageLabel.Size = new Size(394, 448);
+        noVersionsMessageLabel.Size = new Size(369, 301);
         noVersionsMessageLabel.TabIndex = 1;
         noVersionsMessageLabel.Text = "No versions available";
         noVersionsMessageLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -249,41 +260,58 @@ partial class MainForm
         // 
         // versionsListBox
         // 
-        versionsListBox.BackColor = Color.FromArgb(217, 217, 217);
+        versionsListBox.BackColor = Color.White;
+        versionsListBox.BorderStyle = BorderStyle.FixedSingle;
         versionsListBox.Dock = DockStyle.Fill;
+        versionsListBox.Font = new Font("Segoe UI", 9F);
+        versionsListBox.ForeColor = Color.FromArgb(40, 55, 70);
         versionsListBox.FormattingEnabled = true;
         versionsListBox.HorizontalScrollbar = true;
-        versionsListBox.Location = new Point(0, 129);
+        versionsListBox.Location = new Point(0, 220);
         versionsListBox.Name = "versionsListBox";
-        versionsListBox.Size = new Size(394, 448);
+        versionsListBox.Size = new Size(369, 301);
         versionsListBox.TabIndex = 1;
         versionsListBox.SelectedIndexChanged += versionsListBox_SelectedIndexChanged;
         // 
         // historyCaptionLabel
         // 
-        historyCaptionLabel.Dock = DockStyle.Bottom;
-        historyCaptionLabel.Location = new Point(0, 577);
+        historyCaptionLabel.BackColor = Color.FromArgb(220, 230, 235);
+        historyCaptionLabel.Dock = DockStyle.Top;
+        historyCaptionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        historyCaptionLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        historyCaptionLabel.Location = new Point(0, 180);
         historyCaptionLabel.Name = "historyCaptionLabel";
-        historyCaptionLabel.Padding = new Padding(0, 6, 0, 0);
-        historyCaptionLabel.Size = new Size(394, 24);
+        historyCaptionLabel.Size = new Size(369, 40);
         historyCaptionLabel.TabIndex = 2;
         historyCaptionLabel.Text = "Version History";
+        historyCaptionLabel.TextAlign = ContentAlignment.MiddleCenter;
         // 
         // revertButton
         // 
+        revertButton.BackColor = Color.FromArgb(43, 87, 158);
+        revertButton.Cursor = Cursors.Hand;
         revertButton.Dock = DockStyle.Bottom;
         revertButton.Enabled = false;
-        revertButton.Location = new Point(0, 601);
+        revertButton.FlatAppearance.BorderSize = 0;
+        revertButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        revertButton.FlatStyle = FlatStyle.Flat;
+        revertButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        revertButton.ForeColor = Color.White;
+        revertButton.Image = (Image)resources.GetObject("revertButton.Image");
+        revertButton.ImageAlign = ContentAlignment.MiddleLeft;
+        revertButton.Location = new Point(0, 521);
+        revertButton.Margin = new Padding(8);
         revertButton.Name = "revertButton";
-        revertButton.Size = new Size(394, 36);
+        revertButton.RightToLeft = RightToLeft.No;
+        revertButton.Size = new Size(369, 44);
         revertButton.TabIndex = 3;
-        revertButton.Text = "Revert";
-        revertButton.UseVisualStyleBackColor = true;
+        revertButton.Text = "Revert to Selected";
+        revertButton.UseVisualStyleBackColor = false;
         revertButton.Click += revertButton_Click;
         // 
         // metadataGroupBox
         // 
-        metadataGroupBox.BackColor = Color.Silver;
+        metadataGroupBox.BackColor = Color.White;
         metadataGroupBox.Controls.Add(saveVersionButton);
         metadataGroupBox.Controls.Add(updateMetadataButton);
         metadataGroupBox.Controls.Add(statusComboBox);
@@ -295,143 +323,245 @@ partial class MainForm
         metadataGroupBox.Controls.Add(deadlineValueLabel);
         metadataGroupBox.Controls.Add(deadlineLabel);
         metadataGroupBox.Dock = DockStyle.Top;
+        metadataGroupBox.FlatStyle = FlatStyle.Flat;
+        metadataGroupBox.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        metadataGroupBox.ForeColor = Color.FromArgb(40, 55, 70);
         metadataGroupBox.Location = new Point(0, 0);
         metadataGroupBox.Name = "metadataGroupBox";
-        metadataGroupBox.Size = new Size(394, 129);
+        metadataGroupBox.Size = new Size(369, 180);
         metadataGroupBox.TabIndex = 1;
         metadataGroupBox.TabStop = false;
         metadataGroupBox.Text = "Repository Metadata";
         // 
         // saveVersionButton
         // 
+        saveVersionButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        saveVersionButton.BackColor = Color.FromArgb(43, 87, 158);
+        saveVersionButton.Cursor = Cursors.Hand;
         saveVersionButton.Enabled = false;
-        saveVersionButton.Location = new Point(288, 39);
+        saveVersionButton.FlatAppearance.BorderSize = 0;
+        saveVersionButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        saveVersionButton.FlatStyle = FlatStyle.Flat;
+        saveVersionButton.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+        saveVersionButton.ForeColor = Color.White;
+        saveVersionButton.Image = (Image)resources.GetObject("saveVersionButton.Image");
+        saveVersionButton.ImageAlign = ContentAlignment.MiddleLeft;
+        saveVersionButton.Location = new Point(226, 43);
         saveVersionButton.Name = "saveVersionButton";
-        saveVersionButton.Size = new Size(100, 25);
+        saveVersionButton.Size = new Size(137, 49);
         saveVersionButton.TabIndex = 8;
-        saveVersionButton.Text = "Save Version";
-        saveVersionButton.UseVisualStyleBackColor = true;
+        saveVersionButton.Text = "Save New Version";
+        saveVersionButton.TextAlign = ContentAlignment.MiddleRight;
+        saveVersionButton.TextImageRelation = TextImageRelation.ImageBeforeText;
+        saveVersionButton.UseVisualStyleBackColor = false;
         saveVersionButton.Click += saveVersionButton_Click;
         // 
         // updateMetadataButton
         // 
+        updateMetadataButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        updateMetadataButton.BackColor = Color.FromArgb(43, 87, 158);
+        updateMetadataButton.Cursor = Cursors.Hand;
         updateMetadataButton.Enabled = false;
-        updateMetadataButton.Location = new Point(288, 77);
+        updateMetadataButton.FlatAppearance.BorderSize = 0;
+        updateMetadataButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        updateMetadataButton.FlatStyle = FlatStyle.Flat;
+        updateMetadataButton.Font = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+        updateMetadataButton.ForeColor = Color.White;
+        updateMetadataButton.Image = (Image)resources.GetObject("updateMetadataButton.Image");
+        updateMetadataButton.ImageAlign = ContentAlignment.MiddleLeft;
+        updateMetadataButton.Location = new Point(226, 110);
         updateMetadataButton.Name = "updateMetadataButton";
-        updateMetadataButton.Size = new Size(100, 25);
+        updateMetadataButton.Size = new Size(137, 43);
         updateMetadataButton.TabIndex = 9;
-        updateMetadataButton.Text = "Update";
-        updateMetadataButton.UseVisualStyleBackColor = true;
+        updateMetadataButton.Text = "Update Metadata";
+        updateMetadataButton.TextAlign = ContentAlignment.MiddleRight;
+        updateMetadataButton.UseVisualStyleBackColor = false;
         updateMetadataButton.Click += updateMetadataButton_Click;
         // 
         // statusComboBox
         // 
+        statusComboBox.Anchor = AnchorStyles.Top;
+        statusComboBox.BackColor = Color.White;
         statusComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         statusComboBox.Enabled = false;
+        statusComboBox.FlatStyle = FlatStyle.Flat;
+        statusComboBox.Font = new Font("Segoe UI", 9F);
+        statusComboBox.ForeColor = Color.FromArgb(40, 55, 70);
         statusComboBox.FormattingEnabled = true;
-        statusComboBox.Items.AddRange(new object[] { "in-progress", "completed", "late" });
-        statusComboBox.Location = new Point(180, 80);
+        statusComboBox.Items.AddRange(new object[] { "in-progress", "completed", "submitted" });
+        statusComboBox.Location = new Point(120, 130);
         statusComboBox.Name = "statusComboBox";
-        statusComboBox.Size = new Size(90, 23);
+        statusComboBox.Size = new Size(100, 23);
         statusComboBox.TabIndex = 7;
         // 
         // statusLabel
         // 
-        statusLabel.Location = new Point(180, 65);
+        statusLabel.Anchor = AnchorStyles.Top;
+        statusLabel.Font = new Font("Segoe UI", 9F);
+        statusLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        statusLabel.Location = new Point(120, 110);
         statusLabel.Name = "statusLabel";
-        statusLabel.Size = new Size(90, 15);
+        statusLabel.Size = new Size(100, 20);
         statusLabel.TabIndex = 6;
         statusLabel.Text = "Status";
         // 
         // deadlineDateTimePicker
         // 
+        deadlineDateTimePicker.Anchor = AnchorStyles.Top;
+        deadlineDateTimePicker.CalendarForeColor = Color.FromArgb(40, 55, 70);
         deadlineDateTimePicker.Enabled = false;
+        deadlineDateTimePicker.Font = new Font("Segoe UI", 9F);
         deadlineDateTimePicker.Format = DateTimePickerFormat.Short;
-        deadlineDateTimePicker.Location = new Point(180, 38);
+        deadlineDateTimePicker.Location = new Point(120, 55);
         deadlineDateTimePicker.Name = "deadlineDateTimePicker";
-        deadlineDateTimePicker.Size = new Size(90, 23);
+        deadlineDateTimePicker.Size = new Size(100, 23);
         deadlineDateTimePicker.TabIndex = 5;
         // 
         // editDeadlineLabel
         // 
-        editDeadlineLabel.Location = new Point(180, 19);
+        editDeadlineLabel.Anchor = AnchorStyles.Top;
+        editDeadlineLabel.Font = new Font("Segoe UI", 9F);
+        editDeadlineLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        editDeadlineLabel.Location = new Point(120, 35);
         editDeadlineLabel.Name = "editDeadlineLabel";
-        editDeadlineLabel.Size = new Size(90, 16);
+        editDeadlineLabel.Size = new Size(110, 20);
         editDeadlineLabel.TabIndex = 4;
         editDeadlineLabel.Text = "Edit Deadline";
         // 
         // dateAddedValueLabel
         // 
+        dateAddedValueLabel.BackColor = Color.FromArgb(240, 245, 250);
         dateAddedValueLabel.BorderStyle = BorderStyle.FixedSingle;
-        dateAddedValueLabel.Location = new Point(10, 82);
+        dateAddedValueLabel.Font = new Font("Segoe UI", 9F);
+        dateAddedValueLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        dateAddedValueLabel.Location = new Point(10, 130);
         dateAddedValueLabel.Name = "dateAddedValueLabel";
-        dateAddedValueLabel.Padding = new Padding(3, 2, 3, 2);
-        dateAddedValueLabel.Size = new Size(150, 20);
+        dateAddedValueLabel.Size = new Size(100, 23);
         dateAddedValueLabel.TabIndex = 3;
         dateAddedValueLabel.Text = "-";
+        dateAddedValueLabel.TextAlign = ContentAlignment.MiddleCenter;
         // 
         // dateAddedLabel
         // 
-        dateAddedLabel.Location = new Point(10, 65);
+        dateAddedLabel.Font = new Font("Segoe UI", 9F);
+        dateAddedLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        dateAddedLabel.Location = new Point(10, 110);
         dateAddedLabel.Name = "dateAddedLabel";
-        dateAddedLabel.Size = new Size(150, 15);
+        dateAddedLabel.Size = new Size(100, 20);
         dateAddedLabel.TabIndex = 2;
         dateAddedLabel.Text = "Date Added";
         // 
         // deadlineValueLabel
         // 
+        deadlineValueLabel.BackColor = Color.FromArgb(240, 245, 250);
         deadlineValueLabel.BorderStyle = BorderStyle.FixedSingle;
-        deadlineValueLabel.Location = new Point(10, 38);
+        deadlineValueLabel.Font = new Font("Segoe UI", 9F);
+        deadlineValueLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        deadlineValueLabel.Location = new Point(10, 55);
         deadlineValueLabel.Name = "deadlineValueLabel";
-        deadlineValueLabel.Padding = new Padding(3, 2, 3, 2);
-        deadlineValueLabel.Size = new Size(150, 20);
+        deadlineValueLabel.Size = new Size(100, 23);
         deadlineValueLabel.TabIndex = 1;
         deadlineValueLabel.Text = "-";
+        deadlineValueLabel.TextAlign = ContentAlignment.MiddleCenter;
         // 
         // deadlineLabel
         // 
-        deadlineLabel.Location = new Point(10, 20);
+        deadlineLabel.Font = new Font("Segoe UI", 9F);
+        deadlineLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        deadlineLabel.Location = new Point(10, 35);
         deadlineLabel.Name = "deadlineLabel";
-        deadlineLabel.Size = new Size(150, 15);
+        deadlineLabel.Size = new Size(100, 20);
         deadlineLabel.TabIndex = 0;
         deadlineLabel.Text = "Deadline";
         // 
         // _subjectSelectionView
         // 
+        _subjectSelectionView.BackColor = Color.FromArgb(240, 245, 250);
         _subjectSelectionView.Dock = DockStyle.Fill;
+        _subjectSelectionView.Font = new Font("Segoe UI", 10F);
         _subjectSelectionView.Location = new Point(0, 0);
         _subjectSelectionView.Name = "_subjectSelectionView";
-        _subjectSelectionView.Size = new Size(966, 637);
+        _subjectSelectionView.Size = new Size(997, 589);
         _subjectSelectionView.TabIndex = 3;
         // 
-        // _startupView
+        // topHeaderPanel
         // 
-        _startupView.Location = new Point(0, 0);
-        _startupView.Name = "_startupView";
-        _startupView.Size = new Size(1450, 573);
-        _startupView.TabIndex = 4;
+        topHeaderPanel.BackColor = Color.FromArgb(28, 77, 141);
+        topHeaderPanel.Controls.Add(logoLabel);
+        topHeaderPanel.Controls.Add(selectedPathValueLabel);
+        topHeaderPanel.Dock = DockStyle.Top;
+        topHeaderPanel.Location = new Point(0, 0);
+        topHeaderPanel.Name = "topHeaderPanel";
+        topHeaderPanel.Size = new Size(1320, 100);
+        topHeaderPanel.TabIndex = 1;
+        // 
+        // logoLabel
+        // 
+        logoLabel.Font = new Font("Segoe UI", 28F, FontStyle.Bold);
+        logoLabel.ForeColor = Color.White;
+        logoLabel.Image = (Image)resources.GetObject("logoLabel.Image");
+        logoLabel.ImageAlign = ContentAlignment.TopLeft;
+        logoLabel.Location = new Point(36, 17);
+        logoLabel.Name = "logoLabel";
+        logoLabel.Size = new Size(259, 67);
+        logoLabel.TabIndex = 0;
+        logoLabel.Text = "IskolRepo";
+        logoLabel.TextAlign = ContentAlignment.MiddleRight;
+        // 
+        // selectedPathValueLabel
+        // 
+        selectedPathValueLabel.AutoSize = true;
+        selectedPathValueLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+        selectedPathValueLabel.ForeColor = Color.FromArgb(235, 240, 245);
+        selectedPathValueLabel.ImageAlign = ContentAlignment.MiddleLeft;
+        selectedPathValueLabel.Location = new Point(335, 48);
+        selectedPathValueLabel.Name = "selectedPathValueLabel";
+        selectedPathValueLabel.Size = new Size(139, 21);
+        selectedPathValueLabel.TabIndex = 1;
+        selectedPathValueLabel.Text = "No item selected";
+        selectedPathValueLabel.TextAlign = ContentAlignment.MiddleCenter;
+        selectedPathValueLabel.Click += selectedPathValueLabel_Click;
         // 
         // toolbarHeaderPanel
         // 
-        toolbarHeaderPanel.BackColor = Color.FromArgb(218, 215, 205);
+        toolbarHeaderPanel.BackColor = Color.White;
+        toolbarHeaderPanel.Controls.Add(selectedSubjectValueLabel);
         toolbarHeaderPanel.Controls.Add(backToSubjectsButton);
         toolbarHeaderPanel.Controls.Add(createRepositoryButton);
         toolbarHeaderPanel.Controls.Add(createSubrepositoryButton);
         toolbarHeaderPanel.Controls.Add(createFileButton);
         toolbarHeaderPanel.Dock = DockStyle.Top;
-        toolbarHeaderPanel.Location = new Point(10, 52);
+        toolbarHeaderPanel.Location = new Point(0, 100);
         toolbarHeaderPanel.Name = "toolbarHeaderPanel";
-        toolbarHeaderPanel.Size = new Size(966, 50);
-        toolbarHeaderPanel.TabIndex = 0;
+        toolbarHeaderPanel.Padding = new Padding(12);
+        toolbarHeaderPanel.Size = new Size(1320, 60);
+        toolbarHeaderPanel.TabIndex = 2;
+        // 
+        // selectedSubjectValueLabel
+        // 
+        selectedSubjectValueLabel.AutoSize = true;
+        selectedSubjectValueLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        selectedSubjectValueLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        selectedSubjectValueLabel.Location = new Point(188, 12);
+        selectedSubjectValueLabel.Name = "selectedSubjectValueLabel";
+        selectedSubjectValueLabel.Size = new Size(237, 32);
+        selectedSubjectValueLabel.TabIndex = 4;
+        selectedSubjectValueLabel.Text = "No subject selected";
         // 
         // backToSubjectsButton
         // 
-        backToSubjectsButton.BackColor = Color.FromArgb(218, 215, 205);
+        backToSubjectsButton.BackColor = Color.FromArgb(43, 87, 158);
+        backToSubjectsButton.Cursor = Cursors.Hand;
+        backToSubjectsButton.FlatAppearance.BorderSize = 0;
+        backToSubjectsButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        backToSubjectsButton.FlatStyle = FlatStyle.Flat;
+        backToSubjectsButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        backToSubjectsButton.ForeColor = Color.White;
         backToSubjectsButton.Image = (Image)resources.GetObject("backToSubjectsButton.Image");
         backToSubjectsButton.ImageAlign = ContentAlignment.MiddleLeft;
-        backToSubjectsButton.Location = new Point(6, 6);
+        backToSubjectsButton.Location = new Point(12, 10);
         backToSubjectsButton.Name = "backToSubjectsButton";
-        backToSubjectsButton.Size = new Size(135, 32);
+        backToSubjectsButton.Size = new Size(160, 40);
         backToSubjectsButton.TabIndex = 0;
         backToSubjectsButton.Text = "      Back to Subject";
         backToSubjectsButton.UseVisualStyleBackColor = false;
@@ -439,12 +569,19 @@ partial class MainForm
         // 
         // createRepositoryButton
         // 
-        createRepositoryButton.BackColor = Color.FromArgb(218, 215, 205);
+        createRepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        createRepositoryButton.BackColor = Color.FromArgb(43, 87, 158);
+        createRepositoryButton.Cursor = Cursors.Hand;
+        createRepositoryButton.FlatAppearance.BorderSize = 0;
+        createRepositoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        createRepositoryButton.FlatStyle = FlatStyle.Flat;
+        createRepositoryButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createRepositoryButton.ForeColor = Color.White;
         createRepositoryButton.Image = (Image)resources.GetObject("createRepositoryButton.Image");
         createRepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
-        createRepositoryButton.Location = new Point(143, 6);
+        createRepositoryButton.Location = new Point(791, 10);
         createRepositoryButton.Name = "createRepositoryButton";
-        createRepositoryButton.Size = new Size(145, 32);
+        createRepositoryButton.Size = new Size(170, 40);
         createRepositoryButton.TabIndex = 1;
         createRepositoryButton.Text = "     Create Repository";
         createRepositoryButton.UseVisualStyleBackColor = false;
@@ -452,13 +589,20 @@ partial class MainForm
         // 
         // createSubrepositoryButton
         // 
-        createSubrepositoryButton.BackColor = Color.FromArgb(218, 215, 205);
+        createSubrepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        createSubrepositoryButton.BackColor = Color.FromArgb(43, 87, 158);
+        createSubrepositoryButton.Cursor = Cursors.Hand;
         createSubrepositoryButton.Enabled = false;
+        createSubrepositoryButton.FlatAppearance.BorderSize = 0;
+        createSubrepositoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        createSubrepositoryButton.FlatStyle = FlatStyle.Flat;
+        createSubrepositoryButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createSubrepositoryButton.ForeColor = Color.White;
         createSubrepositoryButton.Image = (Image)resources.GetObject("createSubrepositoryButton.Image");
         createSubrepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
-        createSubrepositoryButton.Location = new Point(295, 6);
+        createSubrepositoryButton.Location = new Point(967, 10);
         createSubrepositoryButton.Name = "createSubrepositoryButton";
-        createSubrepositoryButton.Size = new Size(155, 32);
+        createSubrepositoryButton.Size = new Size(196, 40);
         createSubrepositoryButton.TabIndex = 2;
         createSubrepositoryButton.Text = "     Create Subrepository";
         createSubrepositoryButton.UseVisualStyleBackColor = false;
@@ -466,71 +610,58 @@ partial class MainForm
         // 
         // createFileButton
         // 
-        createFileButton.BackColor = Color.FromArgb(218, 215, 205);
+        createFileButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        createFileButton.BackColor = Color.FromArgb(43, 87, 158);
+        createFileButton.Cursor = Cursors.Hand;
         createFileButton.Enabled = false;
+        createFileButton.FlatAppearance.BorderSize = 0;
+        createFileButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        createFileButton.FlatStyle = FlatStyle.Flat;
+        createFileButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createFileButton.ForeColor = Color.White;
         createFileButton.Image = (Image)resources.GetObject("createFileButton.Image");
         createFileButton.ImageAlign = ContentAlignment.MiddleLeft;
-        createFileButton.Location = new Point(456, 6);
+        createFileButton.Location = new Point(1169, 10);
         createFileButton.Name = "createFileButton";
-        createFileButton.Size = new Size(120, 32);
+        createFileButton.Size = new Size(140, 40);
         createFileButton.TabIndex = 3;
-        createFileButton.Text = "Create File";
+        createFileButton.Text = "     Create File";
         createFileButton.UseVisualStyleBackColor = false;
         createFileButton.Click += createFileButton_Click;
         // 
         // pathHeaderPanel
         // 
-        pathHeaderPanel.BackColor = Color.FromArgb(218, 215, 205);
-        pathHeaderPanel.Controls.Add(selectedPathLabel);
-        pathHeaderPanel.Controls.Add(selectedPathValueLabel);
-        pathHeaderPanel.Controls.Add(selectedSubjectValueLabel);
-        pathHeaderPanel.Controls.Add(selectedSubjectLabel);
-        pathHeaderPanel.Dock = DockStyle.Top;
-        pathHeaderPanel.Location = new Point(10, 10);
+        pathHeaderPanel.Location = new Point(0, 0);
         pathHeaderPanel.Name = "pathHeaderPanel";
-        pathHeaderPanel.Size = new Size(966, 42);
-        pathHeaderPanel.TabIndex = 1;
+        pathHeaderPanel.Size = new Size(200, 100);
+        pathHeaderPanel.TabIndex = 0;
+        pathHeaderPanel.Visible = false;
         // 
         // selectedPathLabel
         // 
-        selectedPathLabel.Location = new Point(336, 22);
+        selectedPathLabel.Location = new Point(0, 0);
         selectedPathLabel.Name = "selectedPathLabel";
-        selectedPathLabel.Size = new Size(120, 20);
-        selectedPathLabel.TabIndex = 5;
-        selectedPathLabel.Text = "Selected Path";
-        // 
-        // selectedPathValueLabel
-        // 
-        selectedPathValueLabel.Location = new Point(336, 6);
-        selectedPathValueLabel.Name = "selectedPathValueLabel";
-        selectedPathValueLabel.Size = new Size(430, 20);
-        selectedPathValueLabel.TabIndex = 6;
-        selectedPathValueLabel.Text = "No item selected";
-        // 
-        // selectedSubjectValueLabel
-        // 
-        selectedSubjectValueLabel.Location = new Point(6, 22);
-        selectedSubjectValueLabel.Name = "selectedSubjectValueLabel";
-        selectedSubjectValueLabel.Size = new Size(400, 20);
-        selectedSubjectValueLabel.TabIndex = 4;
-        selectedSubjectValueLabel.Text = "No subject selected";
+        selectedPathLabel.Size = new Size(100, 23);
+        selectedPathLabel.TabIndex = 0;
         // 
         // selectedSubjectLabel
         // 
-        selectedSubjectLabel.Location = new Point(6, 6);
+        selectedSubjectLabel.Location = new Point(0, 0);
         selectedSubjectLabel.Name = "selectedSubjectLabel";
-        selectedSubjectLabel.Size = new Size(120, 20);
-        selectedSubjectLabel.TabIndex = 3;
-        selectedSubjectLabel.Text = "Current Subject";
+        selectedSubjectLabel.Size = new Size(100, 23);
+        selectedSubjectLabel.TabIndex = 0;
         // 
         // MainForm
         // 
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleDimensions = new SizeF(7F, 17F);
         AutoScaleMode = AutoScaleMode.Font;
-        BackColor = Color.White;
+        BackColor = Color.FromArgb(240, 245, 250);
         ClientSize = new Size(1320, 749);
         Controls.Add(mainSplitContainer);
-        MinimumSize = new Size(1100, 680);
+        Controls.Add(toolbarHeaderPanel);
+        Controls.Add(topHeaderPanel);
+        Font = new Font("Segoe UI", 10F);
+        MinimumSize = new Size(1336, 749);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "IskolRepository";
@@ -546,8 +677,10 @@ partial class MainForm
         contentSplitContainer.ResumeLayout(false);
         historyPanel.ResumeLayout(false);
         metadataGroupBox.ResumeLayout(false);
+        topHeaderPanel.ResumeLayout(false);
+        topHeaderPanel.PerformLayout();
         toolbarHeaderPanel.ResumeLayout(false);
-        pathHeaderPanel.ResumeLayout(false);
+        toolbarHeaderPanel.PerformLayout();
         ResumeLayout(false);
     }
 

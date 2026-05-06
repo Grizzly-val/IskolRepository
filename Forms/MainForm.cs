@@ -2,6 +2,7 @@ using IskolRepository.Core;
 using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 using IskolRepository.Models;
+using IskolRepository.Utilities;
 
 namespace IskolRepository.Forms;
 
@@ -38,7 +39,10 @@ public partial class MainForm : Form
         _versionService = services.VersionService;
         _validationService = services.ValidationService;
 
+        _startupView = new StartupView();
         InitializeComponent();
+
+        hostPanel.Controls.Add(_startupView);
 
         _startupView.Dock = DockStyle.Fill;
 
@@ -47,12 +51,53 @@ public partial class MainForm : Form
         _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
         _subjectSelectionView.ChangeSemesterRequested += changeSemesterButton_Click;
 
+        AnimationHelper.AnimateHover(createFileButton, 8, 70);
+        AnimationHelper.AnimateHover(createRepositoryButton, 8, 70);
+        AnimationHelper.AnimateHover(createSubrepositoryButton, 8, 70);
+        AnimationHelper.AnimateHover(backToSubjectsButton, 8, 70);
+        AnimationHelper.AnimateHover(updateMetadataButton, 8, 70);
+        AnimationHelper.AnimateHover(saveVersionButton, 8, 70);
+
+        AnimationHelper.AnimateTextHover(revertButton, 2f, 70);
+
+
         InitializeFilesListViewIcons();
         InitializeTreeViewIcons();
 
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
         UpdateSaveVersionButtonState();
+        SetupButtons();
+    }
+
+    private void SetupButtons()
+    {
+        SetupButton(revertButton);
+        SetupButton(saveVersionButton);
+        SetupButton(updateMetadataButton);
+        SetupButton(backToSubjectsButton);
+        SetupButton(createRepositoryButton);
+        SetupButton(createSubrepositoryButton);
+        SetupButton(createFileButton);
+    }
+
+    private void SetupButton(Button button)
+    {
+        button.EnabledChanged += (s, e) => UpdateButtonColor(button);
+        UpdateButtonColor(button);
+    }
+
+    private void UpdateButtonColor(Button button)
+    {
+        if (button.Enabled)
+        {
+            button.BackColor = Color.FromArgb(43, 87, 158);
+        }
+        else
+        {
+            // Reduce opacity of the default color  
+            button.BackColor = Color.FromArgb(34, 61, 110);
+        }
     }
 
     #region Event Handlers
@@ -175,6 +220,7 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
+        selectedPathValueLabel.Text = "No item selected";
         _subjectSelectionView.PopulateSubjects(_ => { });
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
@@ -193,6 +239,7 @@ public partial class MainForm : Form
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
+        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
         LoadSubjectsUI();
         ShowSubjectView();
     }
@@ -390,6 +437,8 @@ public partial class MainForm : Form
                 deadlineDateTimePicker.Value.Date,
                 status!);
 
+            // Reload the tree while preserving expanded nodes and updating warning icons
+            LoadSubjectTree(selectedRepositoryPath);
             LoadRepositoryMetadataUI(selectedRepositoryPath);
 
             MessageBox.Show(
@@ -463,7 +512,7 @@ public partial class MainForm : Form
             return;
         }
 
-        selectedPathValueLabel.Text = nodeData.Path;
+        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
 
         // Lazy load children when node is selected
         LoadChildNodes(e.Node);
@@ -680,8 +729,8 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
+        selectedPathValueLabel.Text = semesterPath;
         _subjectSelectionView.SemesterName = Path.GetFileName(semesterPath);
-        _subjectSelectionView.SemesterPath = semesterPath;
         selectedSubjectValueLabel.Text = "No subject selected";
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
@@ -728,12 +777,21 @@ public partial class MainForm : Form
             Width = 220,
             Height = 90,
             Margin = new Padding(0, 0, 16, 16),
-            TextAlign = ContentAlignment.MiddleLeft,
+            TextAlign = ContentAlignment.MiddleCenter,
             Font = new Font("Segoe UI", 10F, FontStyle.Bold),
             Text = Path.GetFileName(subjectPath),
             Tag = subjectPath,
-            UseVisualStyleBackColor = true
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(43, 87, 158),
+            ForeColor = Color.White,
+            Cursor = Cursors.Hand
         };
+        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+
+        // Apply the hover animation
+        // 10    is the growth (pixels), 60 is the duration (ms)
+        AnimationHelper.AnimateTextHover(button, 3f, 70);
 
         button.Click += (_, _) => OpenSubject(subjectPath);
         return button;
@@ -746,7 +804,9 @@ public partial class MainForm : Form
             AutoSize = true,
             MaximumSize = new Size(500, 0),
             Text = message,
-            Padding = new Padding(8)
+            Padding = new Padding(8),
+            Font = new Font("Segoe UI", 10F),
+            ForeColor = Color.FromArgb(100, 115, 128)
         };
     }
 
@@ -796,10 +856,13 @@ public partial class MainForm : Form
         try
         {
             var metadata = _repositoryService.EnsureMetadata(repositoryPath);
-            deadlineValueLabel.Text = metadata.Deadline.ToString("yyyy-MM-dd");
-            dateAddedValueLabel.Text = metadata.DateAdded.ToString("yyyy-MM-dd");
+            deadlineValueLabel.Text = FormatDateDisplay(metadata.Deadline);
+            dateAddedValueLabel.Text = FormatDateDisplay(metadata.DateAdded);
             deadlineDateTimePicker.Value = metadata.Deadline;
             statusComboBox.SelectedItem = metadata.Status;
+
+            // Update metadataGroupBox display with deadline/submission status
+            UpdateMetadataGroupBoxDisplay(metadata);
         }
         catch (Exception ex)
         {
@@ -821,7 +884,7 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        selectedPathValueLabel.Text = "No item selected";
+        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
@@ -834,6 +897,7 @@ public partial class MainForm : Form
     {
         mainSplitContainer.Panel1Collapsed = true;
         toolbarHeaderPanel.Visible = false;
+        topHeaderPanel.Visible = false;
         pathHeaderPanel.Visible = false;
         _startupView.Visible = true;
         _subjectSelectionView.Visible = false;
@@ -844,6 +908,7 @@ public partial class MainForm : Form
     {
         mainSplitContainer.Panel1Collapsed = true;
         toolbarHeaderPanel.Visible = false;
+        topHeaderPanel.Visible = true;
         pathHeaderPanel.Visible = false;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = true;
@@ -854,7 +919,8 @@ public partial class MainForm : Form
     {
         mainSplitContainer.Panel1Collapsed = false;
         toolbarHeaderPanel.Visible = true;
-        pathHeaderPanel.Visible = true;
+        topHeaderPanel.Visible = true;
+        pathHeaderPanel.Visible = false;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = false;
         workspacePanel.Visible = true;
@@ -932,6 +998,8 @@ public partial class MainForm : Form
         dateAddedValueLabel.Text = "-";
         deadlineDateTimePicker.Value = DateTime.Today;
         statusComboBox.SelectedIndex = 0;
+        metadataGroupBox.Text = "Repository Metadata";
+        metadataGroupBox.ForeColor = SystemColors.WindowText;
     }
 
     private void UpdateRepositoryUiState(string? repositoryPath)
@@ -959,7 +1027,7 @@ public partial class MainForm : Form
     {
         if (string.IsNullOrWhiteSpace(selectedFilePath))
         {
-            saveVersionButton.Text = "Select a file to save a version of";
+            saveVersionButton.Text = "Select a file first";
             saveVersionButton.Enabled = false;
             return;
         }
@@ -1091,6 +1159,64 @@ public partial class MainForm : Form
         };
     }
 
+    /// <summary>
+    /// Formats a DateTime to display format "Month #, ####" (e.g., "May 06, 2026")
+    /// </summary>
+    private static string FormatDateDisplay(DateTime date)
+    {
+        return date.ToString("MMMM dd, yyyy");
+    }
+
+    /// <summary>
+    /// Calculates the deadline status and returns display text with appropriate color
+    /// </summary>
+    private (string text, Color color, bool shouldColorRed) GetDeadlineStatus(RepoMetadata metadata)
+    {
+        var today = DateTime.Today;
+        var daysUntilDue = (metadata.Deadline - today).Days;
+
+        // Handle submitted status
+        if (metadata.Status == "submitted" && metadata.Submitted.HasValue)
+        {
+            var submittedDate = metadata.Submitted.Value;
+            var isLate = submittedDate > metadata.Deadline;
+
+            if (isLate)
+            {
+                return ("Repository Metadata - Submitted Late", Color.FromArgb(200, 100, 0), true);
+            }
+            else
+            {
+                return ("Repository Metadata - Submitted", Color.Green, false);
+            }
+        }
+
+        // Handle non-submitted statuses
+        if (daysUntilDue > 0)
+        {
+            return ($"Repository Metadata - {daysUntilDue} day{(daysUntilDue != 1 ? "s" : "")} before due date", Color.Green, false);
+        }
+        else if (daysUntilDue == 0)
+        {
+            return ("Repository Metadata - Due today", Color.FromArgb(200, 100, 0), true);
+        }
+        else
+        {
+            var daysOverdue = Math.Abs(daysUntilDue);
+            return ($"Repository Metadata - {daysOverdue} day{(daysOverdue != 1 ? "s" : "")} past due date", Color.FromArgb(128, 0, 0), true);
+        }
+    }
+
+    /// <summary>
+    /// Updates the metadataGroupBox with deadline/submission status
+    /// </summary>
+    private void UpdateMetadataGroupBoxDisplay(RepoMetadata metadata)
+    {
+        var (text, color, _) = GetDeadlineStatus(metadata);
+        metadataGroupBox.Text = text;
+        metadataGroupBox.ForeColor = color;
+    }
+
     #endregion
 
     #region Nested Classes - Moved to Core
@@ -1100,5 +1226,5 @@ public partial class MainForm : Form
 
     #endregion
 
-   
+
 }
