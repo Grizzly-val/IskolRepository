@@ -3,6 +3,7 @@ using IskolRepository.Core.Interfaces;
 using IskolRepository.Core.Interfaces.Infrastructure;
 using IskolRepository.Models;
 using IskolRepository.Utilities;
+using System.Windows.Forms;
 
 namespace IskolRepository.Forms;
 
@@ -91,12 +92,12 @@ public partial class MainForm : Form
     {
         if (button.Enabled)
         {
-            button.BackColor = Color.FromArgb(43, 87, 158);
+            button.BackColor = Color.FromArgb(3, 4, 29);
         }
         else
         {
             // Reduce opacity of the default color  
-            button.BackColor = Color.FromArgb(34, 61, 110);
+            button.BackColor = Color.FromArgb(17, 18, 35);
         }
     }
 
@@ -1226,5 +1227,13 @@ public partial class MainForm : Form
 
     #endregion
 
+
+    private void toolbarHeaderPanel_Paint(object sender, PaintEventArgs e)
+    {
+        using (Pen pen = new Pen(Color.White))
+        {
+            e.Graphics.DrawRectangle(pen, 1, 1, toolbarHeaderPanel.Width - 3, toolbarHeaderPanel.Height - 3);
+        }
+    }
 
 }

@@ -129,11 +129,11 @@ partial class MainForm
         // 
         // repositoryTreeView
         // 
-        repositoryTreeView.BackColor = Color.FromArgb(235, 240, 245);
+        repositoryTreeView.BackColor = Color.FromArgb(17, 18, 35);
         repositoryTreeView.BorderStyle = BorderStyle.None;
         repositoryTreeView.Dock = DockStyle.Fill;
         repositoryTreeView.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-        repositoryTreeView.ForeColor = Color.FromArgb(40, 55, 70);
+        repositoryTreeView.ForeColor = Color.White;
         repositoryTreeView.HideSelection = false;
         repositoryTreeView.Indent = 20;
         repositoryTreeView.ItemHeight = 30;
@@ -172,14 +172,14 @@ partial class MainForm
         // 
         // contentSplitContainer.Panel1
         // 
-        contentSplitContainer.Panel1.BackColor = Color.White;
+        contentSplitContainer.Panel1.BackColor = Color.FromArgb(14, 15, 26);
         contentSplitContainer.Panel1.Controls.Add(noRepositoryMessageLabel);
         contentSplitContainer.Panel1.Controls.Add(filesListView);
         contentSplitContainer.Panel1.Padding = new Padding(12);
         // 
         // contentSplitContainer.Panel2
         // 
-        contentSplitContainer.Panel2.BackColor = Color.FromArgb(235, 240, 245);
+        contentSplitContainer.Panel2.BackColor = Color.FromArgb(17, 18, 35);
         contentSplitContainer.Panel2.Controls.Add(historyPanel);
         contentSplitContainer.Panel2.Padding = new Padding(12);
         contentSplitContainer.Size = new Size(997, 589);
@@ -188,10 +188,10 @@ partial class MainForm
         // 
         // noRepositoryMessageLabel
         // 
-        noRepositoryMessageLabel.BackColor = Color.White;
+        noRepositoryMessageLabel.BackColor = Color.FromArgb(17, 18, 35);
         noRepositoryMessageLabel.Dock = DockStyle.Fill;
         noRepositoryMessageLabel.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-        noRepositoryMessageLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        noRepositoryMessageLabel.ForeColor = Color.White;
         noRepositoryMessageLabel.Location = new Point(12, 12);
         noRepositoryMessageLabel.Name = "noRepositoryMessageLabel";
         noRepositoryMessageLabel.Size = new Size(576, 565);
@@ -202,12 +202,12 @@ partial class MainForm
         // 
         // filesListView
         // 
-        filesListView.BackColor = Color.White;
+        filesListView.BackColor = Color.FromArgb(17, 18, 35);
         filesListView.BorderStyle = BorderStyle.None;
         filesListView.Columns.AddRange(new ColumnHeader[] { fileNameColumn, extensionColumn });
         filesListView.Dock = DockStyle.Fill;
         filesListView.Font = new Font("Segoe UI", 10F);
-        filesListView.ForeColor = Color.FromArgb(40, 55, 70);
+        filesListView.ForeColor = Color.White;
         filesListView.FullRowSelect = true;
         filesListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
         filesListView.Location = new Point(12, 12);
@@ -232,7 +232,7 @@ partial class MainForm
         // 
         // historyPanel
         // 
-        historyPanel.BackColor = Color.FromArgb(235, 240, 245);
+        historyPanel.BackColor = Color.FromArgb(14, 15, 26);
         historyPanel.Controls.Add(noVersionsMessageLabel);
         historyPanel.Controls.Add(versionsListBox);
         historyPanel.Controls.Add(historyCaptionLabel);
@@ -246,10 +246,10 @@ partial class MainForm
         // 
         // noVersionsMessageLabel
         // 
-        noVersionsMessageLabel.BackColor = Color.FromArgb(235, 240, 245);
+        noVersionsMessageLabel.BackColor = Color.FromArgb(14, 15, 26);
         noVersionsMessageLabel.Dock = DockStyle.Fill;
         noVersionsMessageLabel.Font = new Font("Segoe UI", 10F);
-        noVersionsMessageLabel.ForeColor = Color.FromArgb(100, 115, 128);
+        noVersionsMessageLabel.ForeColor = Color.White;
         noVersionsMessageLabel.Location = new Point(0, 220);
         noVersionsMessageLabel.Name = "noVersionsMessageLabel";
         noVersionsMessageLabel.Size = new Size(369, 301);
@@ -260,7 +260,7 @@ partial class MainForm
         // 
         // versionsListBox
         // 
-        versionsListBox.BackColor = Color.White;
+        versionsListBox.BackColor = Color.FromArgb(14, 15, 26);
         versionsListBox.BorderStyle = BorderStyle.FixedSingle;
         versionsListBox.Dock = DockStyle.Fill;
         versionsListBox.Font = new Font("Segoe UI", 9F);
@@ -275,10 +275,10 @@ partial class MainForm
         // 
         // historyCaptionLabel
         // 
-        historyCaptionLabel.BackColor = Color.FromArgb(220, 230, 235);
+        historyCaptionLabel.BackColor = Color.FromArgb(17, 18, 35);
         historyCaptionLabel.Dock = DockStyle.Top;
         historyCaptionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-        historyCaptionLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        historyCaptionLabel.ForeColor = Color.White;
         historyCaptionLabel.Location = new Point(0, 180);
         historyCaptionLabel.Name = "historyCaptionLabel";
         historyCaptionLabel.Size = new Size(369, 40);
@@ -288,7 +288,7 @@ partial class MainForm
         // 
         // revertButton
         // 
-        revertButton.BackColor = Color.FromArgb(43, 87, 158);
+        revertButton.BackColor = Color.FromArgb(3, 4, 29);
         revertButton.Cursor = Cursors.Hand;
         revertButton.Dock = DockStyle.Bottom;
         revertButton.Enabled = false;
@@ -311,7 +311,7 @@ partial class MainForm
         // 
         // metadataGroupBox
         // 
-        metadataGroupBox.BackColor = Color.White;
+        metadataGroupBox.BackColor = Color.FromArgb(14, 15, 26);
         metadataGroupBox.Controls.Add(saveVersionButton);
         metadataGroupBox.Controls.Add(updateMetadataButton);
         metadataGroupBox.Controls.Add(statusComboBox);
@@ -336,7 +336,7 @@ partial class MainForm
         // saveVersionButton
         // 
         saveVersionButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        saveVersionButton.BackColor = Color.FromArgb(43, 87, 158);
+        saveVersionButton.BackColor = Color.FromArgb(3, 4, 29);
         saveVersionButton.Cursor = Cursors.Hand;
         saveVersionButton.Enabled = false;
         saveVersionButton.FlatAppearance.BorderSize = 0;
@@ -359,7 +359,7 @@ partial class MainForm
         // updateMetadataButton
         // 
         updateMetadataButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        updateMetadataButton.BackColor = Color.FromArgb(43, 87, 158);
+        updateMetadataButton.BackColor = Color.FromArgb(3, 4, 29);
         updateMetadataButton.Cursor = Cursors.Hand;
         updateMetadataButton.Enabled = false;
         updateMetadataButton.FlatAppearance.BorderSize = 0;
@@ -486,7 +486,7 @@ partial class MainForm
         // 
         // topHeaderPanel
         // 
-        topHeaderPanel.BackColor = Color.FromArgb(28, 77, 141);
+        topHeaderPanel.BackColor = Color.FromArgb(13, 14, 30);
         topHeaderPanel.Controls.Add(logoLabel);
         topHeaderPanel.Controls.Add(selectedPathValueLabel);
         topHeaderPanel.Dock = DockStyle.Top;
@@ -524,7 +524,8 @@ partial class MainForm
         // 
         // toolbarHeaderPanel
         // 
-        toolbarHeaderPanel.BackColor = Color.White;
+        toolbarHeaderPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        toolbarHeaderPanel.BackColor = Color.FromArgb(17, 18, 35);
         toolbarHeaderPanel.Controls.Add(selectedSubjectValueLabel);
         toolbarHeaderPanel.Controls.Add(backToSubjectsButton);
         toolbarHeaderPanel.Controls.Add(createRepositoryButton);
@@ -536,12 +537,13 @@ partial class MainForm
         toolbarHeaderPanel.Padding = new Padding(12);
         toolbarHeaderPanel.Size = new Size(1320, 60);
         toolbarHeaderPanel.TabIndex = 2;
+        toolbarHeaderPanel.Paint += toolbarHeaderPanel_Paint;
         // 
         // selectedSubjectValueLabel
         // 
         selectedSubjectValueLabel.AutoSize = true;
         selectedSubjectValueLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
-        selectedSubjectValueLabel.ForeColor = Color.FromArgb(40, 55, 70);
+        selectedSubjectValueLabel.ForeColor = Color.White;
         selectedSubjectValueLabel.Location = new Point(188, 12);
         selectedSubjectValueLabel.Name = "selectedSubjectValueLabel";
         selectedSubjectValueLabel.Size = new Size(237, 32);
@@ -550,10 +552,10 @@ partial class MainForm
         // 
         // backToSubjectsButton
         // 
-        backToSubjectsButton.BackColor = Color.FromArgb(43, 87, 158);
+        backToSubjectsButton.BackColor = Color.FromArgb(3, 4, 29);
         backToSubjectsButton.Cursor = Cursors.Hand;
         backToSubjectsButton.FlatAppearance.BorderSize = 0;
-        backToSubjectsButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        backToSubjectsButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(3, 4, 29);
         backToSubjectsButton.FlatStyle = FlatStyle.Flat;
         backToSubjectsButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         backToSubjectsButton.ForeColor = Color.White;
@@ -570,7 +572,7 @@ partial class MainForm
         // createRepositoryButton
         // 
         createRepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        createRepositoryButton.BackColor = Color.FromArgb(43, 87, 158);
+        createRepositoryButton.BackColor = Color.FromArgb(3, 4, 29);
         createRepositoryButton.Cursor = Cursors.Hand;
         createRepositoryButton.FlatAppearance.BorderSize = 0;
         createRepositoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
@@ -590,7 +592,7 @@ partial class MainForm
         // createSubrepositoryButton
         // 
         createSubrepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        createSubrepositoryButton.BackColor = Color.FromArgb(43, 87, 158);
+        createSubrepositoryButton.BackColor = Color.FromArgb(3, 4, 29);
         createSubrepositoryButton.Cursor = Cursors.Hand;
         createSubrepositoryButton.Enabled = false;
         createSubrepositoryButton.FlatAppearance.BorderSize = 0;
@@ -611,7 +613,7 @@ partial class MainForm
         // createFileButton
         // 
         createFileButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        createFileButton.BackColor = Color.FromArgb(43, 87, 158);
+        createFileButton.BackColor = Color.FromArgb(3, 4, 29);
         createFileButton.Cursor = Cursors.Hand;
         createFileButton.Enabled = false;
         createFileButton.FlatAppearance.BorderSize = 0;
@@ -655,13 +657,13 @@ partial class MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 17F);
         AutoScaleMode = AutoScaleMode.Font;
-        BackColor = Color.FromArgb(240, 245, 250);
+        BackColor = Color.FromArgb(14, 15, 26);
         ClientSize = new Size(1320, 749);
         Controls.Add(mainSplitContainer);
         Controls.Add(toolbarHeaderPanel);
         Controls.Add(topHeaderPanel);
         Font = new Font("Segoe UI", 10F);
-        MinimumSize = new Size(1336, 749);
+        MinimumSize = new Size(1336, 718);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "IskolRepository";
@@ -682,6 +684,11 @@ partial class MainForm
         toolbarHeaderPanel.ResumeLayout(false);
         toolbarHeaderPanel.PerformLayout();
         ResumeLayout(false);
+    }
+
+    private void ToolbarHeaderPanel_Paint(object sender, PaintEventArgs e)
+    {
+        throw new NotImplementedException();
     }
 
     // Add this method to the MainForm partial class to fix CS0103
