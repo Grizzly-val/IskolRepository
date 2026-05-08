@@ -36,6 +36,7 @@ partial class MainForm
     private Button createSubrepositoryButton = null!;
     private Button createRepositoryButton = null!;
     private Button backToSubjectsButton = null!;
+    private Button themeToggleButton = null!;
     private Label selectedPathValueLabel = null!;
     private Label selectedPathLabel = null!;
     private Label selectedSubjectValueLabel = null!;
@@ -90,6 +91,7 @@ partial class MainForm
         createRepositoryButton = new Button();
         createSubrepositoryButton = new Button();
         createFileButton = new Button();
+        themeToggleButton = new Button();
         pathHeaderPanel = new Panel();
         selectedPathLabel = new Label();
         selectedSubjectLabel = new Label();
@@ -491,6 +493,7 @@ partial class MainForm
         topHeaderPanel.BackColor = Color.FromArgb(10, 12, 20);
         topHeaderPanel.Controls.Add(logoLabel);
         topHeaderPanel.Controls.Add(selectedPathValueLabel);
+        topHeaderPanel.Controls.Add(themeToggleButton);
         topHeaderPanel.Dock = DockStyle.Top;
         topHeaderPanel.Location = new Point(0, 0);
         topHeaderPanel.Name = "topHeaderPanel";
@@ -632,6 +635,24 @@ partial class MainForm
         createFileButton.Text = "     Create File";
         createFileButton.UseVisualStyleBackColor = false;
         createFileButton.Click += createFileButton_Click;
+        // 
+        // themeToggleButton
+        // 
+        themeToggleButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        themeToggleButton.BackColor = Color.FromArgb(3, 4, 29);
+        themeToggleButton.Cursor = Cursors.Hand;
+        themeToggleButton.FlatAppearance.BorderSize = 0;
+        themeToggleButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        themeToggleButton.FlatStyle = FlatStyle.Flat;
+        themeToggleButton.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+        themeToggleButton.ForeColor = Color.White;
+        themeToggleButton.Location = new Point(1248, 30);
+        themeToggleButton.Name = "themeToggleButton";
+        themeToggleButton.Size = new Size(50, 50);
+        themeToggleButton.TabIndex = 5;
+        themeToggleButton.Text = "🌙";
+        themeToggleButton.UseVisualStyleBackColor = false;
+        themeToggleButton.Click += themeToggleButton_Click;
         // 
         // pathHeaderPanel
         // 

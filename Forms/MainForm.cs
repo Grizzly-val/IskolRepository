@@ -77,6 +77,7 @@ public partial class MainForm : Form
         ShowStartupView();
         UpdateSaveVersionButtonState();
         SetupButtons();
+        ApplyCurrentTheme();
     }
 
     private void SetupButtons()
@@ -104,9 +105,13 @@ public partial class MainForm : Form
 
     private void UpdateButtonColor(Button button)
     {
-        button.BackColor = button.Enabled ? ButtonDefaultColor : ButtonDisabledColor;
-        // Improve text visibility for disabled buttons
-        button.ForeColor = button.Enabled ? Color.White : Color.FromArgb(140, 150, 165);
+        button.BackColor = button.Enabled
+            ? ThemeManager.ButtonDefaultColor
+            : ThemeManager.ButtonDisabledColor;
+
+        button.ForeColor = button.Enabled
+            ? Color.White
+            : Color.FromArgb(190, 200, 215);
     }
 
     private void repositoryTreeView_DrawNode(object sender, DrawTreeNodeEventArgs e)
@@ -118,12 +123,34 @@ public partial class MainForm : Form
         }
 
         var isSelected = (e.State & TreeNodeStates.Selected) != 0;
-        var font = e.Node.NodeFont ?? repositoryTreeView.Font;
-        var textColor = isSelected ? Color.White : Color.White;
-        var backColor = isSelected ? Color.FromArgb(75, 143, 218) : Color.FromArgb(17, 18, 35);
 
-        e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
-        e.Graphics.DrawString(e.Node.Text, font, new SolidBrush(textColor), e.Bounds.X, e.Bounds.Y + 2);
+        // 1. Fill background
+        var backColor = isSelected ? Color.FromArgb(75, 143, 218) : repositoryTreeView.BackColor;
+        e.Graphics.FillRectangle(new SolidBrush(backColor),
+            new Rectangle(e.Bounds.X, e.Bounds.Y,
+                repositoryTreeView.ClientSize.Width - e.Bounds.X, e.Bounds.Height));
+
+        // 2. Draw icon manually from the ImageList
+        var imageList = repositoryTreeView.ImageList;
+        if (imageList != null)
+        {
+            var imageIndex = isSelected && e.Node.SelectedImageIndex >= 0
+                ? e.Node.SelectedImageIndex
+                : e.Node.ImageIndex;
+            if (imageIndex >= 0 && imageIndex < imageList.Images.Count)
+            {
+                var iconX = e.Bounds.X - imageList.ImageSize.Width - 2;
+                var iconY = e.Bounds.Y + (e.Bounds.Height - imageList.ImageSize.Height) / 2;
+                imageList.Draw(e.Graphics, iconX, iconY, imageIndex);
+            }
+        }
+
+        // 3. Draw text in white
+        var font = e.Node.NodeFont ?? repositoryTreeView.Font;
+        TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds,
+            ThemeManager.TextColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+        // Do NOT set e.DrawDefault = true — we handle everything above
     }
 
     #region Event Handlers
@@ -744,6 +771,12 @@ public partial class MainForm : Form
         }
     }
 
+    private void themeToggleButton_Click(object? sender, EventArgs e)
+    {
+        ThemeManager.ToggleTheme();
+        ApplyCurrentTheme();
+    }
+
     #endregion
 
     #region Semester Management
@@ -1026,6 +1059,109 @@ public partial class MainForm : Form
         statusComboBox.SelectedIndex = 0;
         metadataGroupBox.Text = "Repository Metadata";
         metadataGroupBox.ForeColor = SystemColors.WindowText;
+    }
+
+    private void ApplyCurrentTheme()
+    {
+        ThemeManager.ApplyTheme(this);
+
+        // ── Main form ──────────────────────────────────────────────
+        BackColor = ThemeManager.FormBackColor;
+
+        // ── Header panels ─────────────────────────────────────────
+        topHeaderPanel.BackColor = ThemeManager.HeaderColor;
+        toolbarHeaderPanel.BackColor = ThemeManager.PanelBackColor;
+
+        // Force header labels to always be visible against their panel
+        logoLabel.BackColor = ThemeManager.HeaderColor;
+        logoLabel.ForeColor = Color.White;          // header is always dark blue → always white
+        selectedPathValueLabel.BackColor = ThemeManager.HeaderColor;
+        selectedPathValueLabel.ForeColor = Color.White;
+
+        // Toolbar labels/buttons inside toolbarHeaderPanel
+        selectedSubjectValueLabel.BackColor = ThemeManager.PanelBackColor;
+        selectedSubjectValueLabel.ForeColor = ThemeManager.TextColor;
+
+        // ── Workspace ─────────────────────────────────────────────
+        workspacePanel.BackColor = ThemeManager.WorkspaceColor;
+        hostPanel.BackColor = ThemeManager.WorkspaceColor;
+
+        // ── Tree view ─────────────────────────────────────────────
+        repositoryTreeView.BackColor = ThemeManager.SecondaryPanelColor;
+        repositoryTreeView.ForeColor = ThemeManager.TextColor;
+
+        // ── File list ─────────────────────────────────────────────
+        filesListView.BackColor = ThemeManager.SecondaryPanelColor;
+        filesListView.ForeColor = ThemeManager.TextColor;
+
+        // ── Version list ──────────────────────────────────────────
+        versionsListBox.BackColor = ThemeManager.SecondaryPanelColor;
+        versionsListBox.ForeColor = ThemeManager.TextColor;
+
+        // ── Misc labels ───────────────────────────────────────────
+        selectedPathValueLabel.ForeColor = Color.White;     // lives on always-blue header
+        selectedSubjectValueLabel.ForeColor = ThemeManager.TextColor;
+        noRepositoryMessageLabel.ForeColor = ThemeManager.TextColor;
+        noVersionsMessageLabel.ForeColor = ThemeManager.TextColor;
+
+        // ── Message label backgrounds (so they don't look orphaned) ──
+        noRepositoryMessageLabel.BackColor = ThemeManager.WorkspaceColor;
+        noVersionsMessageLabel.BackColor = ThemeManager.SecondaryPanelColor;
+
+        // ── Metadata group ────────────────────────────────────────
+        metadataGroupBox.BackColor = ThemeManager.SecondaryPanelColor;
+        // Preserve the deadline status color (red/orange/green) if a repo is loaded.
+        // UpdateMetadataGroupBoxDisplay owns that color — we only reset it when nothing is selected.
+        if (string.IsNullOrWhiteSpace(selectedRepositoryPath))
+        {
+            metadataGroupBox.ForeColor = ThemeManager.TextColor;
+        }
+        else
+        {
+            // Re-derive and reapply the correct status color so the theme
+            // pass above doesn't clobber it.
+            var metadata = _repositoryService.EnsureMetadata(selectedRepositoryPath);
+            UpdateMetadataGroupBoxDisplay(metadata);
+        }
+
+        // ── Content split panels ──────────────────────────────────
+        contentSplitContainer.Panel1.BackColor = ThemeManager.WorkspaceColor;
+        contentSplitContainer.Panel2.BackColor = ThemeManager.WorkspaceColor;
+
+        // ── History panel ─────────────────────────────────────────
+        historyCaptionLabel.BackColor = ThemeManager.SecondaryPanelColor;
+        historyCaptionLabel.ForeColor = ThemeManager.TextColor;
+
+        // ── Theme toggle icon ─────────────────────────────────────
+        themeToggleButton.Text =
+            ThemeManager.CurrentTheme == AppTheme.Dark ? "☀" : "🌙";
+
+        // ── Deadline / Date Added value labels ────────────────────
+        deadlineValueLabel.BackColor = ThemeManager.SecondaryPanelColor;
+        deadlineValueLabel.ForeColor = ThemeManager.TextColor;
+        dateAddedValueLabel.BackColor = ThemeManager.SecondaryPanelColor;
+        dateAddedValueLabel.ForeColor = ThemeManager.TextColor;
+
+        // ── Muted labels (Deadline, Date Added, Status, Edit Deadline) ──
+        deadlineLabel.ForeColor = ThemeManager.MutedTextColor;
+        dateAddedLabel.ForeColor = ThemeManager.MutedTextColor;
+        statusLabel.ForeColor = ThemeManager.MutedTextColor;
+        editDeadlineLabel.ForeColor = ThemeManager.MutedTextColor;
+
+        // ── ComboBox ──────────────────────────────────────────────
+        statusComboBox.BackColor = ThemeManager.SecondaryPanelColor;
+        statusComboBox.ForeColor = ThemeManager.TextColor;
+
+        // ── DateTimePicker ────────────────────────────────────────
+        deadlineDateTimePicker.CalendarMonthBackground = ThemeManager.SecondaryPanelColor;
+        deadlineDateTimePicker.CalendarForeColor = ThemeManager.TextColor;
+        deadlineDateTimePicker.CalendarTrailingForeColor = ThemeManager.MutedTextColor;
+        deadlineDateTimePicker.CalendarTitleBackColor = ThemeManager.HeaderColor;
+        deadlineDateTimePicker.CalendarTitleForeColor = Color.White;
+
+        // ── Buttons — re-apply enabled/disabled colors after theme pass ──
+
+        Refresh();
     }
 
     private void UpdateRepositoryUiState(string? repositoryPath)
