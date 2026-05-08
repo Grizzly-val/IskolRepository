@@ -1058,7 +1058,7 @@ public partial class MainForm : Form
         deadlineDateTimePicker.Value = DateTime.Today;
         statusComboBox.SelectedIndex = 0;
         metadataGroupBox.Text = "Repository Metadata";
-        metadataGroupBox.ForeColor = SystemColors.WindowText;
+        metadataGroupBox.ForeColor = ThemeManager.TextColor;
     }
 
     private void ApplyCurrentTheme()
