@@ -23,17 +23,16 @@ public partial class SubjectSelectionView : UserControl
         UpdateButtonColor(button);
     }
 
-    private void UpdateButtonColor(Button button)
-    {
-        if (button.Enabled)
-        {
-            button.BackColor = Color.FromArgb(43, 87, 158);
-        }
-        else
-        {
-            button.BackColor = Color.FromArgb(120, 11, 42, 92);
-        }
-    }
+private void UpdateButtonColor(Button button)
+{
+    button.BackColor = button.Enabled
+        ? ThemeManager.ButtonDefaultColor
+        : ThemeManager.ButtonDisabledColor;
+
+    button.ForeColor = button.Enabled
+        ? Color.White
+        : ThemeManager.ButtonDisabledForeColor;
+}
 
     public event EventHandler? AddSubjectRequested;
     public event EventHandler? ChangeSemesterRequested;

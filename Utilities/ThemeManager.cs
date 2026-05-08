@@ -41,13 +41,18 @@ public static class ThemeManager
 
     public static Color ButtonDisabledColor =>
         CurrentTheme == AppTheme.Dark
-            ? Color.FromArgb(30, 36, 52)
+            ? Color.FromArgb(58, 70, 94)
             : Color.FromArgb(175, 180, 200);
 
     public static Color ButtonHoverColor =>
         CurrentTheme == AppTheme.Dark
             ? Color.FromArgb(75, 143, 218)
             : Color.FromArgb(90, 140, 220);
+
+    public static Color ButtonDisabledForeColor =>
+        CurrentTheme == AppTheme.Dark
+            ? Color.FromArgb(130, 140, 160)
+            : Color.FromArgb(120, 125, 140);
 
     public static Color HeaderColor =>
         CurrentTheme == AppTheme.Dark
@@ -98,7 +103,7 @@ public static class ThemeManager
 
             case Button btn:
                 btn.BackColor = btn.Enabled ? ButtonDefaultColor : ButtonDisabledColor;
-                btn.ForeColor = Color.White;          // always white on colored button
+                btn.ForeColor = btn.Enabled ? Color.White : ButtonDisabledForeColor;
                 btn.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
                 break;
 

@@ -47,11 +47,6 @@ public class TreeViewService : ITreeViewService
         LoadChildNodes(rootNode, semesterMarkerFileName);
 
         repositoryTreeView.EndUpdate();
-
-        foreach (TreeNode root in repositoryTreeView.Nodes)
-        {
-            _validationHelper.ApplyNodeValidationColors(root);
-        }
     }
 
     public void LoadSubjectTree(string? currentSubjectPath, string? selectPath, TreeView repositoryTreeView, string semesterMarkerFileName)
@@ -95,11 +90,6 @@ public class TreeViewService : ITreeViewService
         }
 
         repositoryTreeView.EndUpdate();
-
-        foreach (TreeNode root in repositoryTreeView.Nodes)
-        {
-            _validationHelper.ApplyNodeValidationColors(root);
-        }
     }
 
     public void LoadChildNodes(TreeNode parentNode, string semesterMarkerFileName)
@@ -118,6 +108,7 @@ public class TreeViewService : ITreeViewService
 
             var childNodeType = GetChildNodeType(parentData.NodeType);
 
+            // Process directories
             foreach (var directory in _fileSystemHelper.EnumerateDirectories(parentPath)
                 .OrderBy(d => _pathProvider.GetFileName(d), StringComparer.OrdinalIgnoreCase))
             {
@@ -128,16 +119,20 @@ public class TreeViewService : ITreeViewService
                     continue;
                 }
 
-                // Determine if this repository needs a warning icon
-                bool hasWarning = false;
+                // Determine validation state
+                bool hasValidationIssue = false;
                 if (childNodeType == NodeType.Repository)
                 {
-                    hasWarning = HasRepositoryDeadlineWarning(directory);
+                    // Deadline warning
+                    hasValidationIssue = HasRepositoryDeadlineWarning(directory);
+                }
+                else if (parentData.NodeType == NodeType.Subject && !_validationHelper.IsRepositoryFolder(directory))
+                {
+                    // Invalid: non-repository directory under Subject
+                    hasValidationIssue = true;
                 }
 
-                var iconKey = childNodeType == NodeType.Repository 
-                    ? _iconProvider.GetFolderIconKey(directory, hasWarning)
-                    : _iconProvider.GetIconKey(directory);
+                var iconKey = _iconProvider.GetIconKeyWithValidation(directory, hasValidationIssue);
 
                 var childNode = new TreeNode(directoryName)
                 {
@@ -149,18 +144,22 @@ public class TreeViewService : ITreeViewService
                 parentNode.Nodes.Add(childNode);
             }
 
+            // Process files
             foreach (var filePath in _fileSystemHelper.EnumerateFiles(parentPath)
                 .OrderBy(f => _pathProvider.GetFileName(f), StringComparer.OrdinalIgnoreCase))
             {
                 if (_validationHelper.IsSystemManagedFile(filePath, semesterMarkerFileName))
                     continue;
 
-                var isValidFile = parentData.NodeType != NodeType.Subject;
+                // Files directly under Subject are invalid (should be in a repository)
+                bool isInvalid = parentData.NodeType == NodeType.Subject;
+                var iconKey = _iconProvider.GetIconKeyWithValidation(filePath, isInvalid);
+
                 parentNode.Nodes.Add(new TreeNode(_pathProvider.GetFileName(filePath))
                 {
-                    Tag = new NodeData(filePath, NodeType.File, isValidFile),
-                    ImageKey = _iconProvider.GetIconKey(filePath),
-                    SelectedImageKey = _iconProvider.GetIconKey(filePath)
+                    Tag = new NodeData(filePath, NodeType.File, isValidFile: !isInvalid),
+                    ImageKey = iconKey,
+                    SelectedImageKey = iconKey
                 });
             }
         }

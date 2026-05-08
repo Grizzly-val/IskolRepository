@@ -81,11 +81,11 @@ public class ValidationHelperService : IValidationHelper
     }
 
     /// <summary>
-    /// Determines if a node should be marked as invalid (red).
+    /// Determines if a node is invalid.
     /// A node is invalid if it's a non-repository item directly under a Subject,
     /// i.e., files or directories that should be inside repositories instead.
     /// </summary>
-    private bool IsInvalidNode(TreeNode node)
+    public bool IsInvalidNode(TreeNode node)
     {
         if (node?.Tag is not NodeData nodeData)
             return false;
@@ -113,10 +113,9 @@ public class ValidationHelperService : IValidationHelper
         if (node is null)
             return;
 
-        // Color the current node red if it's invalid
-        node.ForeColor = IsInvalidNode(node) ? Color.Red : SystemColors.WindowText;
-
-        // Recursively apply to all children
+        // Recursively validate all children
+        // Validation state is now encoded in node icons (warning indicators)
+        // rather than text color, so we only recurse here for completeness.
         foreach (TreeNode child in node.Nodes)
         {
             ApplyNodeValidationColors(child);

@@ -60,12 +60,12 @@ public partial class MainForm : Form
         _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
         _subjectSelectionView.ChangeSemesterRequested += changeSemesterButton_Click;
 
-        AnimationHelper.AnimateHover(createFileButton, 8, 70);
-        AnimationHelper.AnimateHover(createRepositoryButton, 8, 70);
-        AnimationHelper.AnimateHover(createSubrepositoryButton, 8, 70);
-        AnimationHelper.AnimateHover(backToSubjectsButton, 8, 70);
-        AnimationHelper.AnimateHover(updateMetadataButton, 8, 70);
-        AnimationHelper.AnimateHover(saveVersionButton, 8, 70);
+        AnimationHelper.AnimateHover(createFileButton, 6, 70);
+        AnimationHelper.AnimateHover(createRepositoryButton, 6, 70);
+        AnimationHelper.AnimateHover(createSubrepositoryButton, 6, 70);
+        AnimationHelper.AnimateHover(backToSubjectsButton, 6, 70);
+        AnimationHelper.AnimateHover(updateMetadataButton, 6, 70);
+        AnimationHelper.AnimateHover(saveVersionButton, 6, 70);
 
         AnimationHelper.AnimateTextHover(revertButton, 2f, 70);
 
@@ -111,7 +111,7 @@ public partial class MainForm : Form
 
         button.ForeColor = button.Enabled
             ? Color.White
-            : Color.FromArgb(190, 200, 215);
+            : ThemeManager.ButtonDisabledForeColor;
     }
 
     private void repositoryTreeView_DrawNode(object sender, DrawTreeNodeEventArgs e)

@@ -97,7 +97,6 @@ public static class AnimationHelper
         private readonly int _duration;
         private readonly Timer _timer;
         private readonly Size _originalSize;
-        private readonly Point _originalLocation;
         private double _progress;
         private bool _isGrowing;
 
@@ -107,7 +106,6 @@ public static class AnimationHelper
             _growth = growth;
             _duration = duration;
             _originalSize = control.Size;
-            _originalLocation = control.Location;
             _progress = 0.0;
             _isGrowing = false;
 
@@ -152,15 +150,10 @@ public static class AnimationHelper
 
             var currentGrowth = (int)(_growth * easedProgress);
             var newSize = new Size(_originalSize.Width + currentGrowth, _originalSize.Height + currentGrowth);
-            var newLocation = new Point(_originalLocation.X - currentGrowth / 2, _originalLocation.Y - currentGrowth / 2);
 
             if (_control.Size != newSize)
             {
                 _control.Size = newSize;
-            }
-            if (_control.Location != newLocation)
-            {
-                _control.Location = newLocation;
             }
 
             if ((_isGrowing && _progress >= 1.0) || (!_isGrowing && _progress <= 0.0))

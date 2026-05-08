@@ -85,13 +85,13 @@ partial class MainForm
         topHeaderPanel = new Panel();
         logoLabel = new Label();
         selectedPathValueLabel = new Label();
+        themeToggleButton = new Button();
         toolbarHeaderPanel = new Panel();
         selectedSubjectValueLabel = new Label();
         backToSubjectsButton = new Button();
         createRepositoryButton = new Button();
         createSubrepositoryButton = new Button();
         createFileButton = new Button();
-        themeToggleButton = new Button();
         pathHeaderPanel = new Panel();
         selectedPathLabel = new Label();
         selectedSubjectLabel = new Label();
@@ -134,19 +134,19 @@ partial class MainForm
         repositoryTreeView.BackColor = Color.FromArgb(17, 18, 35);
         repositoryTreeView.BorderStyle = BorderStyle.None;
         repositoryTreeView.Dock = DockStyle.Fill;
+        repositoryTreeView.DrawMode = TreeViewDrawMode.OwnerDrawText;
         repositoryTreeView.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         repositoryTreeView.ForeColor = Color.White;
         repositoryTreeView.HideSelection = false;
-        repositoryTreeView.DrawMode = TreeViewDrawMode.OwnerDrawText;
         repositoryTreeView.Indent = 20;
         repositoryTreeView.ItemHeight = 30;
         repositoryTreeView.Location = new Point(0, 0);
         repositoryTreeView.Name = "repositoryTreeView";
         repositoryTreeView.Size = new Size(319, 589);
         repositoryTreeView.TabIndex = 0;
+        repositoryTreeView.DrawNode += repositoryTreeView_DrawNode;
         repositoryTreeView.AfterSelect += repositoryTreeView_AfterSelect;
         repositoryTreeView.NodeMouseDoubleClick += repositoryTreeView_NodeMouseDoubleClick;
-        repositoryTreeView.DrawNode += repositoryTreeView_DrawNode;
         // 
         // hostPanel
         // 
@@ -527,6 +527,24 @@ partial class MainForm
         selectedPathValueLabel.TextAlign = ContentAlignment.MiddleCenter;
         selectedPathValueLabel.Click += selectedPathValueLabel_Click;
         // 
+        // themeToggleButton
+        // 
+        themeToggleButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        themeToggleButton.BackColor = Color.FromArgb(3, 4, 29);
+        themeToggleButton.Cursor = Cursors.Hand;
+        themeToggleButton.FlatAppearance.BorderSize = 0;
+        themeToggleButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        themeToggleButton.FlatStyle = FlatStyle.Flat;
+        themeToggleButton.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+        themeToggleButton.ForeColor = Color.White;
+        themeToggleButton.Location = new Point(1243, 32);
+        themeToggleButton.Name = "themeToggleButton";
+        themeToggleButton.Size = new Size(50, 50);
+        themeToggleButton.TabIndex = 5;
+        themeToggleButton.Text = "🌙";
+        themeToggleButton.UseVisualStyleBackColor = false;
+        themeToggleButton.Click += themeToggleButton_Click;
+        // 
         // toolbarHeaderPanel
         // 
         toolbarHeaderPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -562,7 +580,7 @@ partial class MainForm
         backToSubjectsButton.FlatAppearance.BorderSize = 0;
         backToSubjectsButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(3, 4, 29);
         backToSubjectsButton.FlatStyle = FlatStyle.Flat;
-        backToSubjectsButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        backToSubjectsButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         backToSubjectsButton.ForeColor = Color.White;
         backToSubjectsButton.Image = (Image)resources.GetObject("backToSubjectsButton.Image");
         backToSubjectsButton.ImageAlign = ContentAlignment.MiddleLeft;
@@ -575,18 +593,18 @@ partial class MainForm
         backToSubjectsButton.Click += backToSubjectsButton_Click;
         // 
         // createRepositoryButton
-        //
+        // 
         createRepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         createRepositoryButton.BackColor = Color.FromArgb(3, 4, 29);
         createRepositoryButton.Cursor = Cursors.Hand;
         createRepositoryButton.FlatAppearance.BorderSize = 0;
         createRepositoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
         createRepositoryButton.FlatStyle = FlatStyle.Flat;
-        createRepositoryButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createRepositoryButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         createRepositoryButton.ForeColor = Color.White;
         createRepositoryButton.Image = (Image)resources.GetObject("createRepositoryButton.Image");
         createRepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
-        createRepositoryButton.Location = new Point(778, 10);
+        createRepositoryButton.Location = new Point(741, 10);
         createRepositoryButton.Name = "createRepositoryButton";
         createRepositoryButton.Size = new Size(170, 40);
         createRepositoryButton.TabIndex = 1;
@@ -595,7 +613,7 @@ partial class MainForm
         createRepositoryButton.Click += createRepositoryButton_Click;
         // 
         // createSubrepositoryButton
-        //
+        // 
         createSubrepositoryButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         createSubrepositoryButton.BackColor = Color.FromArgb(3, 4, 29);
         createSubrepositoryButton.Cursor = Cursors.Hand;
@@ -603,20 +621,20 @@ partial class MainForm
         createSubrepositoryButton.FlatAppearance.BorderSize = 0;
         createSubrepositoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
         createSubrepositoryButton.FlatStyle = FlatStyle.Flat;
-        createSubrepositoryButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createSubrepositoryButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         createSubrepositoryButton.ForeColor = Color.White;
         createSubrepositoryButton.Image = (Image)resources.GetObject("createSubrepositoryButton.Image");
         createSubrepositoryButton.ImageAlign = ContentAlignment.MiddleLeft;
-        createSubrepositoryButton.Location = new Point(958, 10);
+        createSubrepositoryButton.Location = new Point(930, 10);
         createSubrepositoryButton.Name = "createSubrepositoryButton";
-        createSubrepositoryButton.Size = new Size(170, 40);
+        createSubrepositoryButton.Size = new Size(188, 40);
         createSubrepositoryButton.TabIndex = 2;
         createSubrepositoryButton.Text = "     Create Subrepository";
         createSubrepositoryButton.UseVisualStyleBackColor = false;
         createSubrepositoryButton.Click += createSubrepositoryButton_Click;
         // 
         // createFileButton
-        //
+        // 
         createFileButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         createFileButton.BackColor = Color.FromArgb(3, 4, 29);
         createFileButton.Cursor = Cursors.Hand;
@@ -624,7 +642,7 @@ partial class MainForm
         createFileButton.FlatAppearance.BorderSize = 0;
         createFileButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
         createFileButton.FlatStyle = FlatStyle.Flat;
-        createFileButton.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+        createFileButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         createFileButton.ForeColor = Color.White;
         createFileButton.Image = (Image)resources.GetObject("createFileButton.Image");
         createFileButton.ImageAlign = ContentAlignment.MiddleLeft;
@@ -635,24 +653,6 @@ partial class MainForm
         createFileButton.Text = "     Create File";
         createFileButton.UseVisualStyleBackColor = false;
         createFileButton.Click += createFileButton_Click;
-        // 
-        // themeToggleButton
-        // 
-        themeToggleButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        themeToggleButton.BackColor = Color.FromArgb(3, 4, 29);
-        themeToggleButton.Cursor = Cursors.Hand;
-        themeToggleButton.FlatAppearance.BorderSize = 0;
-        themeToggleButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
-        themeToggleButton.FlatStyle = FlatStyle.Flat;
-        themeToggleButton.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
-        themeToggleButton.ForeColor = Color.White;
-        themeToggleButton.Location = new Point(1248, 30);
-        themeToggleButton.Name = "themeToggleButton";
-        themeToggleButton.Size = new Size(50, 50);
-        themeToggleButton.TabIndex = 5;
-        themeToggleButton.Text = "🌙";
-        themeToggleButton.UseVisualStyleBackColor = false;
-        themeToggleButton.Click += themeToggleButton_Click;
         // 
         // pathHeaderPanel
         // 
