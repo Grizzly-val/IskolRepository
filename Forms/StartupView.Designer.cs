@@ -4,12 +4,12 @@ partial class StartupView
 {
     private System.ComponentModel.IContainer components = null;
 
-    private ShadowLabel welcomeLabel = null!;
-    private ShadowLabel appNameLabel = null!;
-    private Label orLabel = null!;
+    private PictureBox logoMarkPictureBox = null!;
+    private Label appNameLabel = null!;
+    private Label taglineLabel = null!;
     private Button openSemesterButton = null!;
     private Button newSemesterButton = null!;
-    private Panel overlayPanel = null!;
+    private Label orLabel = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -21,82 +21,81 @@ partial class StartupView
 
     private void InitializeComponent()
     {
-        welcomeLabel = new ShadowLabel();
-        appNameLabel = new ShadowLabel();
-        orLabel = new Label();
+        logoMarkPictureBox = new PictureBox();
+        appNameLabel = new Label();
+        taglineLabel = new Label();
         openSemesterButton = new Button();
         newSemesterButton = new Button();
-        overlayPanel = new Panel();
+        orLabel = new Label();
 
+        ((System.ComponentModel.ISupportInitialize)logoMarkPictureBox).BeginInit();
         SuspendLayout();
 
         // StartupView
         this.Name = "StartupView";
-        this.BackgroundImage = Image.FromFile("startup_bg.png");
-        this.BackgroundImageLayout = ImageLayout.Stretch;
+        this.BackColor = Color.FromArgb(12, 14, 24);
 
-        // ===== TITLE (TOP) =====
-        welcomeLabel.Text = "Welcome to";
-        welcomeLabel.Font = new Font("Segoe UI", 36F, FontStyle.Regular);
-        welcomeLabel.ForeColor = Color.FromArgb(245, 245, 240);
-        welcomeLabel.TextAlign = ContentAlignment.MiddleCenter;
-        welcomeLabel.BackColor = Color.Transparent;
-        welcomeLabel.AutoSize = true;
-        welcomeLabel.Location = new Point(120, 40);
+        // ===== LOGO MARK (48×48px) =====
+        logoMarkPictureBox.Size = new Size(48, 48);
+        logoMarkPictureBox.BackColor = Color.Transparent;
+        logoMarkPictureBox.SizeMode = PictureBoxSizeMode.CenterImage;
 
+        // ===== APP NAME LABEL =====
         appNameLabel.Text = "IskolRepo";
-        appNameLabel.Font = new Font("Segoe UI", 42F, FontStyle.Bold);
-        appNameLabel.ForeColor = Color.FromArgb(245, 245, 240);
+        appNameLabel.Font = new Font("Segoe UI", 28F, FontStyle.Bold);
+        appNameLabel.ForeColor = Color.White;
         appNameLabel.TextAlign = ContentAlignment.MiddleCenter;
         appNameLabel.BackColor = Color.Transparent;
         appNameLabel.AutoSize = true;
-        appNameLabel.Location = new Point(120, 90);
 
-        // ===== PANEL (ROUNDED BOX CONTAINER) =====
-        overlayPanel.Size = new Size(700, 200);
-        overlayPanel.BackColor = Color.FromArgb(40, 0, 0, 0);
+        // ===== TAGLINE LABEL =====
+        taglineLabel.Text = "Your academic file organizer";
+        taglineLabel.Font = new Font("Segoe UI", 14F, FontStyle.Regular);
+        taglineLabel.ForeColor = Color.FromArgb(180, 190, 205);
+        taglineLabel.TextAlign = ContentAlignment.MiddleCenter;
+        taglineLabel.BackColor = Color.Transparent;
+        taglineLabel.AutoSize = true;
 
-        // Open Button
+        // ===== OPEN SEMESTER BUTTON =====
         openSemesterButton.Text = "Open Semester";
-        openSemesterButton.Size = new Size(220, 70);
-        openSemesterButton.Location = new Point(80, 60);
+        openSemesterButton.Size = new Size(200, 50);
         openSemesterButton.FlatStyle = FlatStyle.Flat;
         openSemesterButton.FlatAppearance.BorderSize = 0;
-        openSemesterButton.BackColor = Color.FromArgb(160, 43, 87, 158);
+        openSemesterButton.BackColor = Color.FromArgb(24, 47, 83);
         openSemesterButton.ForeColor = Color.White;
-        openSemesterButton.Font = new Font("Segoe UI", 14, FontStyle.Bold);
+        openSemesterButton.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+        openSemesterButton.Cursor = Cursors.Hand;
         openSemesterButton.Click += openSemesterButton_Click;
 
-        // OR Label
+        // ===== OR LABEL =====
         orLabel.Text = "OR";
-        orLabel.Font = new Font("Segoe UI", 14, FontStyle.Bold);
-        orLabel.ForeColor = Color.White;
+        orLabel.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+        orLabel.ForeColor = Color.FromArgb(180, 190, 205);
         orLabel.BackColor = Color.Transparent;
         orLabel.TextAlign = ContentAlignment.MiddleCenter;
-        orLabel.Size = new Size(60, 40);
-        orLabel.Location = new Point(310, 75);
+        orLabel.Size = new Size(40, 50);
 
-        // New Button
+        // ===== NEW SEMESTER BUTTON =====
         newSemesterButton.Text = "New Semester";
-        newSemesterButton.Size = new Size(220, 70);
-        newSemesterButton.Location = new Point(400, 60);
+        newSemesterButton.Size = new Size(200, 50);
         newSemesterButton.FlatStyle = FlatStyle.Flat;
         newSemesterButton.FlatAppearance.BorderSize = 0;
-        newSemesterButton.BackColor = Color.FromArgb(160, 43, 87, 158);
+        newSemesterButton.BackColor = Color.FromArgb(24, 47, 83);
         newSemesterButton.ForeColor = Color.White;
-        newSemesterButton.Font = new Font("Segoe UI", 14, FontStyle.Bold);
+        newSemesterButton.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+        newSemesterButton.Cursor = Cursors.Hand;
         newSemesterButton.Click += newSemesterButton_Click;
 
-        // Add controls to panel
-        overlayPanel.Controls.Add(openSemesterButton);
-        overlayPanel.Controls.Add(orLabel);
-        overlayPanel.Controls.Add(newSemesterButton);
-
         // Add controls to view
-        Controls.Add(overlayPanel);
-        Controls.Add(welcomeLabel);
+        Controls.Add(logoMarkPictureBox);
         Controls.Add(appNameLabel);
+        Controls.Add(taglineLabel);
+        Controls.Add(openSemesterButton);
+        Controls.Add(orLabel);
+        Controls.Add(newSemesterButton);
 
+        ((System.ComponentModel.ISupportInitialize)logoMarkPictureBox).EndInit();
         ResumeLayout(false);
+        PerformLayout();
     }
 }

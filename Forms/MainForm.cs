@@ -11,6 +11,14 @@ public partial class MainForm : Form
 {
     private const string SemesterMarkerFileName = ".semester.json";
 
+    private static readonly Color ButtonDefaultColor = Color.FromArgb(24, 47, 83);
+    private static readonly Color ButtonHoverColor = Color.FromArgb(75, 143, 218);
+    private static readonly Color ButtonPressedColor = Color.FromArgb(54, 95, 163);
+    private static readonly Color ButtonDisabledColor = Color.FromArgb(30, 36, 52);
+    private static readonly Color DarkPanelColor = Color.FromArgb(12, 14, 24);
+    private static readonly Color DarkerPanelColor = Color.FromArgb(10, 12, 20);
+    private static readonly Color LightTextColor = Color.FromArgb(220, 230, 245);
+
     private readonly ISemesterService _semesterService;
     private readonly IRepositoryService _repositoryService;
     private readonly IFileService _fileService;
@@ -85,20 +93,37 @@ public partial class MainForm : Form
     private void SetupButton(Button button)
     {
         button.EnabledChanged += (s, e) => UpdateButtonColor(button);
+        button.FlatStyle = FlatStyle.Flat;
+        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
+        button.FlatAppearance.MouseDownBackColor = ButtonPressedColor;
+        button.ForeColor = Color.White;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
         UpdateButtonColor(button);
     }
 
     private void UpdateButtonColor(Button button)
     {
-        if (button.Enabled)
+        button.BackColor = button.Enabled ? ButtonDefaultColor : ButtonDisabledColor;
+        // Improve text visibility for disabled buttons
+        button.ForeColor = button.Enabled ? Color.White : Color.FromArgb(140, 150, 165);
+    }
+
+    private void repositoryTreeView_DrawNode(object sender, DrawTreeNodeEventArgs e)
+    {
+        if (e.Node == null)
         {
-            button.BackColor = Color.FromArgb(3, 4, 29);
+            e.DrawDefault = true;
+            return;
         }
-        else
-        {
-            // Reduce opacity of the default color  
-            button.BackColor = Color.FromArgb(17, 18, 35);
-        }
+
+        var isSelected = (e.State & TreeNodeStates.Selected) != 0;
+        var font = e.Node.NodeFont ?? repositoryTreeView.Font;
+        var textColor = isSelected ? Color.White : Color.White;
+        var backColor = isSelected ? Color.FromArgb(75, 143, 218) : Color.FromArgb(17, 18, 35);
+
+        e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
+        e.Graphics.DrawString(e.Node.Text, font, new SolidBrush(textColor), e.Bounds.X, e.Bounds.Y + 2);
     }
 
     #region Event Handlers
