@@ -64,6 +64,11 @@ public static class ThemeManager
             ? Color.FromArgb(12, 14, 24)
             : Color.FromArgb(220, 225, 238);
 
+    public static Color LogoBackColor =>
+        CurrentTheme == AppTheme.Dark
+            ? Color.FromArgb(60, 100, 175)  // Light blue if dark theme
+            : Color.FromArgb(24, 47, 83);   // Dark blue if light theme
+
     public static void ToggleTheme()
     {
         CurrentTheme = CurrentTheme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;

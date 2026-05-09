@@ -81,6 +81,7 @@ partial class MainForm
         dateAddedLabel = new Label();
         deadlineValueLabel = new Label();
         deadlineLabel = new Label();
+        _startupView = new StartupView();
         _subjectSelectionView = new SubjectSelectionView();
         topHeaderPanel = new Panel();
         logoLabel = new Label();
@@ -153,11 +154,20 @@ partial class MainForm
         hostPanel.BackColor = Color.FromArgb(13, 14, 30);
         hostPanel.Controls.Add(workspacePanel);
         hostPanel.Controls.Add(_subjectSelectionView);
+        hostPanel.Controls.Add(_startupView);
         hostPanel.Dock = DockStyle.Fill;
         hostPanel.Location = new Point(0, 0);
         hostPanel.Name = "hostPanel";
         hostPanel.Size = new Size(997, 589);
         hostPanel.TabIndex = 0;
+        // 
+        // _startupView
+        // 
+        _startupView.Dock = DockStyle.Fill;
+        _startupView.Location = new Point(0, 0);
+        _startupView.Name = "_startupView";
+        _startupView.Size = new Size(997, 589);
+        _startupView.TabIndex = 3;
         // 
         // workspacePanel
         // 

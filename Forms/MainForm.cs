@@ -10,6 +10,7 @@ namespace IskolRepository.Forms;
 public partial class MainForm : Form
 {
     private const string SemesterMarkerFileName = ".semester.json";
+    private const string StartupHeaderPathText = "Select a semester";
 
     private static readonly Color ButtonDefaultColor = Color.FromArgb(24, 47, 83);
     private static readonly Color ButtonHoverColor = Color.FromArgb(75, 143, 218);
@@ -48,12 +49,7 @@ public partial class MainForm : Form
         _versionService = services.VersionService;
         _validationService = services.ValidationService;
 
-        _startupView = new StartupView();
         InitializeComponent();
-
-        hostPanel.Controls.Add(_startupView);
-
-        _startupView.Dock = DockStyle.Fill;
 
         _startupView.OpenSemesterRequested += openSemesterButton_Click;
         _startupView.NewSemesterRequested += newSemesterButton_Click;
@@ -67,6 +63,9 @@ public partial class MainForm : Form
         AnimationHelper.AnimateHover(updateMetadataButton, 6, 70);
         AnimationHelper.AnimateHover(saveVersionButton, 6, 70);
 
+        AnimationHelper.AnimateHover(themeToggleButton, 6, 70);
+        AnimationHelper.AnimateTextHover(themeToggleButton, 2f, 70);
+
         AnimationHelper.AnimateTextHover(revertButton, 2f, 70);
 
 
@@ -75,6 +74,7 @@ public partial class MainForm : Form
 
         statusComboBox.SelectedIndex = 0;
         ShowStartupView();
+        UpdateRepositoryUiState(null);
         UpdateSaveVersionButtonState();
         SetupButtons();
         ApplyCurrentTheme();
@@ -273,12 +273,15 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        selectedPathValueLabel.Text = "No item selected";
+        SetHeaderPath(StartupHeaderPathText);
+        selectedSubjectValueLabel.Text = "No subject selected";
         _subjectSelectionView.PopulateSubjects(_ => { });
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
+        UpdateRepositoryUiState(null);
+        UpdateHistoryUiState(null);
         ShowStartupView();
     }
 
@@ -292,7 +295,10 @@ public partial class MainForm : Form
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
-        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
+        SetHeaderPath(currentSemesterPath ?? StartupHeaderPathText);
+        selectedSubjectValueLabel.Text = "No subject selected";
+        UpdateRepositoryUiState(null);
+        UpdateHistoryUiState(null);
         LoadSubjectsUI();
         ShowSubjectView();
     }
@@ -565,7 +571,7 @@ public partial class MainForm : Form
             return;
         }
 
-        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
+        SetHeaderPath(currentSemesterPath ?? StartupHeaderPathText);
 
         // Lazy load children when node is selected
         LoadChildNodes(e.Node);
@@ -788,13 +794,15 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        selectedPathValueLabel.Text = semesterPath;
+        SetHeaderPath(semesterPath);
         _subjectSelectionView.SemesterName = Path.GetFileName(semesterPath);
         selectedSubjectValueLabel.Text = "No subject selected";
         repositoryTreeView.Nodes.Clear();
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
+        UpdateRepositoryUiState(null);
+        UpdateHistoryUiState(null);
         _treeViewService.LoadSemesterTree(semesterPath, repositoryTreeView, SemesterMarkerFileName);
         LoadSubjectsUI();
         ShowSubjectView();
@@ -873,7 +881,10 @@ public partial class MainForm : Form
     {
         currentSubjectPath = subjectPath;
         selectedSubjectValueLabel.Text = Path.GetFileName(subjectPath);
+        SetHeaderPath(currentSemesterPath ?? StartupHeaderPathText);
         LoadSubjectTree(subjectPath);
+        UpdateRepositoryUiState(null);
+        UpdateHistoryUiState(null);
         ShowWorkspaceView();
     }
 
@@ -943,7 +954,7 @@ public partial class MainForm : Form
         selectedRepositoryPath = null;
         currentBrowsePath = null;
         selectedFilePath = null;
-        selectedPathValueLabel.Text = currentSemesterPath ?? "No item selected";
+        SetHeaderPath(currentSemesterPath ?? StartupHeaderPathText);
         filesListView.Items.Clear();
         versionsListBox.Items.Clear();
         ClearMetadataDisplay();
@@ -955,8 +966,9 @@ public partial class MainForm : Form
     private void ShowStartupView()
     {
         mainSplitContainer.Panel1Collapsed = true;
+        SetHeaderPath(StartupHeaderPathText);
+        topHeaderPanel.Visible = true;
         toolbarHeaderPanel.Visible = false;
-        topHeaderPanel.Visible = false;
         pathHeaderPanel.Visible = false;
         _startupView.Visible = true;
         _subjectSelectionView.Visible = false;
@@ -966,8 +978,9 @@ public partial class MainForm : Form
     private void ShowSubjectView()
     {
         mainSplitContainer.Panel1Collapsed = true;
-        toolbarHeaderPanel.Visible = false;
+        SetHeaderPath(currentSemesterPath ?? StartupHeaderPathText);
         topHeaderPanel.Visible = true;
+        toolbarHeaderPanel.Visible = false;
         pathHeaderPanel.Visible = false;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = true;
@@ -977,8 +990,9 @@ public partial class MainForm : Form
     private void ShowWorkspaceView()
     {
         mainSplitContainer.Panel1Collapsed = false;
-        toolbarHeaderPanel.Visible = true;
+        SetHeaderPath(selectedRepositoryPath ?? currentSemesterPath ?? StartupHeaderPathText);
         topHeaderPanel.Visible = true;
+        toolbarHeaderPanel.Visible = true;
         pathHeaderPanel.Visible = false;
         _startupView.Visible = false;
         _subjectSelectionView.Visible = false;
@@ -1064,6 +1078,7 @@ public partial class MainForm : Form
     private void ApplyCurrentTheme()
     {
         ThemeManager.ApplyTheme(this);
+        _startupView.UpdateTheme();
 
         // ── Main form ──────────────────────────────────────────────
         BackColor = ThemeManager.FormBackColor;
@@ -1167,6 +1182,9 @@ public partial class MainForm : Form
     private void UpdateRepositoryUiState(string? repositoryPath)
     {
         var hasRepository = !string.IsNullOrWhiteSpace(repositoryPath);
+        var hasSubject = !string.IsNullOrWhiteSpace(currentSubjectPath);
+        backToSubjectsButton.Enabled = hasSubject;
+        createRepositoryButton.Enabled = hasSubject;
         createFileButton.Enabled = hasRepository;
         deadlineDateTimePicker.Enabled = hasRepository;
         statusComboBox.Enabled = hasRepository;
@@ -1209,9 +1227,15 @@ public partial class MainForm : Form
         selectedRepositoryPath = repositoryRootPath;
         currentBrowsePath = browsePath;
         selectedFilePath = null;
+        SetHeaderPath(repositoryRootPath);
         LoadFiles(repositoryRootPath, browsePath);
         UpdateRepositoryUiState(repositoryRootPath);
         UpdateHistoryUiState(null);
+    }
+
+    private void SetHeaderPath(string text)
+    {
+        selectedPathValueLabel.Text = text;
     }
 
     private void NavigateToBrowsePath(string targetPath)
