@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
+using IskolRepository.Utilities;
+
 namespace IskolRepository.Forms;
 
 public partial class StartupView : UserControl
@@ -10,87 +12,57 @@ public partial class StartupView : UserControl
     public StartupView()
     {
         InitializeComponent();
-        CreateLogoMark();
         ApplyStyle();
 
-        this.Resize += (s, e) => CenterAllControls();
-        this.Load += (s, e) =>
+        Load += (s, e) =>
         {
             RoundButton(openSemesterButton, 20);
             RoundButton(newSemesterButton, 20);
-            CenterAllControls();
+            UpdateLogoAppearance();
         };
+
+        openSemesterButton.Resize += (s, e) => RoundButton(openSemesterButton, 20);
+        newSemesterButton.Resize += (s, e) => RoundButton(newSemesterButton, 20);
+        logoMarkPictureBox.Resize += (s, e) => UpdateLogoAppearance();
+
+        AnimationHelper.AnimateTextHover(openSemesterButton, 2f, 70);
+        AnimationHelper.AnimateTextHover(newSemesterButton, 2f, 70);
+
     }
 
-    private void CenterAllControls()
+    public void UpdateTheme()
     {
-        int centerX = this.Width / 2;
-        
-        // Calculate total height of all content
-        int logoHeight = 48;
-        int logoToNameGap = 16;
-        int nameToTaglineGap = 8;
-        int taglineToButtonGap = 24;
-        int buttonHeight = 50;
-        
-        int totalContentHeight = logoHeight + logoToNameGap + appNameLabel.Height + 
-                                nameToTaglineGap + taglineLabel.Height + taglineToButtonGap + buttonHeight;
-        
-        // Start from vertical center minus half the content height
-        int startY = (this.Height - totalContentHeight) / 2;
+        appNameLabel.ForeColor = ThemeManager.TextColor;
+        taglineLabel.ForeColor = ThemeManager.MutedTextColor;
+        orLabel.ForeColor = ThemeManager.MutedTextColor;
 
-        // Logo mark centered horizontally
-        logoMarkPictureBox.Left = centerX - logoMarkPictureBox.Width / 2;
-        logoMarkPictureBox.Top = startY;
+        // Force colors for labels if they were overridden
+        appNameLabel.BackColor = Color.Transparent;
+        taglineLabel.BackColor = Color.Transparent;
+        orLabel.BackColor = Color.Transparent;
 
-        // App name centered horizontally, below logo with some spacing
-        appNameLabel.Left = centerX - appNameLabel.Width / 2;
-        appNameLabel.Top = logoMarkPictureBox.Bottom + logoToNameGap;
-
-        // Tagline centered horizontally, below app name
-        taglineLabel.Left = centerX - taglineLabel.Width / 2;
-        taglineLabel.Top = appNameLabel.Bottom + nameToTaglineGap;
-
-        // Button group: 24px gap between logo/tagline block and buttons
-        int buttonGroupTop = taglineLabel.Bottom + taglineToButtonGap;
-        
-        // Calculate horizontal positions for button group (centered)
-        int totalButtonWidth = openSemesterButton.Width + orLabel.Width + newSemesterButton.Width;
-        int buttonGroupLeft = centerX - totalButtonWidth / 2;
-
-        openSemesterButton.Left = buttonGroupLeft;
-        openSemesterButton.Top = buttonGroupTop;
-
-        orLabel.Left = openSemesterButton.Right;
-        orLabel.Top = buttonGroupTop;
-
-        newSemesterButton.Left = orLabel.Right;
-        newSemesterButton.Top = buttonGroupTop;
+        ThemeManager.ApplyTheme(buttonLayout);
+        UpdateLogoAppearance();
     }
 
-    private void CreateLogoMark()
+    private void UpdateLogoAppearance()
     {
-        // Create a 48x48 white outline folder icon
-        Bitmap logoImage = new Bitmap(48, 48);
-        using (Graphics g = Graphics.FromImage(logoImage))
-        {
-            g.Clear(Color.Transparent);
-            g.SmoothingMode = SmoothingMode.AntiAlias;
+        logoMarkPictureBox.BackColor = ThemeManager.LogoBackColor;
+        RoundControl(logoMarkPictureBox, 32);
+    }
 
-            // Draw folder outline
-            Pen whitePen = new Pen(Color.White, 2.5f);
+    private void RoundControl(Control control, int radius)
+    {
+        if (control.Width <= 0 || control.Height <= 0) return;
 
-            // Folder tab (top-left rectangle)
-            g.DrawRectangle(whitePen, 6, 6, 18, 10);
+        using GraphicsPath path = new();
+        path.AddArc(0, 0, radius, radius, 180, 90);
+        path.AddArc(control.Width - radius, 0, radius, radius, 270, 90);
+        path.AddArc(control.Width - radius, control.Height - radius, radius, radius, 0, 90);
+        path.AddArc(0, control.Height - radius, radius, radius, 90, 90);
+        path.CloseFigure();
 
-            // Main folder body
-            g.DrawRectangle(whitePen, 6, 14, 36, 24);
-
-            // Folder flap line
-            g.DrawLine(whitePen, 24, 14, 24, 24);
-        }
-
-        logoMarkPictureBox.Image = logoImage;
+        control.Region = new Region(path);
     }
 
     public event EventHandler? OpenSemesterRequested;
@@ -121,7 +93,7 @@ public partial class StartupView : UserControl
 
     private void RoundButton(Button button, int radius)
     {
-        var path = new GraphicsPath();
+        using GraphicsPath path = new();
 
         path.AddArc(0, 0, radius, radius, 180, 90);
         path.AddArc(button.Width - radius, 0, radius, radius, 270, 90);
