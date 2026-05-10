@@ -1,35 +1,76 @@
-# IskolRepo
+# 📚 IskolRepo
 
-**IskolRepo** is a local Windows desktop application that helps students organize academic files and tasks by semester, subject, and activity repository. It works like a smarter version of the folders already on your PC: students can create semester folders, group coursework by subject, initialize repositories for individual tasks, track deadlines and submission statuses, create files, organize subrepositories, and save snapshots of supported work so previous versions can be restored when needed.
+> A local Windows desktop application for organizing academic files, repositories, coursework, and version history.
 
-The application is built with **C#**, **.NET 10**, and **Windows Forms**. It is designed to work offline and store all academic data locally on the user's computer.
+---
 
-## Developers
+# 📖 Project Description and Purpose
 
-- Donatos, Trixter Lanz C.
-- Ilao, Kent Patrick M.
-- Laganzon, Adrian G.
-- Villanueva, Franz Daniel
+## Overview
 
-## Project Description and Purpose
+**IskolRepo** is a local Windows desktop application that helps students organize academic files and tasks by:
 
-Students often keep school files in ordinary folders such as `1st Semester`, `Programming`, `Assignment 1`, or `Final Project`. This works at first, but it becomes harder to manage as deadlines, revisions, file versions, and multiple subjects pile up.
+- Semester
+- Subject
+- Repository or Activity
 
-IskolRepo solves this problem by giving students a desktop workspace that follows the way academic work is naturally organized:
+The system works like a smarter version of ordinary folders on a computer. Students can create semester folders, organize coursework by subject, initialize repositories for activities, manage deadlines, track submission status, create files, organize subrepositories, and maintain local version history for supported files.
+
+The application is built using:
+
+- **C#**
+- **.NET 10**
+- **Windows Forms**
+
+and is designed to work completely **offline**, storing all academic data locally on the user's computer.
+
+---
+
+## Purpose of the System
+
+Students commonly organize files using folders such as:
 
 ```text
-Semester -> Subject -> Repository/Activity -> Files and Subrepositories
+1st Semester/
+Programming/
+Assignment 1/
+Final Project/
 ```
 
-Each repository represents an academic task or activity, such as an assignment, laboratory exercise, report, presentation, or project requirement. The system keeps repository metadata, including deadline, date added, status, and submitted date. It also includes a local version history feature for supported file types, allowing students to save snapshots of their work and revert to earlier versions.
+Although this works initially, managing deadlines, revisions, versions, and multiple subjects becomes difficult as coursework increases.
 
-The purpose of IskolRepo is to provide a simple, offline, student-centered file management system that reduces clutter, improves coursework tracking, and protects students from losing important previous versions of their work.
+IskolRepo solves this problem by introducing a structured academic repository system:
 
-## UML Diagrams
+```text
+Semester → Subject → Repository/Activity → Files and Subrepositories
+```
 
-The original UML is split into focused diagrams so each one answers a specific architecture question while preserving the class/interface detail and relationships from the full design.
+Each repository represents a specific academic activity such as:
 
-### High-Level Architecture Diagram
+- Assignments
+- Laboratory Exercises
+- Reports
+- Presentations
+- Projects
+
+The system stores repository metadata including:
+
+- Deadline
+- Date Added
+- Status
+- Submitted Date
+
+It also provides a **local version history feature** for supported file types, allowing students to save snapshots of their work and restore previous versions when necessary.
+
+---
+
+# 🧩 UML Diagram
+
+The UML documentation is divided into focused diagrams so each one explains a specific architectural concern while preserving the original class and relationship details.
+
+---
+
+## 🏗️ High-Level Architecture Diagram
 
 This diagram shows the application entry point, UI ownership, and service access path used by `MainForm`.
 
@@ -39,6 +80,7 @@ classDiagram
 
   class Program {
     +Main()
+    +ConfigureGlobalExceptionHandlers()
   }
 
   class ServiceFactory {
@@ -55,6 +97,8 @@ classDiagram
     +IFileIdentityManager FileIdentityManager
     +IFileReconciliationService FileReconciliation
     +IValidationHelper ValidationHelper
+    +IFileSystemHelper FileSystemHelper
+    +IPathProvider PathProvider
   }
 
   class MainForm {
@@ -62,128 +106,58 @@ classDiagram
     -currentSubjectPath string
     -selectedRepositoryPath string
     -selectedFilePath string
+    -selectedBrowsePath string
+    -currentRepositoryMetadata RepoMetadata
+    -services ServiceRegistry
+
     +OpenSemester()
     +CreateSemester()
     +CreateSubject()
     +CreateRepository()
     +CreateFile()
+    +CreateFolder()
     +SaveVersion()
     +RevertToVersion()
+    +LoadRepository()
+    +LoadRepositoryFiles()
+    +LoadTreeView()
+    +RefreshSubjectView()
+    +RefreshRepositoryMetadata()
+    +UpdateRepositoryStatus()
+    +HandleTreeNodeSelection()
+    +ApplyTheme()
+    +ToggleTheme()
   }
 
   class StartupView {
     +OpenSemesterRequested event
     +NewSemesterRequested event
+    +InitializeLayout()
+    +ShowOpenSemesterDialog()
+    +ShowCreateSemesterDialog()
   }
 
   class SubjectSelectionView {
     +AddSubjectRequested event
     +ChangeSemesterRequested event
     +PopulateSubjects()
-  }
-
-  class ISemesterService {
-    <<interface>>
-    +OpenSemester(path) string
-    +CreateSemester(parent, name) string
-    +CreateSemesterMarker(path)
-  }
-
-  class ISubjectService {
-    <<interface>>
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
-  }
-
-  class IRepositoryService {
-    <<interface>>
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-  }
-
-  class IFileService {
-    <<interface>>
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
-  }
-
-  class IVersionService {
-    <<interface>>
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
-    +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
-  }
-
-  class ITreeViewService {
-    <<interface>>
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
-  }
-
-  class IValidationHelper {
-    <<interface>>
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-    +ApplyNodeValidationColors(node)
-  }
-
-  class IFileIdentityManager {
-    <<interface>>
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +FindOrphaned(repoPath) List
-    +FindLost(repoPath) List
-    +SaveManifest(repoPath, manifest)
-  }
-
-  class IFileReconciliationService {
-    <<interface>>
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
+    +CreateSubjectCard()
+    +LoadSubjects()
+    +ApplyTheme()
   }
 
   Program ..> ServiceFactory : creates
-  Program ..> MainForm : runs
+  Program ..> MainForm : launches
   ServiceFactory ..> ServiceRegistry : builds
 
   MainForm --> ServiceRegistry : receives
   MainForm *-- StartupView : owns
   MainForm *-- SubjectSelectionView : owns
-  MainForm ..> ISemesterService : uses
-  MainForm ..> ISubjectService : uses
-  MainForm ..> IRepositoryService : uses
-  MainForm ..> IFileService : uses
-  MainForm ..> IVersionService : uses
-  MainForm ..> ITreeViewService : uses
-  MainForm ..> IValidationHelper : uses
-
-  ServiceRegistry "1" o-- "1" ISemesterService
-  ServiceRegistry "1" o-- "1" ISubjectService
-  ServiceRegistry "1" o-- "1" IRepositoryService
-  ServiceRegistry "1" o-- "1" IFileService
-  ServiceRegistry "1" o-- "1" IVersionService
-  ServiceRegistry "1" o-- "1" ITreeViewService
-  ServiceRegistry "1" o-- "1" IFileIdentityManager
-  ServiceRegistry "1" o-- "1" IFileReconciliationService
-  ServiceRegistry "1" o-- "1" IValidationHelper
 ```
 
-### Service Implementation Diagram
+---
+
+## ⚙️ Service Implementation Diagram
 
 This diagram shows the service interfaces, concrete implementations, and interface realization relationships.
 
@@ -194,8 +168,9 @@ classDiagram
   class ISemesterService {
     <<interface>>
     +OpenSemester(path) string
-    +CreateSemester(parent, name) string
+    +CreateSemester(parentPath, name) string
     +CreateSemesterMarker(path)
+    +IsValidSemester(path) bool
   }
 
   class ISubjectService {
@@ -211,6 +186,8 @@ classDiagram
     +UpdateRepositoryMetadata(path, deadline, status)
     +EnsureMetadata(path) RepoMetadata
     +FindRepositoryRoot(startPath) string
+    +GetRepositoryMetadata(path) RepoMetadata
+    +CalculateRepositoryStatus(metadata) string
   }
 
   class IFileService {
@@ -219,6 +196,8 @@ classDiagram
     +CreateFile(path, name, extension) string
     +CreateFolder(parentPath, name, folderType)
     +OpenFile(filePath, onExited)
+    +DeleteFile(path)
+    +RenameFile(oldPath, newPath)
   }
 
   class IVersionService {
@@ -227,6 +206,7 @@ classDiagram
     +LoadVersionHistory(filePath, listBox, caption, label)
     +CanSaveVersion(filePath) bool
     +RevertToVersion(filePath, version)
+    +GetVersionHistory(filePath) IEnumerable
   }
 
   class ITreeViewService {
@@ -235,6 +215,7 @@ classDiagram
     +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
     +LoadChildNodes(parentNode, marker)
     +FindNodeByPath(nodes, path) TreeNode
+    +CreateTreeNode(path) TreeNode
   }
 
   class IFileIdentityManager {
@@ -264,6 +245,7 @@ classDiagram
     +IsValidStatus(status) bool
     +IsSystemManagedFile(path, marker) bool
     +ApplyNodeValidationColors(node)
+    +ValidateRepositoryStructure(path)
   }
 
   class IFileSystemHelper {
@@ -271,10 +253,14 @@ classDiagram
     +FileExists(path) bool
     +DirectoryExists(path) bool
     +CreateDirectory(path)
+    +DeleteFile(path)
+    +DeleteDirectory(path)
     +ReadAllText(path) string
     +WriteAllText(path, text)
     +EnumerateFiles(path) IEnumerable
     +EnumerateDirectories(path) IEnumerable
+    +CopyFile(source, destination)
+    +MoveFile(source, destination)
   }
 
   class IPathProvider {
@@ -284,57 +270,99 @@ classDiagram
     +GetDirectoryName(path) string
     +GetExtension(path) string
     +GetFullPath(path) string
+    +GetRelativePath(basePath, path) string
   }
 
   class SemesterService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+
     +OpenSemester(path) string
-    +CreateSemester(parent, name) string
+    +CreateSemester(parentPath, name) string
     +CreateSemesterMarker(path)
+    +IsValidSemester(path) bool
   }
 
   class SubjectService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+
     +CreateSubject(semesterPath, name)
     +GetSubjectsForSemester(path) IEnumerable
     +LoadSubjectsUI(path, panel, factory, onEmpty)
   }
 
   class RepositoryService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -reconciliationService IFileReconciliationService
+
     +CreateRepository(subjectPath, name, deadline) string
     +UpdateRepositoryMetadata(path, deadline, status)
     +EnsureMetadata(path) RepoMetadata
     +FindRepositoryRoot(startPath) string
+    +GetRepositoryMetadata(path) RepoMetadata
+    +CalculateRepositoryStatus(metadata) string
   }
 
   class FileService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -identityManager IFileIdentityManager
+    -repositoryService IRepositoryService
+
     +LoadFiles(repoPath, browsePath, listView, marker)
     +CreateFile(path, name, extension) string
     +CreateFolder(parentPath, name, folderType)
     +OpenFile(filePath, onExited)
+    +DeleteFile(path)
+    +RenameFile(oldPath, newPath)
   }
 
   class VersionService {
+    -identityManager IFileIdentityManager
+    -repositoryService IRepositoryService
+
     +SaveVersion(filePath, comment)
     +LoadVersionHistory(filePath, listBox, caption, label)
     +CanSaveVersion(filePath) bool
     +RevertToVersion(filePath, version)
+    +GetVersionHistory(filePath) IEnumerable
   }
 
   class TreeViewService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -repositoryService IRepositoryService
+
     +LoadSemesterTree(path, treeView, marker)
     +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
     +LoadChildNodes(parentNode, marker)
     +FindNodeByPath(nodes, path) TreeNode
+    +CreateTreeNode(path) TreeNode
   }
 
   class FileIdentityManager {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+
     +LoadManifest(repoPath) FileIdentityManifest
     +RegisterFile(repoPath, filePath) Guid
     +UpdateFilePath(repoPath, fileId, newPath)
     +GetFileIdByPath(repoPath, filePath) Guid
+    +FindOrphaned(repoPath) List
+    +FindLost(repoPath) List
     +SaveManifest(repoPath, manifest)
   }
 
   class FileReconciliationService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -identityManager IFileIdentityManager
+
     +ValidateManifestIntegrity(repoPath)
     +MigrateHistoryFolders(repoPath)
     +ReconcileLostFiles(repoPath)
@@ -342,26 +370,15 @@ classDiagram
   }
 
   class ValidationHelperService {
+    -fileSystem IFileSystemHelper
+
     +IsRepositoryFolder(path) bool
     +IsInsideRepository(node) bool
     +IsValidName(name) bool
     +IsValidStatus(status) bool
     +IsSystemManagedFile(path, marker) bool
-  }
-
-  class FileSystemService {
-    +FileExists(path) bool
-    +DirectoryExists(path) bool
-    +CreateDirectory(path)
-    +ReadAllText(path) string
-    +WriteAllText(path, text)
-  }
-
-  class PathProviderService {
-    +CombinePaths(paths) string
-    +GetFileName(path) string
-    +GetDirectoryName(path) string
-    +GetFullPath(path) string
+    +ApplyNodeValidationColors(node)
+    +ValidateRepositoryStructure(path)
   }
 
   SemesterService ..|> ISemesterService
@@ -373,11 +390,11 @@ classDiagram
   FileIdentityManager ..|> IFileIdentityManager
   FileReconciliationService ..|> IFileReconciliationService
   ValidationHelperService ..|> IValidationHelper
-  FileSystemService ..|> IFileSystemHelper
-  PathProviderService ..|> IPathProvider
 ```
 
-### Dependency Injection Diagram
+---
+
+## 🔌 Dependency Injection Diagram
 
 This diagram preserves the constructor dependency relationships from the original design.
 
@@ -385,125 +402,84 @@ This diagram preserves the constructor dependency relationships from the origina
 classDiagram
   direction LR
 
-  class ServiceFactory {
-    +CreateServices() ServiceRegistry
-  }
-
-  class ServiceRegistry {
-    +ISemesterService SemesterService
-    +ISubjectService SubjectService
-    +IRepositoryService RepositoryService
-    +IFileService FileService
-    +IVersionService VersionService
-    +ITreeViewService TreeViewService
-    +IFileIdentityManager FileIdentityManager
-    +IFileReconciliationService FileReconciliation
-    +IValidationHelper ValidationHelper
-  }
-
-  class SemesterService {
-    +OpenSemester(path) string
-    +CreateSemester(parent, name) string
-    +CreateSemesterMarker(path)
-  }
-
-  class SubjectService {
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
-  }
-
   class RepositoryService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -reconciliationService IFileReconciliationService
+
     +CreateRepository(subjectPath, name, deadline) string
     +UpdateRepositoryMetadata(path, deadline, status)
     +EnsureMetadata(path) RepoMetadata
     +FindRepositoryRoot(startPath) string
+    +GetRepositoryMetadata(path) RepoMetadata
+    +CalculateRepositoryStatus(metadata) string
   }
 
   class FileService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -identityManager IFileIdentityManager
+    -repositoryService IRepositoryService
+
     +LoadFiles(repoPath, browsePath, listView, marker)
     +CreateFile(path, name, extension) string
     +CreateFolder(parentPath, name, folderType)
     +OpenFile(filePath, onExited)
+    +DeleteFile(path)
+    +RenameFile(oldPath, newPath)
   }
 
   class VersionService {
+    -identityManager IFileIdentityManager
+    -repositoryService IRepositoryService
+
     +SaveVersion(filePath, comment)
     +LoadVersionHistory(filePath, listBox, caption, label)
     +CanSaveVersion(filePath) bool
     +RevertToVersion(filePath, version)
+    +GetVersionHistory(filePath) IEnumerable
   }
 
   class TreeViewService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -validationHelper IValidationHelper
+    -repositoryService IRepositoryService
+
     +LoadSemesterTree(path, treeView, marker)
     +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
     +LoadChildNodes(parentNode, marker)
     +FindNodeByPath(nodes, path) TreeNode
-  }
-
-  class FileIdentityManager {
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +SaveManifest(repoPath, manifest)
+    +CreateTreeNode(path) TreeNode
   }
 
   class FileReconciliationService {
+    -fileSystem IFileSystemHelper
+    -pathProvider IPathProvider
+    -identityManager IFileIdentityManager
+
     +ValidateManifestIntegrity(repoPath)
     +MigrateHistoryFolders(repoPath)
     +ReconcileLostFiles(repoPath)
     +RegisterAllUnregisteredFiles(repoPath)
   }
 
-  class ValidationHelperService {
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-  }
-
-  class IFileSystemHelper {
-    <<interface>>
-    +FileExists(path) bool
-    +DirectoryExists(path) bool
-    +CreateDirectory(path)
-    +ReadAllText(path) string
-    +WriteAllText(path, text)
-    +EnumerateFiles(path) IEnumerable
-    +EnumerateDirectories(path) IEnumerable
-  }
-
-  class IPathProvider {
-    <<interface>>
-    +CombinePaths(paths) string
-    +GetFileName(path) string
-    +GetDirectoryName(path) string
-    +GetExtension(path) string
-    +GetFullPath(path) string
-  }
-
-  class IValidationHelper {
-    <<interface>>
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-    +ApplyNodeValidationColors(node)
-  }
-
   class IRepositoryService {
     <<interface>>
+
     +CreateRepository(subjectPath, name, deadline) string
     +UpdateRepositoryMetadata(path, deadline, status)
     +EnsureMetadata(path) RepoMetadata
     +FindRepositoryRoot(startPath) string
+    +GetRepositoryMetadata(path) RepoMetadata
+    +CalculateRepositoryStatus(metadata) string
   }
 
   class IFileIdentityManager {
     <<interface>>
+
     +LoadManifest(repoPath) FileIdentityManifest
     +RegisterFile(repoPath, filePath) Guid
     +UpdateFilePath(repoPath, fileId, newPath)
@@ -513,53 +489,44 @@ classDiagram
     +SaveManifest(repoPath, manifest)
   }
 
+  class IValidationHelper {
+    <<interface>>
+
+    +IsRepositoryFolder(path) bool
+    +IsInsideRepository(node) bool
+    +IsValidName(name) bool
+    +IsValidStatus(status) bool
+    +IsSystemManagedFile(path, marker) bool
+    +ApplyNodeValidationColors(node)
+    +ValidateRepositoryStructure(path)
+  }
+
   class IFileReconciliationService {
     <<interface>>
+
     +ValidateManifestIntegrity(repoPath)
     +MigrateHistoryFolders(repoPath)
     +ReconcileLostFiles(repoPath)
     +RegisterAllUnregisteredFiles(repoPath)
   }
 
-  ServiceFactory ..> ServiceRegistry : builds
-  ServiceFactory ..> SemesterService : instantiates
-  ServiceFactory ..> SubjectService : instantiates
-  ServiceFactory ..> RepositoryService : instantiates
-  ServiceFactory ..> FileService : instantiates
-  ServiceFactory ..> VersionService : instantiates
-  ServiceFactory ..> TreeViewService : instantiates
-  ServiceFactory ..> FileIdentityManager : instantiates
-  ServiceFactory ..> FileReconciliationService : instantiates
-  ServiceFactory ..> ValidationHelperService : instantiates
-
-  SemesterService ..> IFileSystemHelper : injected
-  SemesterService ..> IPathProvider : injected
-  SubjectService ..> IFileSystemHelper : injected
-  SubjectService ..> IPathProvider : injected
-  RepositoryService ..> IFileSystemHelper : injected
-  RepositoryService ..> IPathProvider : injected
   RepositoryService ..> IValidationHelper : injected
   RepositoryService ..> IFileReconciliationService : injected
-  FileService ..> IFileSystemHelper : injected
-  FileService ..> IPathProvider : injected
-  FileService ..> IValidationHelper : injected
+
   FileService ..> IFileIdentityManager : injected
   FileService ..> IRepositoryService : injected
-  VersionService ..> IFileIdentityManager : injected
+
   VersionService ..> IRepositoryService : injected
-  TreeViewService ..> IFileSystemHelper : injected
-  TreeViewService ..> IPathProvider : injected
-  TreeViewService ..> IValidationHelper : injected
+  VersionService ..> IFileIdentityManager : injected
+
   TreeViewService ..> IRepositoryService : injected
-  FileIdentityManager ..> IFileSystemHelper : injected
-  FileIdentityManager ..> IPathProvider : injected
-  FileReconciliationService ..> IFileSystemHelper : injected
-  FileReconciliationService ..> IPathProvider : injected
+
   FileReconciliationService ..> IFileIdentityManager : injected
-  ValidationHelperService ..> IFileSystemHelper : injected
 ```
 
-### Domain Model Diagram
+---
+
+## 🗂️ Domain Model Diagram
 
 This diagram isolates persisted repository, identity, and versioning data.
 
@@ -618,95 +585,175 @@ classDiagram
   FileVersion ..> FileIdentity : shares FileId
 ```
 
-## Features and Functionalities
+---
 
-### Semester Management
+# ✨ Features and Functionalities of the System
 
-- Create a new semester folder in a selected location.
-- Open an existing IskolRepo semester folder.
-- Use a hidden `.semester.json` marker file to verify valid semester folders.
-- Return to the startup screen and switch to another semester.
+## 📁 Semester Management
 
-### Subject Management
+- Create a new semester folder
+- Open existing semester folders
+- Validate semester folders using `.semester.json`
+- Switch between semesters
 
-- Add subjects inside the active semester.
-- Display subjects as selectable cards.
-- Open a subject workspace to view and manage repositories.
+---
 
-### Repository and Activity Management
+## 📚 Subject Management
 
-- Create repositories for individual academic tasks or activities.
-- Assign a deadline when creating a repository.
-- Store repository metadata in a hidden `.metadata/metadata.json` file.
-- Update repository status using the supported statuses:
+- Add subjects inside semesters
+- Display subjects as selectable cards
+- Open subject workspaces
+
+---
+
+## 🗃️ Repository and Activity Management
+
+- Create repositories for academic activities
+- Assign deadlines
+- Store metadata using hidden files
+- Track repository status:
   - `in-progress`
   - `completed`
   - `submitted`
-- Automatically record the submitted date when a repository is marked as submitted.
-- Display deadline status, such as due today, days before due date, past due date, submitted, or submitted late.
-- Show warning indicators for repositories that are due, overdue, or submitted late.
+- Automatically record submitted dates
+- Show due date warnings and overdue indicators
 
-### File and Folder Organization
+---
 
-- Create supported academic file types inside a repository:
-  - Text File (`.txt`)
-  - Word Document (`.docx`)
-  - PowerPoint Presentation (`.pptx`)
-  - Excel Spreadsheet (`.xlsx`)
-  - Publisher Document (`.pub`)
-  - OneNote Notebook (`.one`)
-  - Access Database (`.accdb`)
-- Create subrepositories or nested folders inside a repository.
-- Browse repository contents through a tree view and list view.
-- Double-click files to open them with their default Windows application.
-- Prevent invalid workflow usage by warning when files are placed directly under a subject instead of inside a repository.
+## 📄 File and Folder Organization
 
-### Local Version History
+Supported file creation:
 
-- Save version snapshots for supported versioned files:
-  - `.txt`
-  - `.docx`
-- Add a comment every time a version is saved.
-- View version history with version number, timestamp, and comment.
-- Revert a file to a selected previous version.
-- Remove newer versions when reverting, keeping the version timeline consistent.
-- Track files using GUID-based identities so version history can remain connected to a file even when file handling changes.
+- `.txt`
+- `.docx`
+- `.pptx`
+- `.xlsx`
+- `.pub`
+- `.one`
+- `.accdb`
 
-### File Identity and Reconciliation
+Additional features:
 
-- Maintain a hidden file manifest at `.metadata/files.json`.
-- Assign each tracked file a unique `Guid`.
-- Store each file's current path, original file name, creation date, and identity status.
-- Detect lost or orphaned files in the manifest.
-- Reconcile files by comparing content hashes with existing version snapshots.
-- Migrate older filename-based history folders into GUID-based history folders.
+- Create nested folders
+- Browse through tree view and list view
+- Open files using default Windows applications
+- Prevent invalid workflow usage
 
-### User Interface
+---
 
-- Windows Forms desktop interface.
-- Startup screen for opening or creating a semester.
-- Subject selection screen with animated subject cards.
-- Main workspace with repository tree, file list, metadata panel, and version history panel.
-- Dark and light theme support through the theme toggle button.
-- Icons for files, folders, repositories, and validation warnings.
+## 🕓 Local Version History
 
-## How the Program Works
+Supported version-controlled files:
 
-When the application starts, `Program.cs` initializes Windows Forms, registers global error handlers, creates the application services through `ServiceFactory.CreateServices()`, and opens `MainForm`.
+- `.txt`
+- `.docx`
 
-The main workflow is:
+Features include:
 
-1. The user creates or opens a semester.
-2. The semester is validated using the hidden `.semester.json` marker.
-3. The user creates or selects a subject.
-4. Inside a subject, the user creates repositories for specific tasks or activities.
-5. Each repository receives hidden metadata containing the deadline, date added, status, and submitted date.
-6. The user creates files and subrepositories inside the selected repository.
-7. The tree view and file list display the current repository structure while hiding system-managed metadata files.
-8. If the user selects a supported file, the version panel displays its saved snapshots.
-9. The user may save a new version with a comment or revert to an earlier version.
+- Save snapshots with comments
+- View version history
+- Restore previous versions
+- Maintain version timelines
+- Track files using GUID identities
 
-The application's local folder structure looks like this:
+---
+
+## 🔍 File Identity and Reconciliation
+
+- Maintain hidden `.metadata/files.json`
+- Assign unique `Guid` identifiers
+- Detect orphaned and lost files
+- Reconcile histories using content hashes
+- Migrate older filename-based histories
+
+---
+
+## 🎨 User Interface
+
+- Windows Forms desktop interface
+- Startup screen
+- Subject selection view with animations
+- Repository tree view and file explorer
+- Metadata and version history panels
+- Dark and light mode support
+- Icons and warning indicators
+
+---
+
+# ⚙️ Explanation of How the Program Works
+
+When the application starts:
+
+1. `Program.cs` initializes Windows Forms.
+2. Global exception handlers are registered.
+3. Services are created through `ServiceFactory.CreateServices()`.
+4. `MainForm` is launched.
+
+---
+
+## 🔄 Main Workflow
+
+### 1. Semester Creation or Opening
+
+The user creates or opens a semester folder.
+
+The system validates the semester using:
+
+```text
+.semester.json
+```
+
+---
+
+### 2. Subject Selection
+
+The user creates or selects a subject.
+
+---
+
+### 3. Repository Creation
+
+Repositories are created for academic activities such as:
+
+- Assignments
+- Projects
+- Research
+- Reports
+- Laboratory Exercises
+
+Each repository stores hidden metadata including:
+
+- Deadline
+- Date Added
+- Status
+- Submitted Date
+
+---
+
+### 4. File Management
+
+Users can:
+
+- Create files
+- Create subrepositories
+- Organize folders
+- Browse repository contents
+
+System-managed metadata files remain hidden.
+
+---
+
+### 5. Version History
+
+When a supported file is selected:
+
+- The version panel displays saved snapshots
+- Users may save new versions with comments
+- Users may restore earlier versions
+
+---
+
+## 🗂️ Local Folder Structure
 
 ```text
 Selected Parent Folder/
@@ -728,75 +775,38 @@ Selected Parent Folder/
                 └── Draft.txt
 ```
 
-The system is fully local. It does not require an internet connection to manage files, create repositories, save snapshots, or open existing coursework.
+The system works completely offline and does not require an internet connection.
 
-## Project Structure
+---
+
+# ▶️ Instructions on How to Run the Application
+
+## ✅ Prerequisites
+
+Required software:
+
+- Windows Operating System
+- .NET SDK `10.0.203` or compatible .NET 10 SDK
+- Visual Studio 2022 or later
+
+---
+
+## 🖥️ Run Using Visual Studio
+
+1. Clone or download the repository
+2. Open:
 
 ```text
-IskolRepository/
-├── Core/
-│   ├── Interfaces/
-│   │   ├── Infrastructure/
-│   │   ├── IFileService.cs
-│   │   ├── IRepositoryService.cs
-│   │   ├── ISemesterService.cs
-│   │   ├── ISubjectService.cs
-│   │   ├── ITreeViewService.cs
-│   │   └── IVersionService.cs
-│   ├── Services/
-│   │   ├── Infrastructure/
-│   │   ├── FileIdentityManager.cs
-│   │   ├── FileReconciliationService.cs
-│   │   ├── FileService.cs
-│   │   ├── RepositoryService.cs
-│   │   ├── SemesterService.cs
-│   │   ├── SubjectService.cs
-│   │   ├── TreeViewService.cs
-│   │   └── VersionService.cs
-│   ├── IconProvider.cs
-│   ├── ServiceCollectionExtensions.cs
-│   ├── TreeNodeData.cs
-│   └── VersionHelper.cs
-├── Forms/
-│   ├── MainForm.cs
-│   ├── StartupView.cs
-│   ├── SubjectSelectionView.cs
-│   ├── RepoCreationDialog.cs
-│   ├── FileTypeDialog.cs
-│   └── PromptDialog.cs
-├── Models/
-│   ├── FileIdentity.cs
-│   ├── FileIdentityManifest.cs
-│   ├── FileVersion.cs
-│   ├── RepoCreationInfo.cs
-│   └── RepoMetadata.cs
-├── Utilities/
-│   ├── AnimationHelper.cs
-│   ├── DateOnlyDateTimeConverter.cs
-│   └── ThemeManager.cs
-├── Program.cs
-├── IskolRepository.csproj
-├── IskolRepository.sln
-└── README.md
+IskolRepository.sln
 ```
 
-## Instructions on How to Run the Application
+3. Restore NuGet packages if necessary
+4. Set `IskolRepository` as the startup project
+5. Press `F5` or click **Start**
 
-### Prerequisites
+---
 
-- Windows operating system
-- .NET SDK `10.0.203` or compatible .NET 10 SDK
-- Visual Studio 2022 or later is recommended for opening and editing the WinForms project
-
-### Run Using Visual Studio
-
-1. Clone or download the repository.
-2. Open `IskolRepository.sln` in Visual Studio.
-3. Restore NuGet packages if Visual Studio does not do it automatically.
-4. Set `IskolRepository` as the startup project.
-5. Click **Start** or press `F5`.
-
-### Run Using the Command Line
+## 💻 Run Using the Command Line
 
 From the repository root, run:
 
@@ -806,16 +816,23 @@ dotnet build IskolRepository.sln
 dotnet run --project IskolRepository.csproj
 ```
 
-### Build Output
+---
 
-After building, the executable can be found in a folder similar to:
+## 📦 Build Output
+
+After building, the executable is typically located at:
 
 ```text
 bin/Debug/net10.0-windows/IskolRepository.exe
 ```
 
-The exact folder may differ depending on whether the project is built in Debug or Release mode.
+The exact folder may vary depending on the build configuration.
 
-## Repository Access Note
+---
 
-This project is intended to be submitted through a GitHub repository. The instructor must have access to the repository. The repository may be public, or if it is private, the instructor should be added as a collaborator.
+# 👨‍💻 Names of the Developers or Team Members
+
+- **Donatos, Trixter Lanz C.**
+- **Ilao, Kent Patrick M.**
+- **Laganzon, Adrian G.**
+- **Villanueva, Franz Daniel**
