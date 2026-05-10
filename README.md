@@ -25,229 +25,229 @@ Each repository represents an academic task or activity, such as an assignment, 
 
 The purpose of IskolRepo is to provide a simple, offline, student-centered file management system that reduces clutter, improves coursework tracking, and protects students from losing important previous versions of their work.
 
-## UML Diagram
+## UML Diagrams
+
+The project is documented through focused UML diagrams instead of one large diagram. Each diagram highlights one architectural concern: application structure, service implementations, dependency injection, and persisted domain data.
+
+### High-Level Architecture Diagram
+
+This diagram shows how the desktop UI is composed and how the main form reaches the application's service layer through `ServiceRegistry`.
 
 ```mermaid
 classDiagram
   direction TB
 
-  class Program {
-    +Main()
-  }
-
-  class ServiceFactory {
-    +CreateServices() ServiceRegistry
-  }
-
-  class ServiceRegistry {
-    +ISemesterService SemesterService
-    +ISubjectService SubjectService
-    +IRepositoryService RepositoryService
-    +IFileService FileService
-    +IVersionService VersionService
-    +ITreeViewService TreeViewService
-    +IFileIdentityManager FileIdentityManager
-    +IFileReconciliationService FileReconciliation
-    +IValidationHelper ValidationHelper
-  }
-
-  class MainForm {
-    -currentSemesterPath string
-    -currentSubjectPath string
-    -selectedRepositoryPath string
-    -selectedFilePath string
-    +OpenSemester()
-    +CreateSemester()
-    +CreateSubject()
-    +CreateRepository()
-    +CreateFile()
-    +SaveVersion()
-    +RevertToVersion()
-  }
-
-  class StartupView {
-    +OpenSemesterRequested event
-    +NewSemesterRequested event
-  }
-
-  class SubjectSelectionView {
-    +AddSubjectRequested event
-    +ChangeSemesterRequested event
-    +PopulateSubjects()
-  }
+  class Program
+  class Form
+  class UserControl
+  class MainForm
+  class StartupView
+  class SubjectSelectionView
+  class ServiceFactory
+  class ServiceRegistry
 
   class ISemesterService {
     <<interface>>
-    +OpenSemester(path) string
-    +CreateSemester(parent, name) string
-    +CreateSemesterMarker(path)
   }
-
   class ISubjectService {
     <<interface>>
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
   }
-
   class IRepositoryService {
     <<interface>>
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
   }
-
   class IFileService {
     <<interface>>
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
   }
-
   class IVersionService {
     <<interface>>
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
-    +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
   }
-
   class ITreeViewService {
     <<interface>>
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
   }
-
-  class IFileIdentityManager {
-    <<interface>>
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +FindOrphaned(repoPath) List
-    +FindLost(repoPath) List
-    +SaveManifest(repoPath, manifest)
-  }
-
-  class IFileReconciliationService {
-    <<interface>>
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
-  }
-
   class IValidationHelper {
     <<interface>>
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-    +ApplyNodeValidationColors(node)
   }
+  class IFileIdentityManager {
+    <<interface>>
+  }
+  class IFileReconciliationService {
+    <<interface>>
+  }
+
+  MainForm --|> Form
+  StartupView --|> UserControl
+  SubjectSelectionView --|> UserControl
+
+  Program ..> ServiceFactory
+  Program ..> MainForm
+  ServiceFactory ..> ServiceRegistry
+  MainForm --> ServiceRegistry
+
+  MainForm "1" *-- "1" StartupView
+  MainForm "1" *-- "1" SubjectSelectionView
+
+  ServiceRegistry "1" o-- "1" ISemesterService
+  ServiceRegistry "1" o-- "1" ISubjectService
+  ServiceRegistry "1" o-- "1" IRepositoryService
+  ServiceRegistry "1" o-- "1" IFileService
+  ServiceRegistry "1" o-- "1" IVersionService
+  ServiceRegistry "1" o-- "1" ITreeViewService
+  ServiceRegistry "1" o-- "1" IValidationHelper
+  ServiceRegistry "1" o-- "1" IFileIdentityManager
+  ServiceRegistry "1" o-- "1" IFileReconciliationService
+```
+
+### Service Implementation Diagram
+
+This diagram maps each interface to its concrete implementation. It intentionally avoids constructor dependencies so the implementation layer stays easy to scan.
+
+```mermaid
+classDiagram
+  direction TB
+
+  class ISemesterService {
+    <<interface>>
+  }
+  class ISubjectService {
+    <<interface>>
+  }
+  class IRepositoryService {
+    <<interface>>
+  }
+  class IFileService {
+    <<interface>>
+  }
+  class IVersionService {
+    <<interface>>
+  }
+  class ITreeViewService {
+    <<interface>>
+  }
+  class IFileIdentityManager {
+    <<interface>>
+  }
+  class IFileReconciliationService {
+    <<interface>>
+  }
+  class IValidationHelper {
+    <<interface>>
+  }
+  class IFileSystemHelper {
+    <<interface>>
+  }
+  class IPathProvider {
+    <<interface>>
+  }
+
+  class SemesterService
+  class SubjectService
+  class RepositoryService
+  class FileService
+  class VersionService
+  class TreeViewService
+  class FileIdentityManager
+  class FileReconciliationService
+  class ValidationHelperService
+  class FileSystemService
+  class PathProviderService
+
+  SemesterService ..|> ISemesterService
+  SubjectService ..|> ISubjectService
+  RepositoryService ..|> IRepositoryService
+  FileService ..|> IFileService
+  VersionService ..|> IVersionService
+  TreeViewService ..|> ITreeViewService
+  FileIdentityManager ..|> IFileIdentityManager
+  FileReconciliationService ..|> IFileReconciliationService
+  ValidationHelperService ..|> IValidationHelper
+  FileSystemService ..|> IFileSystemHelper
+  PathProviderService ..|> IPathProvider
+```
+
+### Dependency Injection Diagram
+
+This diagram shows the constructor-injected dependencies between services. Infrastructure abstractions sit on the right because most services depend on file-system and path operations.
+
+```mermaid
+classDiagram
+  direction LR
+
+  class ServiceFactory
+  class ServiceRegistry
+  class SemesterService
+  class SubjectService
+  class RepositoryService
+  class FileService
+  class VersionService
+  class TreeViewService
+  class FileIdentityManager
+  class FileReconciliationService
+  class ValidationHelperService
 
   class IFileSystemHelper {
     <<interface>>
-    +FileExists(path) bool
-    +DirectoryExists(path) bool
-    +CreateDirectory(path)
-    +ReadAllText(path) string
-    +WriteAllText(path, text)
-    +EnumerateFiles(path) IEnumerable
-    +EnumerateDirectories(path) IEnumerable
   }
-
   class IPathProvider {
     <<interface>>
-    +CombinePaths(paths) string
-    +GetFileName(path) string
-    +GetDirectoryName(path) string
-    +GetExtension(path) string
-    +GetFullPath(path) string
+  }
+  class IValidationHelper {
+    <<interface>>
+  }
+  class IRepositoryService {
+    <<interface>>
+  }
+  class IFileIdentityManager {
+    <<interface>>
+  }
+  class IFileReconciliationService {
+    <<interface>>
   }
 
-  class SemesterService {
-    +OpenSemester(path) string
-    +CreateSemester(parent, name) string
-    +CreateSemesterMarker(path)
-  }
+  ServiceFactory ..> ServiceRegistry
+  ServiceFactory ..> SemesterService
+  ServiceFactory ..> SubjectService
+  ServiceFactory ..> RepositoryService
+  ServiceFactory ..> FileService
+  ServiceFactory ..> VersionService
+  ServiceFactory ..> TreeViewService
+  ServiceFactory ..> FileIdentityManager
+  ServiceFactory ..> FileReconciliationService
+  ServiceFactory ..> ValidationHelperService
 
-  class SubjectService {
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
-  }
+  SemesterService ..> IFileSystemHelper
+  SemesterService ..> IPathProvider
+  SubjectService ..> IFileSystemHelper
+  SubjectService ..> IPathProvider
+  RepositoryService ..> IFileSystemHelper
+  RepositoryService ..> IPathProvider
+  RepositoryService ..> IValidationHelper
+  RepositoryService ..> IFileReconciliationService
+  FileService ..> IFileSystemHelper
+  FileService ..> IPathProvider
+  FileService ..> IValidationHelper
+  FileService ..> IFileIdentityManager
+  FileService ..> IRepositoryService
+  VersionService ..> IFileIdentityManager
+  VersionService ..> IRepositoryService
+  TreeViewService ..> IFileSystemHelper
+  TreeViewService ..> IPathProvider
+  TreeViewService ..> IValidationHelper
+  TreeViewService ..> IRepositoryService
+  FileIdentityManager ..> IFileSystemHelper
+  FileIdentityManager ..> IPathProvider
+  FileReconciliationService ..> IFileSystemHelper
+  FileReconciliationService ..> IPathProvider
+  FileReconciliationService ..> IFileIdentityManager
+  ValidationHelperService ..> IFileSystemHelper
+```
 
-  class RepositoryService {
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-  }
+### Domain Model Diagram
 
-  class FileService {
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
-  }
+This diagram focuses on the persisted data used by repositories and version history.
 
-  class VersionService {
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
-    +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
-  }
-
-  class TreeViewService {
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
-  }
-
-  class FileIdentityManager {
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +SaveManifest(repoPath, manifest)
-  }
-
-  class FileReconciliationService {
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
-  }
-
-  class ValidationHelperService {
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-  }
-
-  class FileSystemService {
-    +FileExists(path) bool
-    +DirectoryExists(path) bool
-    +CreateDirectory(path)
-    +ReadAllText(path) string
-    +WriteAllText(path, text)
-  }
-
-  class PathProviderService {
-    +CombinePaths(paths) string
-    +GetFileName(path) string
-    +GetDirectoryName(path) string
-    +GetFullPath(path) string
-  }
+```mermaid
+classDiagram
+  direction LR
 
   class RepoMetadata {
     +Deadline DateTime
@@ -278,83 +278,8 @@ classDiagram
     +SnapshotPath string
   }
 
-  class RepoCreationInfo {
-    +RepositoryName string
-    +Deadline DateTime
-  }
-
-  class RepositoryBrowseEntry {
-    +Kind RepositoryBrowseEntryKind
-    +Path string
-    +DisplayName string
-  }
-
-  class TreeNodeData {
-    +NodeType NodeType
-    +Path string
-    +FileName string
-    +IsValidFile bool
-  }
-
-  Program ..> ServiceFactory : creates
-  Program ..> MainForm : runs
-
-  ServiceFactory ..> ServiceRegistry : builds
-
-  MainForm --> ServiceRegistry : receives
-  MainForm *-- StartupView : owns
-  MainForm *-- SubjectSelectionView : owns
-  MainForm ..> ISemesterService : uses
-  MainForm ..> ISubjectService : uses
-  MainForm ..> IRepositoryService : uses
-  MainForm ..> IFileService : uses
-  MainForm ..> IVersionService : uses
-  MainForm ..> ITreeViewService : uses
-  MainForm ..> IValidationHelper : uses
-
-  SemesterService ..|> ISemesterService
-  SubjectService ..|> ISubjectService
-  RepositoryService ..|> IRepositoryService
-  FileService ..|> IFileService
-  VersionService ..|> IVersionService
-  TreeViewService ..|> ITreeViewService
-  FileIdentityManager ..|> IFileIdentityManager
-  FileReconciliationService ..|> IFileReconciliationService
-  ValidationHelperService ..|> IValidationHelper
-  FileSystemService ..|> IFileSystemHelper
-  PathProviderService ..|> IPathProvider
-
-  SemesterService ..> IFileSystemHelper : injected
-  SemesterService ..> IPathProvider : injected
-  SubjectService ..> IFileSystemHelper : injected
-  SubjectService ..> IPathProvider : injected
-  RepositoryService ..> IFileSystemHelper : injected
-  RepositoryService ..> IPathProvider : injected
-  RepositoryService ..> IValidationHelper : injected
-  RepositoryService ..> IFileReconciliationService : injected
-  FileService ..> IFileSystemHelper : injected
-  FileService ..> IPathProvider : injected
-  FileService ..> IValidationHelper : injected
-  FileService ..> IFileIdentityManager : injected
-  FileService ..> IRepositoryService : injected
-  VersionService ..> IFileIdentityManager : injected
-  VersionService ..> IRepositoryService : injected
-  TreeViewService ..> IFileSystemHelper : injected
-  TreeViewService ..> IPathProvider : injected
-  TreeViewService ..> IValidationHelper : injected
-  TreeViewService ..> IRepositoryService : injected
-  FileIdentityManager ..> IFileSystemHelper : injected
-  FileIdentityManager ..> IPathProvider : injected
-  FileReconciliationService ..> IFileSystemHelper : injected
-  FileReconciliationService ..> IPathProvider : injected
-  FileReconciliationService ..> IFileIdentityManager : injected
-  ValidationHelperService ..> IFileSystemHelper : injected
-
-  RepositoryService ..> RepoMetadata : serializes
-  FileIdentityManager ..> FileIdentityManifest : persists
-  FileIdentityManifest "1" *-- "*" FileIdentity : contains
-  VersionService ..> FileVersion : reads/writes
-  FileVersion ..> FileIdentity : shares FileId
+  FileIdentityManifest "1" *-- "*" FileIdentity
+  FileVersion ..> FileIdentity
 ```
 
 ## Features and Functionalities
