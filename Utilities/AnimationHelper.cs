@@ -74,7 +74,12 @@ public static class AnimationHelper
             // To prevent creating new Font objects constantly if the size hasn't changed
             if (Math.Abs(_control.Font.Size - newSize) > 0.01f)
             {
+                var oldFont = _control.Font;
                 _control.Font = new Font(_originalFont.FontFamily, newSize, _originalFont.Style);
+                if (oldFont != _originalFont)
+                {
+                    oldFont.Dispose();
+                }
             }
 
             if ((_isGrowing && _progress >= 1.0) || (!_isGrowing && _progress <= 0.0))
@@ -97,6 +102,8 @@ public static class AnimationHelper
         private readonly int _duration;
         private readonly Timer _timer;
         private readonly Size _originalSize;
+        private readonly AnchorStyles _originalAnchor;
+        private Point _originalLocation;
         private double _progress;
         private bool _isGrowing;
 
@@ -106,6 +113,8 @@ public static class AnimationHelper
             _growth = growth;
             _duration = duration;
             _originalSize = control.Size;
+            _originalAnchor = control.Anchor;
+            _originalLocation = control.Location;
             _progress = 0.0;
             _isGrowing = false;
 
@@ -123,6 +132,8 @@ public static class AnimationHelper
 
         private void OnMouseEnter(object? sender, EventArgs e)
         {
+            _control.Anchor = AnchorStyles.None;
+            _originalLocation = _control.Location;
             _isGrowing = true;
             _timer.Start();
         }
@@ -153,11 +164,21 @@ public static class AnimationHelper
 
             if (_control.Size != newSize)
             {
+                _control.Parent?.SuspendLayout();
                 _control.Size = newSize;
+                _control.Parent?.ResumeLayout(false);
             }
 
             if ((_isGrowing && _progress >= 1.0) || (!_isGrowing && _progress <= 0.0))
             {
+                if (!_isGrowing && _progress <= 0.0)
+                {
+                    _control.Parent?.SuspendLayout();
+                    _control.Size = _originalSize;
+                    _control.Location = _originalLocation;
+                    _control.Anchor = _originalAnchor;
+                    _control.Parent?.ResumeLayout(false);
+                }
                 _timer.Stop();
             }
         }

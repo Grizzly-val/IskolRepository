@@ -12,14 +12,6 @@ public partial class MainForm : Form
     private const string SemesterMarkerFileName = ".semester.json";
     private const string StartupHeaderPathText = "Select a semester";
 
-    private static readonly Color ButtonDefaultColor = Color.FromArgb(24, 47, 83);
-    private static readonly Color ButtonHoverColor = Color.FromArgb(75, 143, 218);
-    private static readonly Color ButtonPressedColor = Color.FromArgb(54, 95, 163);
-    private static readonly Color ButtonDisabledColor = Color.FromArgb(30, 36, 52);
-    private static readonly Color DarkPanelColor = Color.FromArgb(12, 14, 24);
-    private static readonly Color DarkerPanelColor = Color.FromArgb(10, 12, 20);
-    private static readonly Color LightTextColor = Color.FromArgb(220, 230, 245);
-
     private readonly ISemesterService _semesterService;
     private readonly IRepositoryService _repositoryService;
     private readonly IFileService _fileService;
@@ -56,6 +48,8 @@ public partial class MainForm : Form
         _subjectSelectionView.AddSubjectRequested += addSubjectButton_Click;
         _subjectSelectionView.ChangeSemesterRequested += changeSemesterButton_Click;
 
+        ThemeManager.ThemeChanged += OnThemeChanged;
+
         AnimationHelper.AnimateHover(createFileButton, 6, 70);
         AnimationHelper.AnimateHover(createRepositoryButton, 6, 70);
         AnimationHelper.AnimateHover(createSubrepositoryButton, 6, 70);
@@ -80,38 +74,21 @@ public partial class MainForm : Form
         ApplyCurrentTheme();
     }
 
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        ApplyCurrentTheme();
+    }
+
     private void SetupButtons()
     {
-        SetupButton(revertButton);
-        SetupButton(saveVersionButton);
-        SetupButton(updateMetadataButton);
-        SetupButton(backToSubjectsButton);
-        SetupButton(createRepositoryButton);
-        SetupButton(createSubrepositoryButton);
-        SetupButton(createFileButton);
-    }
-
-    private void SetupButton(Button button)
-    {
-        button.EnabledChanged += (s, e) => UpdateButtonColor(button);
-        button.FlatStyle = FlatStyle.Flat;
-        button.FlatAppearance.BorderSize = 0;
-        button.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
-        button.FlatAppearance.MouseDownBackColor = ButtonPressedColor;
-        button.ForeColor = Color.White;
-        button.TextImageRelation = TextImageRelation.ImageBeforeText;
-        UpdateButtonColor(button);
-    }
-
-    private void UpdateButtonColor(Button button)
-    {
-        button.BackColor = button.Enabled
-            ? ThemeManager.ButtonDefaultColor
-            : ThemeManager.ButtonDisabledColor;
-
-        button.ForeColor = button.Enabled
-            ? Color.White
-            : ThemeManager.ButtonDisabledForeColor;
+        ThemeManager.SetupButton(revertButton);
+        ThemeManager.SetupButton(saveVersionButton);
+        ThemeManager.SetupButton(updateMetadataButton);
+        ThemeManager.SetupButton(backToSubjectsButton);
+        ThemeManager.SetupButton(createRepositoryButton);
+        ThemeManager.SetupButton(createSubrepositoryButton);
+        ThemeManager.SetupButton(createFileButton);
+        ThemeManager.SetupButton(themeToggleButton);
     }
 
     private void repositoryTreeView_DrawNode(object sender, DrawTreeNodeEventArgs e)
@@ -126,9 +103,12 @@ public partial class MainForm : Form
 
         // 1. Fill background
         var backColor = isSelected ? Color.FromArgb(75, 143, 218) : repositoryTreeView.BackColor;
-        e.Graphics.FillRectangle(new SolidBrush(backColor),
-            new Rectangle(e.Bounds.X, e.Bounds.Y,
-                repositoryTreeView.ClientSize.Width - e.Bounds.X, e.Bounds.Height));
+        using (var backBrush = new SolidBrush(backColor))
+        {
+            e.Graphics.FillRectangle(backBrush,
+                new Rectangle(e.Bounds.X, e.Bounds.Y,
+                    repositoryTreeView.ClientSize.Width - e.Bounds.X, e.Bounds.Height));
+        }
 
         // 2. Draw icon manually from the ImageList
         var imageList = repositoryTreeView.ImageList;
@@ -848,16 +828,11 @@ public partial class MainForm : Form
             Font = new Font("Segoe UI", 10F, FontStyle.Bold),
             Text = Path.GetFileName(subjectPath),
             Tag = subjectPath,
-            FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(43, 87, 158),
-            ForeColor = Color.White,
             Cursor = Cursors.Hand
         };
-        button.FlatAppearance.BorderSize = 0;
-        button.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
+        ThemeManager.SetupButton(button);
 
         // Apply the hover animation
-        // 10    is the growth (pixels), 60 is the duration (ms)
         AnimationHelper.AnimateTextHover(button, 3f, 70);
 
         button.Click += (_, _) => OpenSubject(subjectPath);

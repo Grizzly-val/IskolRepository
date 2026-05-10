@@ -7,6 +7,8 @@ public enum AppTheme { Dark, Light }
 
 public static class ThemeManager
 {
+    public static event EventHandler? ThemeChanged;
+
     public static AppTheme CurrentTheme { get; private set; } = AppTheme.Dark;
 
     public static Color FormBackColor =>
@@ -37,7 +39,7 @@ public static class ThemeManager
     public static Color ButtonDefaultColor =>
         CurrentTheme == AppTheme.Dark
             ? Color.FromArgb(24, 47, 83)
-            : Color.FromArgb(60, 100, 175);       // visible blue in light mode
+            : Color.FromArgb(60, 100, 175);
 
     public static Color ButtonDisabledColor =>
         CurrentTheme == AppTheme.Dark
@@ -49,6 +51,11 @@ public static class ThemeManager
             ? Color.FromArgb(75, 143, 218)
             : Color.FromArgb(90, 140, 220);
 
+    public static Color ButtonPressedColor =>
+        CurrentTheme == AppTheme.Dark
+            ? Color.FromArgb(54, 95, 163)
+            : Color.FromArgb(70, 120, 200);
+
     public static Color ButtonDisabledForeColor =>
         CurrentTheme == AppTheme.Dark
             ? Color.FromArgb(130, 140, 160)
@@ -57,7 +64,7 @@ public static class ThemeManager
     public static Color HeaderColor =>
         CurrentTheme == AppTheme.Dark
             ? Color.FromArgb(10, 12, 20)
-            : Color.FromArgb(45, 75, 140);        // deep blue so white logo stays readable
+            : Color.FromArgb(45, 75, 140);
 
     public static Color WorkspaceColor =>
         CurrentTheme == AppTheme.Dark
@@ -66,12 +73,13 @@ public static class ThemeManager
 
     public static Color LogoBackColor =>
         CurrentTheme == AppTheme.Dark
-            ? Color.FromArgb(60, 100, 175)  // Light blue if dark theme
-            : Color.FromArgb(24, 47, 83);   // Dark blue if light theme
+            ? Color.FromArgb(60, 100, 175)
+            : Color.FromArgb(24, 47, 83);
 
     public static void ToggleTheme()
     {
         CurrentTheme = CurrentTheme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;
+        ThemeChanged?.Invoke(null, EventArgs.Empty);
     }
 
     public static void ApplyTheme(Control parent)
@@ -79,6 +87,45 @@ public static class ThemeManager
         ApplyControlTheme(parent);
         foreach (Control c in parent.Controls)
             ApplyTheme(c);
+    }
+
+    public static void SetupButton(Button button)
+    {
+        button.EnabledChanged -= Button_EnabledChanged;
+        button.EnabledChanged += Button_EnabledChanged;
+        button.FlatStyle = FlatStyle.Flat;
+        button.FlatAppearance.BorderSize = 0;
+        button.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
+        button.FlatAppearance.MouseDownBackColor = ButtonPressedColor;
+        button.ForeColor = Color.White;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        UpdateButtonColor(button);
+    }
+
+    private static void Button_EnabledChanged(object? sender, EventArgs e)
+    {
+        if (sender is Button button)
+        {
+            UpdateButtonColor(button);
+        }
+    }
+
+    private static void UpdateButtonColor(Button button)
+    {
+        button.BackColor = button.Enabled
+            ? ButtonDefaultColor
+            : ButtonDisabledColor;
+
+        button.ForeColor = button.Enabled
+            ? Color.White
+            : ButtonDisabledForeColor;
+    }
+
+    private static void ApplyButtonTheme(Button btn)
+    {
+        btn.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
+        btn.FlatAppearance.MouseDownBackColor = ButtonPressedColor;
+        UpdateButtonColor(btn);
     }
 
     private static void ApplyControlTheme(Control control)
@@ -101,15 +148,15 @@ public static class ThemeManager
                 break;
 
             case Label label:
-                label.ForeColor = TextColor;
+                label.ForeColor = (string.Equals(label.Tag as string, "Muted", StringComparison.Ordinal))
+                    ? MutedTextColor
+                    : TextColor;
                 if (label.BackColor != Color.Transparent)
                     label.BackColor = Color.Transparent;
                 break;
 
             case Button btn:
-                btn.BackColor = btn.Enabled ? ButtonDefaultColor : ButtonDisabledColor;
-                btn.ForeColor = btn.Enabled ? Color.White : ButtonDisabledForeColor;
-                btn.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
+                ApplyButtonTheme(btn);
                 break;
 
             case TreeView tv:

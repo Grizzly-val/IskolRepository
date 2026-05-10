@@ -25,9 +25,16 @@ public partial class StartupView : UserControl
         newSemesterButton.Resize += (s, e) => RoundButton(newSemesterButton, 20);
         logoMarkPictureBox.Resize += (s, e) => UpdateLogoAppearance();
 
+        ThemeManager.ThemeChanged += OnThemeChanged;
         AnimationHelper.AnimateTextHover(openSemesterButton, 2f, 70);
         AnimationHelper.AnimateTextHover(newSemesterButton, 2f, 70);
+        ThemeManager.SetupButton(openSemesterButton);
+        ThemeManager.SetupButton(newSemesterButton);
+    }
 
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        UpdateTheme();
     }
 
     public void UpdateTheme()
@@ -77,18 +84,6 @@ public partial class StartupView : UserControl
     private void ApplyStyle()
     {
         DoubleBuffered = true;
-
-        AddHoverEffect(openSemesterButton);
-        AddHoverEffect(newSemesterButton);
-    }
-
-    private void AddHoverEffect(Button btn)
-    {
-        Color defaultColor = Color.FromArgb(24, 47, 83);
-        Color hoverColor = Color.FromArgb(75, 143, 218);
-
-        btn.MouseEnter += (s, e) => btn.BackColor = hoverColor;
-        btn.MouseLeave += (s, e) => btn.BackColor = defaultColor;
     }
 
     private void RoundButton(Button button, int radius)

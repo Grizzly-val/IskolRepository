@@ -10,9 +10,13 @@ partial class FileTypeDialog
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && (components != null))
+        if (disposing)
         {
-            components.Dispose();
+            Utilities.ThemeManager.ThemeChanged -= OnThemeChanged;
+            if (components != null)
+            {
+                components.Dispose();
+            }
         }
         base.Dispose(disposing);
     }
@@ -28,7 +32,6 @@ partial class FileTypeDialog
         // 
         // fileTypeLabel
         // 
-        fileTypeLabel.ForeColor = Color.FromArgb(40, 55, 70);
         fileTypeLabel.Location = new Point(12, 12);
         fileTypeLabel.Name = "fileTypeLabel";
         fileTypeLabel.Size = new Size(260, 20);
@@ -39,7 +42,7 @@ partial class FileTypeDialog
         // 
         fileTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         fileTypeComboBox.FormattingEnabled = true;
-        fileTypeComboBox.Items.AddRange(new object[] { "Text File (.txt)", "Word Document (.docx)" });
+        fileTypeComboBox.Items.AddRange(new object[] { "Text File (.txt)", "Word Document (.docx)", "PowerPoint Presentation (.pptx)", "Excel Spreadsheet (.xlsx)", "Publisher Document (.pub)", "OneNote Notebook (.one)", "Access Database (.accdb)" });
         fileTypeComboBox.Location = new Point(12, 35);
         fileTypeComboBox.Name = "fileTypeComboBox";
         fileTypeComboBox.Size = new Size(260, 23);
@@ -47,12 +50,7 @@ partial class FileTypeDialog
         // 
         // okButton
         // 
-        okButton.BackColor = Color.FromArgb(43, 87, 158);
-        okButton.FlatAppearance.BorderSize = 0;
-        okButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
-        okButton.FlatStyle = FlatStyle.Flat;
         okButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        okButton.ForeColor = Color.White;
         okButton.Location = new Point(116, 78);
         okButton.Name = "okButton";
         okButton.Size = new Size(75, 30);
@@ -63,12 +61,7 @@ partial class FileTypeDialog
         // 
         // cancelButton
         // 
-        cancelButton.BackColor = Color.FromArgb(43, 87, 158);
-        cancelButton.FlatAppearance.BorderSize = 0;
-        cancelButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(57, 97, 163);
-        cancelButton.FlatStyle = FlatStyle.Flat;
         cancelButton.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        cancelButton.ForeColor = Color.White;
         cancelButton.Location = new Point(197, 78);
         cancelButton.Name = "cancelButton";
         cancelButton.Size = new Size(75, 30);
@@ -82,7 +75,6 @@ partial class FileTypeDialog
         AcceptButton = okButton;
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        BackColor = Color.FromArgb(240, 245, 250);
         CancelButton = cancelButton;
         ClientSize = new Size(284, 121);
         Controls.Add(cancelButton);

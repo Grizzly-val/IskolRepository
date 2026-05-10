@@ -11,28 +11,17 @@ public partial class SubjectSelectionView : UserControl
     public SubjectSelectionView()
     {
         InitializeComponent();
+        ThemeManager.ThemeChanged += OnThemeChanged;
         AnimationHelper.AnimateHover(addSubjectButton, 8, 70);
         AnimationHelper.AnimateHover(changeSemesterButton, 8, 70);
-        SetupButton(addSubjectButton);
-        SetupButton(changeSemesterButton);
+        ThemeManager.SetupButton(addSubjectButton);
+        ThemeManager.SetupButton(changeSemesterButton);
     }
 
-    private void SetupButton(Button button)
+    private void OnThemeChanged(object? sender, EventArgs e)
     {
-        button.EnabledChanged += (s, e) => UpdateButtonColor(button);
-        UpdateButtonColor(button);
+        ThemeManager.ApplyTheme(this);
     }
-
-private void UpdateButtonColor(Button button)
-{
-    button.BackColor = button.Enabled
-        ? ThemeManager.ButtonDefaultColor
-        : ThemeManager.ButtonDisabledColor;
-
-    button.ForeColor = button.Enabled
-        ? Color.White
-        : ThemeManager.ButtonDisabledForeColor;
-}
 
     public event EventHandler? AddSubjectRequested;
     public event EventHandler? ChangeSemesterRequested;

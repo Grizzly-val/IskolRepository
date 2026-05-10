@@ -1,3 +1,5 @@
+using IskolRepository.Utilities;
+
 namespace IskolRepository.Forms;
 
 public partial class FileTypeDialog : Form
@@ -7,7 +9,16 @@ public partial class FileTypeDialog : Form
     public FileTypeDialog()
     {
         InitializeComponent();
+        ThemeManager.ThemeChanged += OnThemeChanged;
+        ThemeManager.ApplyTheme(this);
+        ThemeManager.SetupButton(okButton);
+        ThemeManager.SetupButton(cancelButton);
         fileTypeComboBox.SelectedIndex = 0;
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        ThemeManager.ApplyTheme(this);
     }
 
     public static string? ShowCreateDialog(IWin32Window owner)
@@ -22,6 +33,11 @@ public partial class FileTypeDialog : Form
         {
             "Text File (.txt)" => ".txt",
             "Word Document (.docx)" => ".docx",
+            "PowerPoint Presentation (.pptx)" => ".pptx",
+            "Excel Spreadsheet (.xlsx)" => ".xlsx",
+            "Publisher Document (.pub)" => ".pub",
+            "OneNote Notebook (.one)" => ".one",
+            "Access Database (.accdb)" => ".accdb",
             _ => null
         };
 
@@ -44,4 +60,6 @@ public partial class FileTypeDialog : Form
         DialogResult = DialogResult.Cancel;
         Close();
     }
+
+
 }
