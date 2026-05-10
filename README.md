@@ -80,7 +80,6 @@ classDiagram
 
   class Program {
     +Main()
-    +ConfigureGlobalExceptionHandlers()
   }
 
   class ServiceFactory {
@@ -89,70 +88,51 @@ classDiagram
 
   class ServiceRegistry {
     +ISemesterService SemesterService
-    +ISubjectService SubjectService
     +IRepositoryService RepositoryService
     +IFileService FileService
-    +IVersionService VersionService
+    +ISubjectService SubjectService
     +ITreeViewService TreeViewService
+    +IVersionService VersionService
+    +IValidationHelper ValidationService
     +IFileIdentityManager FileIdentityManager
-    +IFileReconciliationService FileReconciliation
-    +IValidationHelper ValidationHelper
-    +IFileSystemHelper FileSystemHelper
-    +IPathProvider PathProvider
+    +IFileReconciliationService FileReconciliationService
   }
 
   class MainForm {
-    -currentSemesterPath string
-    -currentSubjectPath string
-    -selectedRepositoryPath string
-    -selectedFilePath string
-    -selectedBrowsePath string
-    -currentRepositoryMetadata RepoMetadata
-    -services ServiceRegistry
-
-    +OpenSemester()
-    +CreateSemester()
-    +CreateSubject()
-    +CreateRepository()
-    +CreateFile()
-    +CreateFolder()
-    +SaveVersion()
-    +RevertToVersion()
-    +LoadRepository()
-    +LoadRepositoryFiles()
-    +LoadTreeView()
-    +RefreshSubjectView()
-    +RefreshRepositoryMetadata()
-    +UpdateRepositoryStatus()
-    +HandleTreeNodeSelection()
-    +ApplyTheme()
-    +ToggleTheme()
+    -_semesterService ISemesterService
+    -_repositoryService IRepositoryService
+    -_fileService IFileService
+    -_subjectService ISubjectService
+    -_treeViewService ITreeViewService
+    -_versionService IVersionService
+    -_validationService IValidationHelper
+    -currentSemesterPath string?
+    -currentSubjectPath string?
+    -selectedRepositoryPath string?
+    -currentBrowsePath string?
+    -selectedFilePath string?
   }
 
   class StartupView {
     +OpenSemesterRequested event
     +NewSemesterRequested event
-    +InitializeLayout()
-    +ShowOpenSemesterDialog()
-    +ShowCreateSemesterDialog()
   }
 
   class SubjectSelectionView {
     +AddSubjectRequested event
     +ChangeSemesterRequested event
-    +PopulateSubjects()
-    +CreateSubjectCard()
-    +LoadSubjects()
-    +ApplyTheme()
+    +SemesterName string
+    +PopulateSubjects(loader)
   }
 
-  Program ..> ServiceFactory : creates
-  Program ..> MainForm : launches
+  Program ..> ServiceFactory : calls
+  Program ..> MainForm : runs
   ServiceFactory ..> ServiceRegistry : builds
 
-  MainForm --> ServiceRegistry : receives
-  MainForm *-- StartupView : owns
-  MainForm *-- SubjectSelectionView : owns
+  MainForm "1" *-- "1" StartupView : owns
+  MainForm "1" *-- "1" SubjectSelectionView : owns
+  MainForm "1" --> "1" ServiceRegistry : receives
+
 ```
 
 ---
@@ -167,219 +147,124 @@ classDiagram
 
   class ISemesterService {
     <<interface>>
-    +OpenSemester(path) string
-    +CreateSemester(parentPath, name) string
-    +CreateSemesterMarker(path)
-    +IsValidSemester(path) bool
+    +OpenSemester(selectedPath) string
+    +CreateSemester(parentPath,semesterName) string
+    +CreateSemesterMarker(semesterPath)
   }
 
   class ISubjectService {
     <<interface>>
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
+    +CreateSubject(semesterPath,subjectName)
+    +GetSubjectsForSemester(semesterPath) IEnumerable
+    +LoadSubjectsUI(semesterPath,subjectCardsPanel,createSubjectCard,onEmpty)
   }
 
   class IRepositoryService {
     <<interface>>
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-    +GetRepositoryMetadata(path) RepoMetadata
-    +CalculateRepositoryStatus(metadata) string
+    +CreateRepository(subjectPath,repositoryName,deadline) string
+    +UpdateRepositoryMetadata(repositoryPath,deadline,status)
+    +EnsureMetadata(repositoryPath) RepoMetadata
+    +FindRepositoryRoot(startPath) string?
   }
 
   class IFileService {
     <<interface>>
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
-    +DeleteFile(path)
-    +RenameFile(oldPath, newPath)
+    +LoadFiles(repositoryRootPath,browsePath,filesListView,semesterMarkerFileName)
+    +CreateFolder(parentPath,name,folderType)
+    +CreateFile(repositoryPath,fileName,extension) string
+    +OpenFile(filePath,onFileExited)
   }
 
   class IVersionService {
     <<interface>>
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
+    +LoadVersionHistory(filePath,versionsListBox,captionLabel,noVersionsMessageLabel)
+    +SaveVersion(filePath,comment)
+    +IsSupportedVersionFileType(filePath) bool
     +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
-    +GetVersionHistory(filePath) IEnumerable
+    +RevertToVersion(filePath,selectedVersion)
   }
 
   class ITreeViewService {
     <<interface>>
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
-    +CreateTreeNode(path) TreeNode
+    +LoadSemesterTree(semesterPath,repositoryTreeView,semesterMarkerFileName)
+    +LoadSubjectTree(currentSubjectPath,selectPath,repositoryTreeView,semesterMarkerFileName)
+    +LoadChildNodes(parentNode,semesterMarkerFileName)
+    +FindNodeByPath(nodes,path) TreeNode?
+    +EnsureParentChainExpanded(node)
   }
 
   class IFileIdentityManager {
     <<interface>>
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +FindOrphaned(repoPath) List
-    +FindLost(repoPath) List
-    +SaveManifest(repoPath, manifest)
+    +LoadManifest(repositoryPath) FileIdentityManifest
+    +RegisterFile(repositoryPath,filePath) Guid
+    +UpdateFilePath(repositoryPath,fileId,newPath)
+    +GetFileIdByPath(repositoryPath,filePath) Guid?
+    +GetFilePathById(repositoryPath,fileId) string?
+    +FindOrphaned(repositoryPath) List
+    +FindLost(repositoryPath) List
+    +SaveManifest(repositoryPath,manifest)
   }
 
   class IFileReconciliationService {
     <<interface>>
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
+    +ValidateManifestIntegrity(repositoryPath) FileReconciliationReport
+    +MigrateHistoryFolders(repositoryPath)
+    +ReconcileLostFiles(repositoryPath)
+    +RegisterAllUnregisteredFiles(repositoryPath)
+    +ComputeFileHash(filePath) string
   }
 
   class IValidationHelper {
     <<interface>>
     +IsRepositoryFolder(path) bool
     +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
     +ApplyNodeValidationColors(node)
-    +ValidateRepositoryStructure(path)
+    +IsValidStatus(status) bool
+    +IsSystemManagedFile(filePath,semesterMarkerFileName) bool
+    +IsValidName(name) bool
   }
 
   class IFileSystemHelper {
     <<interface>>
-    +FileExists(path) bool
-    +DirectoryExists(path) bool
     +CreateDirectory(path)
-    +DeleteFile(path)
-    +DeleteDirectory(path)
-    +ReadAllText(path) string
-    +WriteAllText(path, text)
+    +DirectoryExists(path) bool
+    +FileExists(path) bool
+    +IsDirectoryEmpty(path) bool
+    +IsValidName(name) bool
+    +CreateRepositoryFile(repositoryPath,fileName,extension) string?
     +EnumerateFiles(path) IEnumerable
     +EnumerateDirectories(path) IEnumerable
-    +CopyFile(source, destination)
-    +MoveFile(source, destination)
+    +EnumerateFileSystemEntries(path) IEnumerable
+    +ReadAllText(filePath) string
+    +WriteAllText(filePath,content)
+    +SetFileAttributes(filePath,attributes)
+    +GetFileAttributes(filePath) FileAttributes
+    +MoveDirectory(sourcePath,destinationPath)
+    +DeleteDirectory(path)
   }
 
   class IPathProvider {
     <<interface>>
     +CombinePaths(paths) string
     +GetFileName(path) string
-    +GetDirectoryName(path) string
+    +GetDirectoryName(path) string?
+    +GetFileNameWithoutExtension(path) string
     +GetExtension(path) string
     +GetFullPath(path) string
-    +GetRelativePath(basePath, path) string
   }
 
-  class SemesterService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-
-    +OpenSemester(path) string
-    +CreateSemester(parentPath, name) string
-    +CreateSemesterMarker(path)
-    +IsValidSemester(path) bool
-  }
-
-  class SubjectService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-
-    +CreateSubject(semesterPath, name)
-    +GetSubjectsForSemester(path) IEnumerable
-    +LoadSubjectsUI(path, panel, factory, onEmpty)
-  }
-
-  class RepositoryService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -reconciliationService IFileReconciliationService
-
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-    +GetRepositoryMetadata(path) RepoMetadata
-    +CalculateRepositoryStatus(metadata) string
-  }
-
-  class FileService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -identityManager IFileIdentityManager
-    -repositoryService IRepositoryService
-
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
-    +DeleteFile(path)
-    +RenameFile(oldPath, newPath)
-  }
-
-  class VersionService {
-    -identityManager IFileIdentityManager
-    -repositoryService IRepositoryService
-
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
-    +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
-    +GetVersionHistory(filePath) IEnumerable
-  }
-
-  class TreeViewService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -repositoryService IRepositoryService
-
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
-    +CreateTreeNode(path) TreeNode
-  }
-
-  class FileIdentityManager {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +FindOrphaned(repoPath) List
-    +FindLost(repoPath) List
-    +SaveManifest(repoPath, manifest)
-  }
-
-  class FileReconciliationService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -identityManager IFileIdentityManager
-
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
-  }
-
-  class ValidationHelperService {
-    -fileSystem IFileSystemHelper
-
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-    +ApplyNodeValidationColors(node)
-    +ValidateRepositoryStructure(path)
-  }
+  class SemesterService
+  class SubjectService
+  class RepositoryService
+  class FileService
+  class VersionService
+  class TreeViewService
+  class FileIdentityManager
+  class FileReconciliationService
+  class FileReconciliationReport
+  class ValidationHelperService
+  class FileSystemService
+  class PathProviderService
 
   SemesterService ..|> ISemesterService
   SubjectService ..|> ISubjectService
@@ -390,6 +275,9 @@ classDiagram
   FileIdentityManager ..|> IFileIdentityManager
   FileReconciliationService ..|> IFileReconciliationService
   ValidationHelperService ..|> IValidationHelper
+  FileSystemService ..|> IFileSystemHelper
+  PathProviderService ..|> IPathProvider
+
 ```
 
 ---
@@ -402,126 +290,71 @@ This diagram preserves the constructor dependency relationships from the origina
 classDiagram
   direction LR
 
-  class RepositoryService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -reconciliationService IFileReconciliationService
-
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-    +GetRepositoryMetadata(path) RepoMetadata
-    +CalculateRepositoryStatus(metadata) string
+  class ServiceFactory {
+    +CreateServices() ServiceRegistry
   }
 
-  class FileService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -identityManager IFileIdentityManager
-    -repositoryService IRepositoryService
+  class ServiceRegistry
+  class RepositoryService
+  class FileService
+  class VersionService
+  class TreeViewService
+  class FileReconciliationService
+  class FileIdentityManager
+  class ValidationHelperService
+  class JsonSerializerOptions
 
-    +LoadFiles(repoPath, browsePath, listView, marker)
-    +CreateFile(path, name, extension) string
-    +CreateFolder(parentPath, name, folderType)
-    +OpenFile(filePath, onExited)
-    +DeleteFile(path)
-    +RenameFile(oldPath, newPath)
-  }
+  class IRepositoryService { <<interface>> }
+  class IFileIdentityManager { <<interface>> }
+  class IValidationHelper { <<interface>> }
+  class IFileReconciliationService { <<interface>> }
+  class IFileSystemHelper { <<interface>> }
+  class IPathProvider { <<interface>> }
 
-  class VersionService {
-    -identityManager IFileIdentityManager
-    -repositoryService IRepositoryService
+  ServiceFactory ..> ServiceRegistry : returns
+  ServiceFactory ..> ValidationHelperService : creates
+  ServiceFactory ..> FileIdentityManager : creates
+  ServiceFactory ..> FileReconciliationService : creates
+  ServiceFactory ..> RepositoryService : creates
+  ServiceFactory ..> FileService : creates
+  ServiceFactory ..> VersionService : creates
+  ServiceFactory ..> TreeViewService : creates
 
-    +SaveVersion(filePath, comment)
-    +LoadVersionHistory(filePath, listBox, caption, label)
-    +CanSaveVersion(filePath) bool
-    +RevertToVersion(filePath, version)
-    +GetVersionHistory(filePath) IEnumerable
-  }
+  ServiceRegistry "1" *-- "1" IRepositoryService
+  ServiceRegistry "1" *-- "1" IFileIdentityManager
+  ServiceRegistry "1" *-- "1" IValidationHelper
+  ServiceRegistry "1" *-- "1" IFileReconciliationService
 
-  class TreeViewService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -validationHelper IValidationHelper
-    -repositoryService IRepositoryService
-
-    +LoadSemesterTree(path, treeView, marker)
-    +LoadSubjectTree(subjectPath, selectPath, treeView, marker)
-    +LoadChildNodes(parentNode, marker)
-    +FindNodeByPath(nodes, path) TreeNode
-    +CreateTreeNode(path) TreeNode
-  }
-
-  class FileReconciliationService {
-    -fileSystem IFileSystemHelper
-    -pathProvider IPathProvider
-    -identityManager IFileIdentityManager
-
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
-  }
-
-  class IRepositoryService {
-    <<interface>>
-
-    +CreateRepository(subjectPath, name, deadline) string
-    +UpdateRepositoryMetadata(path, deadline, status)
-    +EnsureMetadata(path) RepoMetadata
-    +FindRepositoryRoot(startPath) string
-    +GetRepositoryMetadata(path) RepoMetadata
-    +CalculateRepositoryStatus(metadata) string
-  }
-
-  class IFileIdentityManager {
-    <<interface>>
-
-    +LoadManifest(repoPath) FileIdentityManifest
-    +RegisterFile(repoPath, filePath) Guid
-    +UpdateFilePath(repoPath, fileId, newPath)
-    +GetFileIdByPath(repoPath, filePath) Guid
-    +FindOrphaned(repoPath) List
-    +FindLost(repoPath) List
-    +SaveManifest(repoPath, manifest)
-  }
-
-  class IValidationHelper {
-    <<interface>>
-
-    +IsRepositoryFolder(path) bool
-    +IsInsideRepository(node) bool
-    +IsValidName(name) bool
-    +IsValidStatus(status) bool
-    +IsSystemManagedFile(path, marker) bool
-    +ApplyNodeValidationColors(node)
-    +ValidateRepositoryStructure(path)
-  }
-
-  class IFileReconciliationService {
-    <<interface>>
-
-    +ValidateManifestIntegrity(repoPath)
-    +MigrateHistoryFolders(repoPath)
-    +ReconcileLostFiles(repoPath)
-    +RegisterAllUnregisteredFiles(repoPath)
-  }
-
+  RepositoryService ..> IFileSystemHelper : injected
   RepositoryService ..> IValidationHelper : injected
+  RepositoryService ..> IPathProvider : injected
+  RepositoryService ..> JsonSerializerOptions : injected
   RepositoryService ..> IFileReconciliationService : injected
 
+  FileService ..> IFileSystemHelper : injected
+  FileService ..> IPathProvider : injected
+  FileService ..> IValidationHelper : injected
   FileService ..> IFileIdentityManager : injected
   FileService ..> IRepositoryService : injected
 
-  VersionService ..> IRepositoryService : injected
+  VersionService ..> JsonSerializerOptions : injected
   VersionService ..> IFileIdentityManager : injected
+  VersionService ..> IRepositoryService : injected
 
+  TreeViewService ..> IFileSystemHelper : injected
+  TreeViewService ..> IPathProvider : injected
+  TreeViewService ..> IValidationHelper : injected
   TreeViewService ..> IRepositoryService : injected
 
+  FileReconciliationService ..> IFileSystemHelper : injected
+  FileReconciliationService ..> IPathProvider : injected
   FileReconciliationService ..> IFileIdentityManager : injected
+
+  FileIdentityManager ..> IFileSystemHelper : injected
+  FileIdentityManager ..> IPathProvider : injected
+
+  ValidationHelperService ..> IFileSystemHelper : injected
+
 ```
 
 ---
@@ -574,15 +407,34 @@ classDiagram
     +DisplayName string
   }
 
-  class TreeNodeData {
-    +NodeType NodeType
+  class RepositoryBrowseEntryKind {
+    <<enumeration>>
+    Parent
+    Directory
+    File
+  }
+
+  class NodeData {
     +Path string
     +FileName string
+    +NodeType NodeType
     +IsValidFile bool
   }
 
-  FileIdentityManifest "1" *-- "*" FileIdentity : contains
-  FileVersion ..> FileIdentity : shares FileId
+  class NodeType {
+    <<enumeration>>
+    Semester
+    Subject
+    Repository
+    SubRepository
+    File
+  }
+
+  FileIdentityManifest "1" *-- "0..*" FileIdentity : contains
+  FileVersion ..> FileIdentity : uses FileId
+  RepositoryBrowseEntry ..> RepositoryBrowseEntryKind : typedBy
+  NodeData ..> NodeType : typedBy
+
 ```
 
 ---
