@@ -155,7 +155,7 @@ classDiagram
   class ISubjectService {
     <<interface>>
     +CreateSubject(semesterPath,subjectName)
-    +GetSubjectsForSemester(semesterPath) IEnumerable
+    +GetSubjectsForSemester(semesterPath) IEnumerable~string~
     +LoadSubjectsUI(semesterPath,subjectCardsPanel,createSubjectCard,onEmpty)
   }
 
@@ -200,8 +200,8 @@ classDiagram
     +UpdateFilePath(repositoryPath,fileId,newPath)
     +GetFileIdByPath(repositoryPath,filePath) Guid?
     +GetFilePathById(repositoryPath,fileId) string?
-    +FindOrphaned(repositoryPath) List
-    +FindLost(repositoryPath) List
+    +FindOrphaned(repositoryPath) List~FileIdentity~
+    +FindLost(repositoryPath) List~string~
     +SaveManifest(repositoryPath,manifest)
   }
 
@@ -232,9 +232,9 @@ classDiagram
     +IsDirectoryEmpty(path) bool
     +IsValidName(name) bool
     +CreateRepositoryFile(repositoryPath,fileName,extension) string?
-    +EnumerateFiles(path) IEnumerable
-    +EnumerateDirectories(path) IEnumerable
-    +EnumerateFileSystemEntries(path) IEnumerable
+    +EnumerateFiles(path) IEnumerable~string~
+    +EnumerateDirectories(path) IEnumerable~string~
+    +EnumerateFileSystemEntries(path) IEnumerable~string~
     +ReadAllText(filePath) string
     +WriteAllText(filePath,content)
     +SetFileAttributes(filePath,attributes)
@@ -253,18 +253,139 @@ classDiagram
     +GetFullPath(path) string
   }
 
-  class SemesterService
-  class SubjectService
-  class RepositoryService
-  class FileService
-  class VersionService
-  class TreeViewService
-  class FileIdentityManager
-  class FileReconciliationService
-  class FileReconciliationReport
-  class ValidationHelperService
-  class FileSystemService
-  class PathProviderService
+  class SemesterService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    +OpenSemester(selectedPath) string
+    +CreateSemester(parentPath,semesterName) string
+    +CreateSemesterMarker(semesterPath)
+  }
+
+  class SubjectService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    +CreateSubject(semesterPath,subjectName)
+    +GetSubjectsForSemester(semesterPath) IEnumerable~string~
+    +LoadSubjectsUI(semesterPath,subjectCardsPanel,createSubjectCard,onEmpty)
+  }
+
+  class RepositoryService {
+    +MetadataFolderName string
+    +MetadataFileName string
+    -_fileSystemHelper IFileSystemHelper
+    -_validationHelper IValidationHelper
+    -_pathProvider IPathProvider
+    -_jsonOptions JsonSerializerOptions
+    -_fileReconciliationService IFileReconciliationService
+    +CreateRepository(subjectPath,repositoryName,deadline) string
+    +UpdateRepositoryMetadata(repositoryPath,deadline,status)
+    +EnsureMetadata(repositoryPath) RepoMetadata
+    +FindRepositoryRoot(startPath) string?
+  }
+
+  class FileService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_validationHelper IValidationHelper
+    -_identityManager IFileIdentityManager
+    -_repositoryService IRepositoryService
+    +LoadFiles(repositoryRootPath,browsePath,filesListView,semesterMarkerFileName)
+    +CreateFolder(parentPath,name,folderType)
+    +CreateFile(repositoryPath,fileName,extension) string
+    +OpenFile(filePath,onFileExited)
+  }
+
+  class VersionService {
+    -_jsonOptions JsonSerializerOptions
+    -_identityManager IFileIdentityManager
+    -_repositoryService IRepositoryService
+    +LoadVersionHistory(filePath,versionsListBox,captionLabel,noVersionsMessageLabel)
+    +SaveVersion(filePath,comment)
+    +IsSupportedVersionFileType(filePath) bool
+    +CanSaveVersion(filePath) bool
+    +RevertToVersion(filePath,selectedVersion)
+  }
+
+  class TreeViewService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_validationHelper IValidationHelper
+    -_repositoryService IRepositoryService
+    +LoadSemesterTree(semesterPath,repositoryTreeView,semesterMarkerFileName)
+    +LoadSubjectTree(currentSubjectPath,selectPath,repositoryTreeView,semesterMarkerFileName)
+    +LoadChildNodes(parentNode,semesterMarkerFileName)
+    +FindNodeByPath(nodes,path) TreeNode?
+    +EnsureParentChainExpanded(node)
+  }
+
+  class FileIdentityManager {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    +LoadManifest(repositoryPath) FileIdentityManifest
+    +RegisterFile(repositoryPath,filePath) Guid
+    +UpdateFilePath(repositoryPath,fileId,newPath)
+    +GetFileIdByPath(repositoryPath,filePath) Guid?
+    +GetFilePathById(repositoryPath,fileId) string?
+    +FindOrphaned(repositoryPath) List~FileIdentity~
+    +FindLost(repositoryPath) List~string~
+    +SaveManifest(repositoryPath,manifest)
+  }
+
+  class FileReconciliationReport {
+    +OrphanedFiles List~FileIdentity~
+    +LostFiles List~string~
+    +ReconciliationIssues List~string~
+    +HasIssues bool
+    +TotalIssues int
+  }
+
+  class FileReconciliationService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_identityManager IFileIdentityManager
+    +ValidateManifestIntegrity(repositoryPath) FileReconciliationReport
+    +MigrateHistoryFolders(repositoryPath)
+    +ReconcileLostFiles(repositoryPath)
+    +RegisterAllUnregisteredFiles(repositoryPath)
+    +ComputeFileHash(filePath) string
+  }
+
+  class ValidationHelperService {
+    -_fileSystemHelper IFileSystemHelper
+    +IsRepositoryFolder(path) bool
+    +IsInsideRepository(node) bool
+    +ApplyNodeValidationColors(node)
+    +IsValidStatus(status) bool
+    +IsSystemManagedFile(filePath,semesterMarkerFileName) bool
+    +IsValidName(name) bool
+  }
+
+  class FileSystemService {
+    +CreateDirectory(path)
+    +DirectoryExists(path) bool
+    +FileExists(path) bool
+    +IsDirectoryEmpty(path) bool
+    +IsValidName(name) bool
+    +CreateRepositoryFile(repositoryPath,fileName,extension) string?
+    +EnumerateFiles(path) IEnumerable~string~
+    +EnumerateDirectories(path) IEnumerable~string~
+    +EnumerateFileSystemEntries(path) IEnumerable~string~
+    +ReadAllText(filePath) string
+    +WriteAllText(filePath,content)
+    +SetFileAttributes(filePath,attributes)
+    +GetFileAttributes(filePath) FileAttributes
+    +MoveDirectory(sourcePath,destinationPath)
+    +DeleteDirectory(path)
+  }
+
+  class PathProviderService {
+    +CombinePaths(paths) string
+    +GetFileName(path) string
+    +GetDirectoryName(path) string?
+    +GetFileNameWithoutExtension(path) string
+    +GetExtension(path) string
+    +GetFullPath(path) string
+  }
 
   SemesterService ..|> ISemesterService
   SubjectService ..|> ISubjectService
@@ -294,22 +415,145 @@ classDiagram
     +CreateServices() ServiceRegistry
   }
 
-  class ServiceRegistry
-  class RepositoryService
-  class FileService
-  class VersionService
-  class TreeViewService
-  class FileReconciliationService
-  class FileIdentityManager
-  class ValidationHelperService
-  class JsonSerializerOptions
+  class ServiceRegistry {
+    +ISemesterService SemesterService
+    +IRepositoryService RepositoryService
+    +IFileService FileService
+    +ISubjectService SubjectService
+    +ITreeViewService TreeViewService
+    +IVersionService VersionService
+    +IValidationHelper ValidationService
+    +IFileIdentityManager FileIdentityManager
+    +IFileReconciliationService FileReconciliationService
+  }
 
-  class IRepositoryService { <<interface>> }
-  class IFileIdentityManager { <<interface>> }
-  class IValidationHelper { <<interface>> }
-  class IFileReconciliationService { <<interface>> }
-  class IFileSystemHelper { <<interface>> }
-  class IPathProvider { <<interface>> }
+  class IRepositoryService {
+    <<interface>>
+    +CreateRepository(subjectPath,repositoryName,deadline) string
+    +UpdateRepositoryMetadata(repositoryPath,deadline,status)
+    +EnsureMetadata(repositoryPath) RepoMetadata
+    +FindRepositoryRoot(startPath) string?
+  }
+
+  class IFileIdentityManager {
+    <<interface>>
+    +LoadManifest(repositoryPath) FileIdentityManifest
+    +RegisterFile(repositoryPath,filePath) Guid
+    +UpdateFilePath(repositoryPath,fileId,newPath)
+    +GetFileIdByPath(repositoryPath,filePath) Guid?
+    +GetFilePathById(repositoryPath,fileId) string?
+    +FindOrphaned(repositoryPath) List~FileIdentity~
+    +FindLost(repositoryPath) List~string~
+    +SaveManifest(repositoryPath,manifest)
+  }
+
+  class IValidationHelper {
+    <<interface>>
+    +IsRepositoryFolder(path) bool
+    +IsInsideRepository(node) bool
+    +ApplyNodeValidationColors(node)
+    +IsValidStatus(status) bool
+    +IsSystemManagedFile(filePath,semesterMarkerFileName) bool
+    +IsValidName(name) bool
+  }
+
+  class IFileReconciliationService {
+    <<interface>>
+    +ValidateManifestIntegrity(repositoryPath) FileReconciliationReport
+    +MigrateHistoryFolders(repositoryPath)
+    +ReconcileLostFiles(repositoryPath)
+    +RegisterAllUnregisteredFiles(repositoryPath)
+    +ComputeFileHash(filePath) string
+  }
+
+  class IFileSystemHelper {
+    <<interface>>
+    +CreateDirectory(path)
+    +DirectoryExists(path) bool
+    +FileExists(path) bool
+    +IsDirectoryEmpty(path) bool
+    +CreateRepositoryFile(repositoryPath,fileName,extension) string?
+    +EnumerateFiles(path) IEnumerable~string~
+    +EnumerateDirectories(path) IEnumerable~string~
+    +ReadAllText(filePath) string
+    +WriteAllText(filePath,content)
+    +MoveDirectory(sourcePath,destinationPath)
+    +DeleteDirectory(path)
+  }
+
+  class IPathProvider {
+    <<interface>>
+    +CombinePaths(paths) string
+    +GetFileName(path) string
+    +GetDirectoryName(path) string?
+    +GetFileNameWithoutExtension(path) string
+    +GetExtension(path) string
+    +GetFullPath(path) string
+  }
+
+  class JsonSerializerOptions {
+    +WriteIndented bool
+    +PropertyNameCaseInsensitive bool
+  }
+
+  class RepositoryService {
+    -_fileSystemHelper IFileSystemHelper
+    -_validationHelper IValidationHelper
+    -_pathProvider IPathProvider
+    -_jsonOptions JsonSerializerOptions
+    -_fileReconciliationService IFileReconciliationService
+    +RepositoryService(fileSystemHelper,validationHelper,pathProvider,jsonOptions,fileReconciliationService)
+  }
+
+  class FileService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_validationHelper IValidationHelper
+    -_identityManager IFileIdentityManager
+    -_repositoryService IRepositoryService
+    +FileService(fileSystemHelper,pathProvider,validationHelper,identityManager,repositoryService)
+  }
+
+  class VersionService {
+    -_jsonOptions JsonSerializerOptions
+    -_identityManager IFileIdentityManager
+    -_repositoryService IRepositoryService
+    +VersionService(jsonOptions,identityManager,repositoryService)
+  }
+
+  class TreeViewService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_validationHelper IValidationHelper
+    -_repositoryService IRepositoryService
+    +TreeViewService(fileSystemHelper,pathProvider,validationHelper,repositoryService)
+  }
+
+  class FileReconciliationService {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    -_identityManager IFileIdentityManager
+    +FileReconciliationService(fileSystemHelper,pathProvider,identityManager)
+  }
+
+  class FileIdentityManager {
+    -_fileSystemHelper IFileSystemHelper
+    -_pathProvider IPathProvider
+    +FileIdentityManager(fileSystemHelper,pathProvider)
+  }
+
+  class ValidationHelperService {
+    -_fileSystemHelper IFileSystemHelper
+    +ValidationHelperService(fileSystemHelper)
+  }
+
+  class FileSystemService {
+    +FileSystemService()
+  }
+
+  class PathProviderService {
+    +PathProviderService()
+  }
 
   ServiceFactory ..> ServiceRegistry : returns
   ServiceFactory ..> ValidationHelperService : creates
@@ -354,6 +598,13 @@ classDiagram
   FileIdentityManager ..> IPathProvider : injected
 
   ValidationHelperService ..> IFileSystemHelper : injected
+
+  FileSystemService ..|> IFileSystemHelper
+  PathProviderService ..|> IPathProvider
+  ValidationHelperService ..|> IValidationHelper
+  FileIdentityManager ..|> IFileIdentityManager
+  FileReconciliationService ..|> IFileReconciliationService
+  RepositoryService ..|> IRepositoryService
 
 ```
 
